@@ -1,0 +1,38 @@
+@import "../../styles/custom-media.css";
+
+.logo {
+  width: 100%;
+  max-width: 56px;
+
+  @media (--viewport-lg-up) {
+    max-width: 80px;
+  }
+
+  .innerC {
+    fill: #ffffff;
+
+    [data-theme="dark"] & {
+      fill: #3e3e3e;
+    }
+  }
+
+  .outerC {
+    fill: #3e4453;
+
+    [data-theme="dark"] & {
+      fill: #ededed;
+    }
+  }
+
+  .innerA {
+    fill: #00b140;
+  }
+
+  .outerA {
+    fill: #3e4453;
+
+    [data-theme="dark"] & {
+      fill: #ededed;
+    }
+  }
+}

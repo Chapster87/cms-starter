@@ -1,0 +1,38 @@
+.breadcrumbsList {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 6px;
+  padding: 16px 0;
+}
+
+.breadcrumbItem {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  gap: 6px;
+}
+
+.breadcrumbLink {
+  color: var(--color-primary-dark);
+  text-decoration: none;
+}
+
+.breadcrumbLink:hover {
+  text-decoration: underline;
+}
+
+.currentBreadcrumb {
+  color: var(--color-text);
+  font-weight: bold;
+}
+
+.separator {
+  color: var(--color-grey-500);
+}
+
+.separatorIcon {
+  display: flex;
+  align-items: center;
+}

@@ -1,0 +1,17 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  padding: 16px 0;
+  gap: 24px;
+
+  @media (--viewport-lg-up) {
+    padding: 32px 0;
+    gap: 40px;
+  }
+}
+
+.pageSection {
+  composes: global-grid-container from global;
+  background-color: var(--background-overlay);
+}

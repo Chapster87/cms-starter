@@ -1,0 +1,164 @@
+@import "../../styles/custom-media.css";
+
+.breakpointIndicator {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100000;
+  display: flex;
+  width: 30px;
+  align-items: center;
+  justify-content: center;
+  background-color: #e2e8f0;
+  padding-top: 2.5px;
+  padding-bottom: 2.5px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #000;
+}
+
+@media (--viewport-sm-up) {
+  .breakpointIndicator {
+    background-color: #fecaca;
+  }
+}
+
+@media (--viewport-md-up) {
+  .breakpointIndicator {
+    background-color: #fef08a;
+  }
+}
+
+@media (--viewport-lg-up) {
+  .breakpointIndicator {
+    background-color: #d9f991;
+  }
+}
+
+@media (--viewport-xl-up) {
+  .breakpointIndicator {
+    background-color: #bfdbfe;
+  }
+}
+
+@media (--viewport-2xl-up) {
+  .breakpointIndicator {
+    background-color: #fbcfe8;
+  }
+}
+
+.labelAll {
+  display: block;
+}
+
+@media (--viewport-xxs-up) {
+  .labelAll {
+    display: none;
+  }
+}
+
+.labelXxs {
+  display: none;
+}
+
+@media (--viewport-xxs-up) {
+  .labelXxs {
+    display: block;
+  }
+}
+
+@media (--viewport-xs-up) {
+  .labelXxs {
+    display: none;
+  }
+}
+
+.labelXs {
+  display: none;
+}
+
+@media (--viewport-xs-up) {
+  .labelXs {
+    display: block;
+  }
+}
+
+@media (--viewport-sm-up) {
+  .labelXs {
+    display: none;
+  }
+}
+
+.labelSm {
+  display: none;
+}
+
+@media (--viewport-sm-up) {
+  .labelSm {
+    display: block;
+  }
+}
+
+@media (--viewport-md-up) {
+  .labelSm {
+    display: none;
+  }
+}
+
+.labelMd {
+  display: none;
+}
+
+@media (--viewport-md-up) {
+  .labelMd {
+    display: block;
+  }
+}
+
+@media (--viewport-lg-up) {
+  .labelMd {
+    display: none;
+  }
+}
+
+.labelLg {
+  display: none;
+}
+
+@media (--viewport-lg-up) {
+  .labelLg {
+    display: block;
+  }
+}
+
+@media (--viewport-xl-up) {
+  .labelLg {
+    display: none;
+  }
+}
+
+.labelXl {
+  display: none;
+}
+
+@media (--viewport-xl-up) {
+  .labelXl {
+    display: block;
+  }
+}
+
+@media (--viewport-2xl-up) {
+  .labelXl {
+    display: none;
+  }
+}
+
+.label2xl {
+  display: none;
+}
+
+@media (--viewport-2xl-up) {
+  .label2xl {
+    display: block;
+  }
+}

@@ -1,0 +1,54 @@
+:root {
+  --color-white: #ffffff;
+  --color-grey-100: #f8f9fa;
+  --color-grey-200: #e9ecef;
+  --color-grey-300: #dee2e6;
+  --color-grey-400: #ced4da;
+  --color-grey-500: #adb5bd;
+  --color-grey-600: #6c757d;
+  --color-grey-700: #495057;
+  --color-grey-800: #343a40;
+  --color-grey-900: #222222;
+  --color-black: #000000;
+
+  --color-gold: #ffb81c;
+  --color-red: #c60c30;
+  --color-green: #00b140;
+  --color-blue: #377cfb;
+  --color-blue-ada: #004bb3;
+
+  --color-primary: var(--color-green);
+
+  --color-success: #198754;
+  --color-warning: var(--color-gold);
+  --color-danger: var(--color-red);
+  --color-info: var(--color-blue);
+
+  --color-foreground-dark: var(--color-white);
+  --color-background-dark: var(--color-grey-900);
+  --color-foreground-light: var(--color-black);
+  --color-background-light: var(--color-white);
+
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  --background: var(--color-white);
+  --foreground: var(--color-black);
+
+  --text-primary: #000;
+  --text-secondary: #666;
+
+  --background-overlay: rgba(255, 255, 255, 0.4);
+
+  --box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+/* @media (prefers-color-scheme: dark) { */
+[data-theme="dark"] {
+  --color-primary: var(--color-blue);
+
+  --background: var(--color-black);
+  --foreground: var(--color-white);
+
+  --background-overlay: rgba(32, 32, 32, 0.4);
+}
