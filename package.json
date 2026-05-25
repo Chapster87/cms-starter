@@ -1,6 +1,6 @@
 {
-  "name": "achapman-portfolio",
-  "version": "2.0.0",
+  "name": "achapman-cms-starter",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -10,6 +10,12 @@
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-label": "^2.1.8",
+    "@radix-ui/react-slot": "^1.2.4",
+    "@supabase/auth-helpers-nextjs": "^0.15.0",
+    "@supabase/supabase-js": "^2.106.1",
+    "graphql": "^16.14.0",
+    "graphql-request": "^7.4.0",
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -33,5 +39,6 @@
     "postcss-preset-env": "^11.2.0",
     "prettier": "^3.8.1",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
 }

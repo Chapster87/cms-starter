@@ -1,0 +1,81 @@
+.pageForm {
+  padding: 24px;
+  background-color: var(--background); /* Using global background variable */
+  border-radius: 8px;
+  max-width: 600px;
+  margin: 24px auto;
+
+  @media (--viewport-md-up) {
+    padding: 32px;
+  }
+}
+
+.formGroup {
+  margin-bottom: 16px;
+
+  & label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: var(--foreground); /* Use global foreground variable */
+  }
+
+  & input[type="text"],
+  & textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--color-grey-300); /* Using global grey-300 for border */
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: var(--background);
+    color: var(--foreground);
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-blue); /* Use global blue */
+      box-shadow: 0 0 0 2px rgb(from var(--color-blue) r g b / 0.2);
+    }
+  }
+
+  & textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+}
+
+.formActions {
+  display: flex;
+  gap: 16px;
+  margin-top: 24px;
+
+  & button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  & button[type="submit"] {
+    background-color: var(--color-primary);
+    color: var(--color-white); /* Use global white variable */
+
+    &:hover {
+      /* Darken primary color, or use a specific darker variant if available */
+      background-color: rgb(from var(--color-primary) r g b / 0.8);
+    }
+  }
+
+  & button[type="button"] {
+    background-color: var(
+      --color-grey-600
+    ); /* Using global grey-600 for secondary */
+    color: var(--color-white); /* Use global white variable */
+
+    &:hover {
+      background-color: var(--color-grey-700); /* Darker grey for hover */
+    }
+  }
+}

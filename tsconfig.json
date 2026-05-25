@@ -19,6 +19,7 @@
       }
     ],
     "paths": {
+      "~/*": ["./src/*"], // Add ~ alias for src for convenience (matches initial thought)
       "@/*": ["./src/*"],
       "@data/*": ["./src/data/*"],
       "@helpers/*": ["./src/helpers/*"],
@@ -27,7 +28,8 @@
       "@components/*": ["./src/components/*"],
       "@styles/*": ["./src/styles/*"],
       "@svg/*": ["./src/svg/*"],
-      "@customTypes/*": ["./src/types/*"]
+      "@customTypes/*": ["./src/types/*"], // Added alias for custom types
+      "@client/*": ["./src/client/*"] // Explicitly add @client alias
     }
   },
   "include": [
