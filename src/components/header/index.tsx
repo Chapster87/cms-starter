@@ -1,19 +1,40 @@
-import Logo from "./_components/logo"
-import Text from "@components/typography/text"
 import Link from "@components/link"
+import AuthStatus from "./_components/auth-status"
+import Logo from "./_components/logo"
+
 import s from "./styles.module.css"
 
-const NAV = [
+interface NavItem {
+  title: string
+  url: string
+  icon: React.ReactNode
+}
+
+const NAV: NavItem[] = [
   {
-    title: "Example",
-    url: "/temp",
+    title: "Content",
+    url: "/editor",
+    icon: (
+      <svg className={`feather-icon ${s.navIcon}`} width="16" height="16">
+        <use href="/feather-sprite.svg#edit" />
+      </svg>
+    ),
+  },
+  {
+    title: "Schema",
+    url: "/schema",
+    icon: (
+      <svg className={`feather-icon ${s.navIcon}`} width="16" height="16">
+        <use href="/feather-sprite.svg#layers" />
+      </svg>
+    ),
   },
 ]
 
 export default function Header() {
   return (
     <>
-      <div className={s.headerBanner}>
+      {/* <div className={s.headerBanner}>
         <div>
           <svg
             className={`feather-icon ${s.bannerIcon}`}
@@ -27,15 +48,19 @@ export default function Header() {
         <Link href="/temp" className={s.bannerLink}>
           Temp page Link
         </Link>
-      </div>
+      </div> */}
       <header className={s.header}>
-        <div className={s.headerInner}>
+        <div className={s.headerMain}>
           <Logo />
+          <AuthStatus />
+        </div>
+        <div className={s.headerSub}>
           <nav className={s.nav}>
             <ul className={s.navList}>
               {NAV.map((item) => (
                 <li key={item.title}>
                   <Link href={item.url} className={s.navLink}>
+                    {item.icon}
                     {item.title}
                   </Link>
                 </li>

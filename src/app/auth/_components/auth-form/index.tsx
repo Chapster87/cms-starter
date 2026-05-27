@@ -2,9 +2,7 @@
 
 import { useCallback, useState } from "react"
 import { supabase } from "@/utils/supabaseClient" // Using alias for supabaseClient
-import { useRouter } from "next/navigation" // Using next/navigation for useRouter
 import * as Label from "@radix-ui/react-label"
-import * as Input from "@radix-ui/react-input" // This is a placeholder, Radix doesn't have a direct Input component, typically uses HTML input with Label
 import s from "./style.module.css" // CSS module for styling
 
 /**
@@ -13,7 +11,6 @@ import s from "./style.module.css" // CSS module for styling
 export default function AuthForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
 
   /**
    * Handles sign in with Google.

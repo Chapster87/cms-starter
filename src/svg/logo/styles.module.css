@@ -2,10 +2,10 @@
 
 .logo {
   width: 100%;
-  max-width: 56px;
+  max-width: 32px;
 
   @media (--viewport-lg-up) {
-    max-width: 80px;
+    max-width: 40px;
   }
 
   .innerC {

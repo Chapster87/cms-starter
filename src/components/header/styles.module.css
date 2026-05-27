@@ -35,36 +35,53 @@
   top: 0;
   left: 0;
   border-bottom: 2px solid var(--color-primary);
-  padding: 16px 0;
   background-color: var(--background);
   background-color: rgb(249, 250, 251, 0.4);
   backdrop-filter: blur(6px);
   z-index: 50;
 }
 
-.headerInner {
+.headerMain {
   composes: global-grid-container from global;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding: 8px 0;
+  background-color: var(--color-green);
+  color: var(--color-white);
+}
+
+.headerSub {
+  composes: global-grid-container from global;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  background-color: rgb(from #006d00 r g b / 0.9);
+  /* background-color: #006d00; */
+  color: var(--color-white);
 }
 
 .navList {
   list-style: none;
   display: flex;
   align-items: center;
-  gap: 24px;
-  font-size: 24px;
+  gap: 32px;
+  font-size: 18px;
   font-weight: 700;
+  padding: 0;
 }
 
 .navLink {
+  display: flex;
+  gap: 8px;
+  align-items: center;
   text-decoration: none;
-  color: var(--foreground);
+  color: inherit;
   transition: color 0.3s ease;
 
   &:hover {
-    color: var(--color-primary);
+    color: var(--color-white);
     text-decoration: underline;
   }
 }

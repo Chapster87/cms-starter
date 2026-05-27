@@ -7,7 +7,7 @@ export default function Logo({ showText = true }) {
     <>
       <Link href="/" className={s.navbarBrand}>
         <SiteLogo />
-        {showText && <p className={s.logoText}>Logo</p>}
+        {showText && <p className={s.logoText}>Custom CMS</p>}
       </Link>
     </>
   )

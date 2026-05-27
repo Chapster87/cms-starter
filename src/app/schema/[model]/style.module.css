@@ -1,0 +1,41 @@
+.container {
+  padding: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.titleGroup h1 {
+  margin: 8px 0 4px 0;
+  font-size: 28px;
+}
+
+.tableName {
+  font-family: monospace;
+  font-size: 16px;
+  color: #666;
+  font-weight: 400;
+}
+
+.backLink {
+  font-size: 14px;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.settingsButton {
+  padding: 8px 16px;
+  background-color: white;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.settingsButton:hover {
+  background-color: #f5f5f5;
+}

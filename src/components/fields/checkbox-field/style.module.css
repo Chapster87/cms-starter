@@ -1,0 +1,57 @@
+.switchRoot {
+  width: 42px;
+  height: 24px;
+  background-color: var(--color-grey-300);
+  border-radius: 9999px;
+  position: relative;
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.switchRoot[data-state="checked"] {
+  background-color: var(--color-primary);
+}
+
+.switchThumb {
+  display: block;
+  width: 20px;
+  height: 20px;
+  background-color: var(--color-white);
+  border-radius: 9999px;
+  transition: transform 0.2s ease;
+  transform: translateX(2px);
+  will-change: transform;
+}
+
+.switchThumb[data-state="checked"] {
+  transform: translateX(20px);
+}
+
+.checkboxRoot {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid var(--color-grey-300);
+  background-color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.checkboxRoot[data-state="checked"] {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.checkboxIndicator {
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

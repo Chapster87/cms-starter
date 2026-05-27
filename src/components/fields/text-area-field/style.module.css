@@ -1,0 +1,48 @@
+.textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 12px;
+  background-color: var(--color-white);
+  border: 1px solid var(--color-grey-300);
+  border-radius: 4px;
+  font-family: var(--font-inter);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-grey-900);
+  resize: vertical;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &::placeholder {
+    color: var(--color-grey-400);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(var(--color-primary-rgb), 0.1);
+  }
+
+  &:disabled {
+    background-color: var(--color-grey-50);
+    cursor: not-allowed;
+    color: var(--color-grey-500);
+  }
+}
+
+.error {
+  border-color: var(--color-red-500);
+
+  &:focus {
+    border-color: var(--color-red-500);
+    box-shadow: 0 0 0 2px rgba(var(--color-red-rgb), 0.1);
+  }
+}
+
+/* For JSON content */
+.monospace {
+  font-family: monospace;
+  font-size: 13px;
+  white-space: pre;
+}

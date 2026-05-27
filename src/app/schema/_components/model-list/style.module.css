@@ -1,0 +1,77 @@
+.pageListContainer {
+  padding: 24px;
+  background-color: var(--background);
+  border-radius: 8px;
+
+  @media (--viewport-md-up) {
+    padding: 32px;
+  }
+}
+
+.pageList {
+  list-style: none;
+  padding: 0;
+  margin-top: 16px;
+  display: grid;
+  gap: 16px;
+}
+
+.pageListItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background-color: var(--background);
+  border: 1px solid var(--color-grey-300);
+  border-radius: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.editButton,
+.deleteButton {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.editButton {
+  background-color: var(--color-blue);
+  color: var(--color-white);
+
+  &:hover {
+    background-color: var(--color-blue-ada);
+  }
+}
+
+.settingsButton {
+  background-color: var(--color-grey-200);
+  color: var(--color-black);
+  padding: 8px 16px;
+  border: 1px solid var(--color-grey-300);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: var(--color-grey-300);
+  }
+}
+
+.deleteButton {
+  background-color: var(--color-danger);
+  color: var(--color-white);
+
+  &:hover {
+    background-color: rgb(from var(--color-danger) r g b / 0.8);
+  }
+}

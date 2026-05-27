@@ -1,0 +1,317 @@
+.fieldListContainer {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-border);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.headerTitleGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.syncHint {
+  font-size: 13px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.syncButton {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  text-decoration: underline;
+  padding: 0;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.syncButton:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.addFieldButton {
+  padding: 8px 16px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.addFieldButton:hover {
+  filter: brightness(1.1);
+}
+
+.fieldStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 900px;
+}
+
+.fieldCard {
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: #fff;
+  transition: box-shadow 0.2s ease;
+  gap: 20px;
+}
+
+.fieldCard:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dragHandle {
+  color: #ccc;
+  display: flex;
+  align-items: center;
+  cursor: grab;
+}
+
+.fieldIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fffbeb; /* Default light yellow */
+  flex-shrink: 0;
+}
+
+/* Specific icon colors based on type categories */
+.icon_text {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+.icon_media {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+.icon_json {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+.icon_seo {
+  background-color: #faf5ff;
+  color: #9333ea;
+}
+.icon_boolean {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+.fieldContent {
+  flex-grow: 1;
+}
+
+.fieldMainInfo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.fieldLabel {
+  font-weight: 600;
+  font-size: 16px;
+  color: #111;
+}
+
+.fieldLabelRequired::after {
+  content: "*";
+  color: var(--color-error);
+  margin-left: 2px;
+}
+
+.fieldName {
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.fieldTypeLabel {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.fieldBadges {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.uniqueBadge {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.systemBadge {
+  background-color: #eef2ff;
+  color: #4f46e5;
+}
+
+/* Modal Styling */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background-color: white;
+  padding: 32px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal h3 {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 20px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-weight: 500;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.input,
+.select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  ring: 2px solid var(--color-primary);
+}
+
+.checkboxGroup {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.checkboxGroup input {
+  margin: 0;
+  width: 16px;
+  height: 16px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.saveButton {
+  padding: 10px 24px;
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.saveButton:disabled {
+  background-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.cancelButton {
+  padding: 10px 24px;
+  background-color: #fff;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.cancelButton:hover {
+  background-color: #f9fafb;
+}
+
+.errorText {
+  color: #dc2626;
+  font-size: 14px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  background-color: #fef2f2;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+}
+
+.emptyState {
+  padding: 32px;
+  text-align: center;
+  background-color: #f9fafb;
+  border: 2px dashed #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
