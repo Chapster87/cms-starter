@@ -73,27 +73,44 @@ The Schema management layer is now fully operational with metadata-driven field 
 - **Upsert Refactor:** Migrated `dataService` and Registry APIs to use `.upsert()`.
 - **TypeScript Hardening:** Replaced most uses of `any` with specific types or `unknown` in core metadata utilities.
 
+### 1.5. Global Components & Drag-and-Drop
+
+- **Global Field Components:** Created a suite of reusable, accessible field components in `src/components/fields` using Radix primitives. Includes `TextField`, `TextAreaField`, `SelectField`, `CheckboxField`, `JsonField`, `NumberField`, and `DateField`.
+- **Field Wrapper Pattern:** Implemented a unified `FieldWrapper` that handles labels, required indicators, and "field notes" (inline descriptions) across all input types.
+- **Global Modal System:** Implemented a centralized `Modal` component based on `@radix-ui/react-dialog` for consistent overlay experiences, replacing legacy custom modal code.
+- **Drag-and-Drop Reordering:** Fully implemented DND reordering for model fields using `@dnd-kit`.
+  - **Reorder API:** Created `POST /api/models/schema/fields/reorder` for batch sequential order updates.
+  - **Sortable UI:** Refactored the Schema Builder's field list into a sortable list with touch support, drag handles, and smooth transitions.
+  - **Dynamic Persistence:** Field order is persisted to the database and automatically reflected in the `RecordForm` rendering order.
+- **Advanced Field Management & Metadata:**
+  - **Unified Field Modal:** Created a reusable `FieldModal` component supporting **Create**, **Edit**, and **Duplicate** modes, replacing legacy custom modals.
+  - **Full CRUD for Fields:** Implemented `PATCH` and `DELETE` handlers for field registry management, including an atomic database RPC (`drop_model_field`) to synchronize physical schema changes.
+  - **Smart Duplication:** Added a "Duplicate" feature that pre-populates metadata with `(copy)` and `_copy` suffixes to speed up model definition.
+  - **Professional UX:** Integrated Radix Dropdown menus for field actions and refined the styling to match professional CMS standards (DatoCMS-inspired).
+  - **Internal Field Notes:** Added a `field_note` metadata column to the registry. Updated all global field components (`TextField`, `SelectField`, etc.) and the `FieldWrapper` to display these internal help notes distinct from system descriptions in the Record Form.
+
 ## 2. Current State
 
-- The dynamic routing and form generation system is fully functional for standard data types.
+- The dynamic routing, form generation, and schema management are fully operational.
 - System fields (`id`, `created_at`, `updated_at`) are strictly read-only on the frontend and managed by database triggers.
-- The user is currently performing independent UI work. **IMPORTANT: Rescan the environment (file contents and structure) before resuming the next session as the UI may have changed.**
+- All core forms (Record Editor, Schema Builder, Model Registry) now use consistent global field components.
+- Field reordering is live, persisted to `public.fields.ui_order`, and utilized by the form engine.
 
 ## 3. Pending Tasks & Next Steps
 
 - **Advanced Field UI:** Support for complex editors (Markdown, Rich Text, Image Uploaders) for the new field types.
-- **Field Reordering:** Implementing the drag-and-drop logic for the `ui_order` property.
 - **Field Deletion/Archiving:** Implementation of soft-delete or physical column dropping for registered fields.
+- **Model Reordering:** Apply similar DND logic to the top-level Models list.
 
 ## 4. Relevant Files
 
-- `src/app/schema/[model]/page.tsx`: New model management hub.
-- `src/app/schema/[model]/_components/field-list/index.tsx`: Main Schema Builder UI.
-- `src/app/editor/[model]/_components/record-form/index.tsx`: Dynamic form engine.
-- `src/app/api/models/schema/fields/route.ts`: Core Field Registry API.
-- `src/app/api/models/schema/fields/sync/route.ts`: Column synchronization API.
+- `src/components/fields/`: Directory containing all global form components.
+- `src/components/modal/index.tsx`: Centralized Radix Dialog wrapper.
+- `src/app/schema/[model]/_components/field-list/index.tsx`: Main Schema Builder UI with DND context.
+- `src/app/schema/[model]/_components/field-list/sortable-field-card.tsx`: Sortable item wrapper.
+- `src/app/editor/[model]/_components/record-form/index.tsx`: Dynamic form engine (respects `ui_order`).
+- `src/app/api/models/schema/fields/reorder/route.ts`: Batch reorder API.
 - `src/utils/field-types.ts`: Centralized field mapping and definitions.
-- `src/components/header/_components/auth-status/index.tsx`: Radix Avatar indicator.
 
 ## 5. Suggested Skills
 

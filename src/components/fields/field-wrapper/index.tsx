@@ -7,6 +7,7 @@ interface FieldWrapperProps {
   id: string
   label: string
   description?: string
+  fieldNote?: string
   error?: string
   required?: boolean
   children: React.ReactNode
@@ -22,6 +23,7 @@ export default function FieldWrapper({
   id,
   label,
   description,
+  fieldNote,
   error,
   required,
   children,
@@ -39,7 +41,12 @@ export default function FieldWrapper({
 
       {children}
 
-      {description && <div className={s.description}>{description}</div>}
+      {(description || fieldNote) && (
+        <div className={s.description}>
+          {description && <p className={s.descriptionPart}>{description}</p>}
+          {fieldNote && <p className={s.fieldNote}>{fieldNote}</p>}
+        </div>
+      )}
       {error && <div className={s.error}>{error}</div>}
     </div>
   )

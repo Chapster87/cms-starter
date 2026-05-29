@@ -6,6 +6,7 @@ import s from "./style.module.css"
 interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string
   description?: string
+  fieldNote?: string
   error?: string
   required?: boolean
 }
@@ -16,6 +17,7 @@ interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
 export default function TextField({
   label,
   description,
+  fieldNote,
   error,
   required,
   id,
@@ -29,6 +31,7 @@ export default function TextField({
       id={inputId}
       label={label}
       description={description}
+      fieldNote={fieldNote}
       error={error}
       required={required}
       className={className}

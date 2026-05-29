@@ -8,6 +8,7 @@ import s from "./style.module.css"
 interface CheckboxFieldProps {
   label: string
   description?: string
+  fieldNote?: string
   error?: string
   required?: boolean
   id?: string
@@ -25,6 +26,7 @@ interface CheckboxFieldProps {
 export default function CheckboxField({
   label,
   description,
+  fieldNote,
   error,
   required,
   id,
@@ -41,6 +43,7 @@ export default function CheckboxField({
       id={inputId}
       label={label}
       description={description}
+      fieldNote={fieldNote}
       error={error}
       required={required}
       variant="checkbox"

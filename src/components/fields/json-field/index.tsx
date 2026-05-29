@@ -4,6 +4,7 @@ import TextAreaField from "../text-area-field"
 interface JsonFieldProps {
   label: string
   description?: string
+  fieldNote?: string
   required?: boolean
   id?: string
   name?: string
@@ -20,6 +21,7 @@ interface JsonFieldProps {
 export default function JsonField({
   label,
   description,
+  fieldNote,
   required,
   id,
   name,
@@ -54,6 +56,7 @@ export default function JsonField({
     <TextAreaField
       label={label}
       description={description || "Must be a valid JSON object or array."}
+      fieldNote={fieldNote}
       error={error}
       required={required}
       id={id}

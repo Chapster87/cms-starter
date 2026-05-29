@@ -7,6 +7,7 @@ interface NumberFieldProps extends Omit<
 > {
   label: string
   description?: string
+  fieldNote?: string
   error?: string
   required?: boolean
   onChange?: (value: number | undefined) => void
@@ -15,7 +16,11 @@ interface NumberFieldProps extends Omit<
 /**
  * A numeric input field.
  */
-export default function NumberField({ onChange, ...props }: NumberFieldProps) {
+export default function NumberField({
+  onChange,
+  fieldNote,
+  ...props
+}: NumberFieldProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     if (val === "") {
@@ -25,5 +30,12 @@ export default function NumberField({ onChange, ...props }: NumberFieldProps) {
     }
   }
 
-  return <TextField {...props} type="number" onChange={handleChange} />
+  return (
+    <TextField
+      {...props}
+      fieldNote={fieldNote}
+      type="number"
+      onChange={handleChange}
+    />
+  )
 }

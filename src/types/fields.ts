@@ -21,12 +21,14 @@ export interface CMSField {
   model_id: string
   field_name: string
   field_label: string
+  field_description?: string
   field_type: CMSFieldType
   is_required: boolean
   is_unique: boolean
   is_system: boolean
   ui_order: number
   settings: Record<string, unknown>
+  field_note?: string | null
   created_at: string
   updated_at: string
 }

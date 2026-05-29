@@ -25,10 +25,26 @@
 }
 
 .description {
-  font-size: 12px;
-  color: var(--color-grey-500);
-  line-height: 1.4;
   margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.descriptionPart,
+.fieldNote {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.descriptionPart {
+  color: var(--color-grey-500);
+}
+
+.fieldNote {
+  color: var(--color-grey-600);
+  font-weight: 500;
 }
 
 .error {

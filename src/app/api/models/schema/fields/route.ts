@@ -128,6 +128,120 @@ export async function POST(req: NextRequest) {
 }
 
 /**
+ * Handles PATCH requests to update field metadata.
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const {
+      data: { user },
+    } = await authenticatedSupabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized: User not authenticated." },
+        { status: 401 }
+      )
+    }
+
+    const body = await req.json()
+    console.log("PATCH /api/models/schema/fields request body:", body)
+    const { id, field_label, field_note, is_required, is_unique } = body
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Field ID is required." },
+        { status: 400 }
+      )
+    }
+
+    // Use system client to update metadata in public.fields
+    const systemClient = createClient(supabaseUrl, supabaseServiceKey)
+
+    const { data, error } = await systemClient
+      .from("fields")
+      .update({
+        field_label,
+        field_note,
+        is_required: !!is_required,
+        is_unique: !!is_unique,
+      })
+      .eq("id", id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Error updating field metadata:", error)
+      return NextResponse.json(
+        { error: error.message, details: error },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json(data, { status: 200 })
+  } catch (err: unknown) {
+    console.error("Unexpected error in PATCH /api/models/schema/fields:", err)
+    return NextResponse.json(
+      { error: (err as Error).message || "Internal Server Error" },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * Handles DELETE requests to remove a field.
+ */
+export async function DELETE(req: NextRequest) {
+  try {
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const {
+      data: { user },
+    } = await authenticatedSupabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized: User not authenticated." },
+        { status: 401 }
+      )
+    }
+
+    const { searchParams } = new URL(req.url)
+    const id = searchParams.get("id")
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Field ID is required." },
+        { status: 400 }
+      )
+    }
+
+    // Call RPC to safely drop column and metadata
+    // We use the system client here because authenticatedSupabase might not have
+    // permission to execute RPCs that modify schema depending on DB setup.
+    const systemClient = createClient(supabaseUrl, supabaseServiceKey)
+    const { error: rpcError } = await systemClient.rpc("drop_model_field", {
+      p_field_id: id,
+    })
+
+    if (rpcError) {
+      console.error("Error dropping field via RPC:", rpcError)
+      return NextResponse.json(
+        { error: rpcError.message, details: rpcError },
+        { status: 500 }
+      )
+    }
+
+    return NextResponse.json({ message: "Field deleted successfully." })
+  } catch (err: unknown) {
+    console.error("Unexpected error in DELETE /api/models/schema/fields:", err)
+    return NextResponse.json(
+      { error: (err as Error).message || "Internal Server Error" },
+      { status: 500 }
+    )
+  }
+}
+
+/**
  * Handles GET requests to list fields for a specific model.
  */
 export async function GET(req: NextRequest) {

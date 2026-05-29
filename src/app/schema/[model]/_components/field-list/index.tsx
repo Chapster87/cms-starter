@@ -1,10 +1,26 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { TextField, SelectField, CheckboxField } from "@/components/fields"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable"
 import { useAuth } from "@/hooks/use-auth"
 import { CMSField } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
+import FieldModal from "../field-modal"
+import { SortableFieldCard } from "./sortable-field-card"
 import s from "./style.module.css"
 
 interface FieldListProps {
@@ -23,13 +39,22 @@ export default function FieldList({ modelId }: FieldListProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
 
-  // Form State
-  const [newFieldLabel, setNewFieldLabel] = useState("")
-  const [newFieldName, setNewFieldName] = useState("")
-  const [newFieldType, setNewFieldType] = useState(FIELD_DEFINITIONS[0].type)
-  const [isRequired, setIsRequired] = useState(false)
-  const [isUnique, setIsUnique] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  // Modal State
+  const [selectedField, setSelectedField] = useState<CMSField | null>(null)
+  const [modalMode, setModalMode] = useState<"create" | "edit" | "duplicate">(
+    "create"
+  )
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   const fetchFields = useCallback(async () => {
     if (!modelId) return
@@ -66,11 +91,15 @@ export default function FieldList({ modelId }: FieldListProps) {
           { headers }
         )
         if (schemaRes.ok) {
-          const physicalCols = await schemaRes.json()
-          const registeredNames = new Set(data.map((f: any) => f.field_name))
+          const physicalCols = (await schemaRes.json()) as Array<{
+            column_name: string
+          }>
+          const registeredNames = new Set(
+            data.map((f: CMSField) => f.field_name)
+          )
           const systemFields = ["id", "created_at", "updated_at"]
           const missing = physicalCols.filter(
-            (c: any) =>
+            (c) =>
               !registeredNames.has(c.column_name) &&
               !systemFields.includes(c.column_name)
           )
@@ -90,46 +119,6 @@ export default function FieldList({ modelId }: FieldListProps) {
     }, 0)
     return () => clearTimeout(timer)
   }, [fetchFields, accessToken])
-
-  const handleCreateField = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!accessToken) return
-
-    setIsSaving(true)
-    setError(null)
-
-    try {
-      const response = await fetch("/api/models/schema/fields", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          model_id: modelId,
-          field_name:
-            newFieldName ||
-            newFieldLabel.toLowerCase().replace(/[^a-z0-9]/g, "_"),
-          field_label: newFieldLabel,
-          field_type: newFieldType,
-          is_required: isRequired,
-          is_unique: isUnique,
-        }),
-      })
-
-      const result = await response.json()
-      if (!response.ok)
-        throw new Error(result.error || "Failed to create field")
-
-      await fetchFields()
-      setIsModalOpen(false)
-      resetForm()
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to create field")
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   const handleSync = async () => {
     if (!accessToken || !modelId) return
@@ -159,20 +148,51 @@ export default function FieldList({ modelId }: FieldListProps) {
 
       if (!response.ok) throw new Error("Failed to sync fields")
       await fetchFields()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to sync fields")
     } finally {
       setIsSyncing(false)
     }
   }
 
-  const resetForm = () => {
-    setNewFieldLabel("")
-    setNewFieldName("")
-    setNewFieldType(FIELD_DEFINITIONS[0].type)
-    setIsRequired(false)
-    setIsUnique(false)
-    setError(null)
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = fields.findIndex((f) => f.id === active.id)
+      const newIndex = fields.findIndex((f) => f.id === over.id)
+
+      const newFields = arrayMove(fields, oldIndex, newIndex)
+      setFields(newFields)
+
+      // Update in database
+      if (!accessToken) return
+
+      try {
+        const orders = newFields.map((f, index) => ({
+          id: f.id,
+          ui_order: index,
+        }))
+
+        const response = await fetch("/api/models/schema/fields/reorder", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ orders }),
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to save field order")
+        }
+      } catch (err: unknown) {
+        console.error("Error reordering fields:", err)
+        setError("Failed to save field order. Please try again.")
+        // Revert UI on failure
+        fetchFields()
+      }
+    }
   }
 
   if (loading) return <p>Loading fields...</p>
@@ -187,6 +207,53 @@ export default function FieldList({ modelId }: FieldListProps) {
     if (type.includes("seo")) return s.icon_seo
     if (type.includes("boolean")) return s.icon_boolean
     return s.icon_text
+  }
+
+  const handleEdit = (field: CMSField) => {
+    setSelectedField(field)
+    setModalMode("edit")
+    setIsModalOpen(true)
+  }
+
+  const handleDuplicate = (field: CMSField) => {
+    setSelectedField(field)
+    setModalMode("duplicate")
+    setIsModalOpen(true)
+  }
+
+  const handleDelete = async (field: CMSField) => {
+    if (!accessToken) return
+    if (
+      !window.confirm(
+        `Are you sure you want to delete the field "${field.field_label}"? This will permanently drop the database column.`
+      )
+    ) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/models/schema/fields?id=${field.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+
+      if (!response.ok) {
+        const result = await response.json()
+        throw new Error(result.error || "Failed to delete field")
+      }
+
+      await fetchFields()
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete field")
+    }
+  }
+
+  const handleAddNew = () => {
+    setSelectedField(null)
+    setModalMode("create")
+    setIsModalOpen(true)
   }
 
   return (
@@ -207,150 +274,51 @@ export default function FieldList({ modelId }: FieldListProps) {
             </span>
           )}
         </div>
-        <button
-          className={s.addFieldButton}
-          onClick={() => setIsModalOpen(true)}
-        >
+        <button className={s.addFieldButton} onClick={handleAddNew}>
           <span>+</span> Add new field
         </button>
       </div>
 
+      {error && <p className={s.errorText}>{error}</p>}
+
       <div className={s.fieldStack}>
         {fields.length === 0 && !loading && (
           <p className={s.emptyState}>
-            No fields added yet. Click "+ Add new field" to get started.
+            {`No fields added yet. Click "+ Add new field" to get started`}.
           </p>
         )}
-        {fields.map((field) => {
-          const definition = FIELD_DEFINITIONS.find(
-            (d) => d.type === field.field_type
-          )
-          return (
-            <div key={field.id} className={s.fieldCard}>
-              <div className={s.dragHandle}>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="8" y1="6" x2="16" y2="6"></line>
-                  <line x1="8" y1="12" x2="16" y2="12"></line>
-                  <line x1="8" y1="18" x2="16" y2="18"></line>
-                </svg>
-              </div>
-
-              <div
-                className={`${s.fieldIcon} ${getIconCategory(field.field_type)}`}
-              >
-                {field.field_type === "json" ? "{...}" : "A"}
-              </div>
-
-              <div className={s.fieldContent}>
-                <div className={s.fieldMainInfo}>
-                  <span
-                    className={`${s.fieldLabel} ${
-                      field.is_required ? s.fieldLabelRequired : ""
-                    }`}
-                  >
-                    {field.field_label}
-                  </span>
-                  <span className={s.fieldName}>{field.field_name}</span>
-                </div>
-                <div className={s.fieldTypeLabel}>
-                  {definition?.label || field.field_type}
-                </div>
-              </div>
-
-              <div className={s.fieldBadges}>
-                {field.is_unique && (
-                  <span className={s.uniqueBadge}>Unique</span>
-                )}
-                {field.is_system && (
-                  <span className={s.systemBadge}>System</span>
-                )}
-              </div>
-            </div>
-          )
-        })}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={fields.map((f) => f.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {fields.map((field) => (
+              <SortableFieldCard
+                key={field.id}
+                field={field}
+                getIconCategory={getIconCategory}
+                onEdit={handleEdit}
+                onDuplicate={handleDuplicate}
+                onDelete={handleDelete}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
 
-      {isModalOpen && (
-        <div className={s.modalOverlay}>
-          <div className={s.modal}>
-            <h3>Add New Field</h3>
-            {error && <p className={s.errorText}>{error}</p>}
-
-            <form onSubmit={handleCreateField} className={s.modalForm}>
-              <TextField
-                label="Field Label"
-                placeholder="e.g. Featured Image"
-                value={newFieldLabel}
-                onChange={(e) => setNewFieldLabel(e.target.value)}
-                required
-                description="Human-friendly name for the field."
-              />
-
-              <TextField
-                label="Field Name (Database Column)"
-                placeholder="e.g. featured_image"
-                value={newFieldName}
-                onChange={(e) => setNewFieldName(e.target.value)}
-                description="The physical column name in your database."
-              />
-
-              <SelectField
-                label="Field Type"
-                value={newFieldType}
-                onChange={(val) =>
-                  setNewFieldType(val as CMSField["field_type"])
-                }
-                options={FIELD_DEFINITIONS.map((def) => ({
-                  value: def.type,
-                  label: `${def.label} - ${def.description}`,
-                }))}
-              />
-
-              <CheckboxField
-                label="Required Field"
-                checked={isRequired}
-                onChange={setIsRequired}
-                description="Make this field mandatory."
-                variant="switch"
-              />
-
-              <CheckboxField
-                label="Unique Constraint"
-                checked={isUnique}
-                onChange={setIsUnique}
-                description="Prevent duplicate values in this column."
-                variant="switch"
-              />
-
-              <div className={s.modalActions}>
-                <button
-                  type="button"
-                  className={s.cancelButton}
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={s.saveButton}
-                  disabled={isSaving}
-                >
-                  {isSaving ? "Creating..." : "Create Field"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <FieldModal
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSuccess={fetchFields}
+        modelId={modelId}
+        accessToken={accessToken}
+        field={selectedField}
+        mode={modalMode}
+      />
     </div>
   )
 }

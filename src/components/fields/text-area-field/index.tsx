@@ -6,6 +6,7 @@ import s from "./style.module.css"
 interface TextAreaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   label: string
   description?: string
+  fieldNote?: string
   error?: string
   required?: boolean
   monospace?: boolean
@@ -18,6 +19,7 @@ interface TextAreaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaEl
 export default function TextAreaField({
   label,
   description,
+  fieldNote,
   error,
   required,
   id,
@@ -32,6 +34,7 @@ export default function TextAreaField({
       id={inputId}
       label={label}
       description={description}
+      fieldNote={fieldNote}
       error={error}
       required={required}
       className={className}

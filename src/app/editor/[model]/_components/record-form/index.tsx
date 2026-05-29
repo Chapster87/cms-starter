@@ -126,9 +126,9 @@ export default function RecordForm({
     <form onSubmit={handleSubmit} className={s.form}>
       {schema.map((field) => {
         const commonProps = {
-          key: field.field_name,
           label: field.field_label,
           description: field.field_description,
+          fieldNote: (field as any).field_note || undefined,
           required: field.is_required,
           disabled: isLoading,
           name: field.field_name,
@@ -137,6 +137,7 @@ export default function RecordForm({
         if (field.field_type === "boolean") {
           return (
             <CheckboxField
+              key={field.field_name}
               {...commonProps}
               checked={!!formData[field.field_name]}
               onChange={(checked) => handleChange(field.field_name, checked)}
@@ -147,6 +148,7 @@ export default function RecordForm({
         if (field.field_type === "number") {
           return (
             <NumberField
+              key={field.field_name}
               {...commonProps}
               value={(formData[field.field_name] as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
@@ -157,6 +159,7 @@ export default function RecordForm({
         if (field.field_type === "text_multi") {
           return (
             <TextAreaField
+              key={field.field_name}
               {...commonProps}
               value={(formData[field.field_name] as string) || ""}
               onChange={(e) => handleChange(field.field_name, e.target.value)}
@@ -173,6 +176,7 @@ export default function RecordForm({
 
           return (
             <JsonField
+              key={field.field_name}
               {...commonProps}
               value={jsonValue}
               onChange={(val) => handleChange(field.field_name, val)}
@@ -183,6 +187,7 @@ export default function RecordForm({
         if (field.field_type === "date_time") {
           return (
             <DateField
+              key={field.field_name}
               {...commonProps}
               showTime
               value={(formData[field.field_name] as string) || ""}
@@ -193,6 +198,7 @@ export default function RecordForm({
 
         return (
           <TextField
+            key={field.field_name}
             {...commonProps}
             value={(formData[field.field_name] as string) || ""}
             onChange={(e) => handleChange(field.field_name, e.target.value)}

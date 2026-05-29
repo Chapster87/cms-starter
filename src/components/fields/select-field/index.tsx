@@ -13,6 +13,7 @@ interface SelectOption {
 interface SelectFieldProps {
   label: string
   description?: string
+  fieldNote?: string
   error?: string
   required?: boolean
   id?: string
@@ -31,6 +32,7 @@ interface SelectFieldProps {
 export default function SelectField({
   label,
   description,
+  fieldNote,
   error,
   required,
   id,
@@ -49,6 +51,7 @@ export default function SelectField({
       id={inputId}
       label={label}
       description={description}
+      fieldNote={fieldNote}
       error={error}
       required={required}
       className={className}
