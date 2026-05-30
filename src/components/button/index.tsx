@@ -15,7 +15,7 @@ type ButtonProps = {
   unstyled?: boolean
 } & React.ButtonHTMLAttributes<HTMLButtonElement>
 
-const Button: React.FC<ButtonProps> = ({
+export default function Button({
   children,
   onClick,
   variant = "primary",
@@ -28,7 +28,7 @@ const Button: React.FC<ButtonProps> = ({
   afterText,
   unstyled = false,
   ...props
-}) => {
+}: ButtonProps) {
   const classes = unstyled
     ? `${s.unstyled} ${className || ""}`
     : [
@@ -56,5 +56,3 @@ const Button: React.FC<ButtonProps> = ({
     </button>
   )
 }
-
-export default Button

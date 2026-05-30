@@ -1,13 +1,13 @@
 :root {
   --color-white: #ffffff;
-  --color-grey-100: #f8f9fa;
-  --color-grey-200: #e9ecef;
-  --color-grey-300: #dee2e6;
-  --color-grey-400: #ced4da;
-  --color-grey-500: #adb5bd;
-  --color-grey-600: #6c757d;
-  --color-grey-700: #495057;
-  --color-grey-800: #343a40;
+  --color-grey-100: #f3f3f9;
+  --color-grey-200: #d9d9de;
+  --color-grey-300: #bfbfc3;
+  --color-grey-400: #a5a5a8;
+  --color-grey-500: #8b8b8e;
+  --color-grey-600: #707073;
+  --color-grey-700: #565658;
+  --color-grey-800: #3c3c3d;
   --color-grey-900: #222222;
   --color-black: #000000;
 
@@ -39,8 +39,7 @@
 
   --background-overlay: rgba(255, 255, 255, 0.4);
 
-  --box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --box-shadow: 0 3px 3px rgba(56, 65, 74, 0.1);
 }
 
 /* @media (prefers-color-scheme: dark) { */

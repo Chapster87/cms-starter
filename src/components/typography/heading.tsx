@@ -12,13 +12,13 @@ type HeadingProps = {
   className?: string
 } & React.ComponentPropsWithoutRef<HeadingLevel>
 
-const Heading: React.FC<HeadingProps> = ({
+export default function Heading({
   level,
   display = level, // Default display to level if not defined
   children,
   className,
   ...props
-}) => {
+}: HeadingProps) {
   const Component = level
 
   return (
@@ -40,5 +40,3 @@ const Heading: React.FC<HeadingProps> = ({
     </Component>
   )
 }
-
-export default Heading

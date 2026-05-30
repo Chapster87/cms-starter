@@ -1,34 +1,8 @@
-import Link from "@components/link"
+import Heading from "@components/typography/heading"
 import AuthStatus from "./_components/auth-status"
+import TitleBar from "./_components/title-bar"
 
 import s from "./styles.module.css"
-
-interface NavItem {
-  title: string
-  url: string
-  icon: React.ReactNode
-}
-
-const NAV: NavItem[] = [
-  {
-    title: "Content",
-    url: "/editor",
-    icon: (
-      <svg className={`feather-icon ${s.navIcon}`} width="16" height="16">
-        <use href="/feather-sprite.svg#edit" />
-      </svg>
-    ),
-  },
-  {
-    title: "Schema",
-    url: "/schema",
-    icon: (
-      <svg className={`feather-icon ${s.navIcon}`} width="16" height="16">
-        <use href="/feather-sprite.svg#layers" />
-      </svg>
-    ),
-  },
-]
 
 export default function Header() {
   return (
@@ -49,10 +23,16 @@ export default function Header() {
         </Link>
       </div> */}
       <header className={s.header}>
-        <div className={s.headerMain}>
+        <div className={s.headerLeft}>
+          <Heading level="h1" display="h4" className={s.headerTitle}>
+            CMS Starter
+          </Heading>
+        </div>
+        <div className={s.headerRight}>
           <AuthStatus />
         </div>
       </header>
+      <TitleBar />
     </>
   )
 }

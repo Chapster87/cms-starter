@@ -163,7 +163,7 @@
 
   code {
     font-family: monospace;
-    background-color: var(--color-grey-200);
+    background-color: var(--color-grey-100);
     padding: 2px 4px;
     border-radius: 3px;
     font-size: 85%;

@@ -15,7 +15,7 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-inter);
-  background-color: var(--color-grey-200);
+  background-color: var(--color-grey-100);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

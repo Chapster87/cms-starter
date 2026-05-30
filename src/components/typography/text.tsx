@@ -10,14 +10,14 @@ type TextProps = {
   dangerouslySetInnerHTML?: { __html: string }
 }
 
-const Text: React.FC<TextProps> = ({
+export default function Text({
   variant = "p",
   size = "default",
   children,
   className,
   dangerouslySetInnerHTML,
   ...props
-}) => {
+}: TextProps) {
   const Component = variant
 
   return (
@@ -37,5 +37,3 @@ const Text: React.FC<TextProps> = ({
     </Component>
   )
 }
-
-export default Text

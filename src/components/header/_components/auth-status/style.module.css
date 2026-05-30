@@ -18,7 +18,7 @@
   width: 32px;
   height: 32px;
   border-radius: 100%;
-  background-color: var(--color-grey-200);
+  background-color: var(--color-grey-100);
   position: relative;
 }
 
@@ -88,6 +88,6 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--color-grey-200);
+  background-color: var(--color-grey-100);
   animation: var(--animate-pulse);
 }

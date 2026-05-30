@@ -1,0 +1,12 @@
+.titleBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: var(--color-white);
+  box-shadow: var(--box-shadow);
+}
+
+.pageTitle {
+  text-transform: uppercase;
+}

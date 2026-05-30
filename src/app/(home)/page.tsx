@@ -5,6 +5,7 @@ import Link from "next/link"
 import { supabase } from "@/utils/supabaseClient"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import Card from "@/components/card"
 
 /**
  * Renders the main dashboard page, now acting as the homepage.
@@ -31,25 +32,26 @@ export default function Home() {
 
   return (
     <div>
-      <h1>Welcome to the Homepage, {user.email}!</h1>{" "}
-      {/* Updated welcome message */}
-      <p>
-        This is your main dashboard. You can navigate to other sections from
-        here.
-      </p>
-      <button
-        onClick={async () => {
-          await supabase.auth.signOut()
-          router.push("/auth")
-        }}
-      >
-        Sign Out
-      </button>
-      {/* Add links to other dashboard sections, e.g., /dashboard/pages */}
-      <p>
-        Go to <Link href="/schema">Models Management</Link>{" "}
-        {/* Updated link to be relative to root for now */}
-      </p>
+      <Card>
+        <h1>Welcome to the Homepage, {user.email}!</h1>{" "}
+        <p>
+          This is your main dashboard. You can navigate to other sections from
+          here.
+        </p>
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut()
+            router.push("/auth")
+          }}
+        >
+          Sign Out
+        </button>
+        {/* Add links to other dashboard sections, e.g., /dashboard/pages */}
+        <p>
+          Go to <Link href="/schema">Models Management</Link>{" "}
+          {/* Updated link to be relative to root for now */}
+        </p>
+      </Card>
     </div>
   )
 }

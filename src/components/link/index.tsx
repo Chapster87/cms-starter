@@ -16,7 +16,7 @@ type LinkProps = {
   buttonStyle?: boolean
 } & React.AnchorHTMLAttributes<HTMLAnchorElement>
 
-const Link: React.FC<LinkProps> = ({
+export default function Link({
   children,
   href,
   variant = "primary",
@@ -27,7 +27,7 @@ const Link: React.FC<LinkProps> = ({
   nofollow = false,
   buttonStyle = false,
   ...props
-}) => {
+}: LinkProps) {
   const classes = clsx(
     buttonStyle
       ? [
@@ -52,5 +52,3 @@ const Link: React.FC<LinkProps> = ({
     </NextLink>
   )
 }
-
-export default Link

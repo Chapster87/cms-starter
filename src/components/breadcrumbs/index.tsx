@@ -17,6 +17,7 @@ interface BreadcrumbsProps {
    * labels for those segments in the breadcrumbs (e.g., 'Project Title').
    */
   dynamicSegments?: { [key: string]: string }
+  hideOnRoot?: boolean
 }
 
 /**
@@ -27,18 +28,19 @@ interface BreadcrumbsProps {
  * @param {Object} [props.dynamicSegments] - An object mapping dynamic segment keys to their display labels.
  * @returns {React.ReactElement} The Breadcrumbs component.
  */
-const Breadcrumbs = ({
+export default function Breadcrumbs({
   dynamicSegments,
-}: BreadcrumbsProps): React.ReactElement => {
+  hideOnRoot = false,
+}: BreadcrumbsProps): React.ReactElement {
   const pathname = usePathname()
 
   const breadcrumbs: BreadcrumbItem[] = useMemo(() => {
     if (!pathname) {
-      return [{ label: "Home", href: "/" }]
+      return [{ label: "Dashboard", href: "/" }]
     }
 
     const pathSegments = pathname.split("/").filter(Boolean)
-    const homeBreadcrumb: BreadcrumbItem = { label: "Home", href: "/" }
+    const homeBreadcrumb: BreadcrumbItem = { label: "Dashboard", href: "/" }
 
     const dynamicBreadcrumbs = pathSegments.map((segment, index) => {
       const href = "/" + pathSegments.slice(0, index + 1).join("/")
@@ -56,6 +58,10 @@ const Breadcrumbs = ({
 
     return [homeBreadcrumb, ...dynamicBreadcrumbs]
   }, [pathname, dynamicSegments])
+
+  if (hideOnRoot && pathname === "/") {
+    return <></>
+  }
 
   return (
     <nav aria-label="Breadcrumbs">
@@ -88,5 +94,3 @@ const Breadcrumbs = ({
     </nav>
   )
 }
-
-export default Breadcrumbs
