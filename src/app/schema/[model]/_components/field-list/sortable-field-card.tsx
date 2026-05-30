@@ -1,9 +1,10 @@
-import React from "react"
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import ContextMenu from "@/components/context-menu"
+import SvgIcon from "@/components/svg-icon"
 import { CMSField } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
+
 import s from "./style.module.css"
 
 interface SortableFieldCardProps {
@@ -46,20 +47,7 @@ export function SortableFieldCard({
       className={`${s.fieldCard} ${isDragging ? s.isDragging : ""}`}
     >
       <div className={s.dragHandle} {...attributes} {...listeners}>
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <line x1="8" y1="6" x2="16" y2="6"></line>
-          <line x1="8" y1="12" x2="16" y2="12"></line>
-          <line x1="8" y1="18" x2="16" y2="18"></line>
-        </svg>
+        <SvgIcon icon="menu" size={20} />
       </div>
 
       <div className={`${s.fieldIcon} ${getIconCategory(field.field_type)}`}>
@@ -96,49 +84,27 @@ export function SortableFieldCard({
           Edit field
         </button>
 
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
-            <button className={s.menuTrigger} aria-label="More options">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="1"></circle>
-                <circle cx="12" cy="5" r="1"></circle>
-                <circle cx="12" cy="19" r="1"></circle>
-              </svg>
+        <ContextMenu>
+          <ContextMenu.Trigger className={s.menuTrigger}>
+            <button type="button" aria-label="More options">
+              <SvgIcon icon="more-vertical" size={20} />
             </button>
-          </DropdownMenu.Trigger>
+          </ContextMenu.Trigger>
 
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content
-              className={s.menuContent}
-              sideOffset={5}
-              align="end"
-            >
-              <DropdownMenu.Item
-                className={s.menuItem}
-                onSelect={() => onDuplicate(field)}
+          <ContextMenu.Content>
+            <ContextMenu.Item onSelect={() => onDuplicate(field)}>
+              Duplicate
+            </ContextMenu.Item>
+            {!field.is_system && (
+              <ContextMenu.Item
+                onSelect={() => onDelete(field)}
+                variant="danger"
               >
-                Duplicate
-              </DropdownMenu.Item>
-              {!field.is_system && (
-                <DropdownMenu.Item
-                  className={`${s.menuItem} ${s.deleteItem}`}
-                  onSelect={() => onDelete(field)}
-                >
-                  Delete
-                </DropdownMenu.Item>
-              )}
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+                Delete
+              </ContextMenu.Item>
+            )}
+          </ContextMenu.Content>
+        </ContextMenu>
       </div>
     </div>
   )

@@ -38,14 +38,6 @@ export default function Home() {
           This is your main dashboard. You can navigate to other sections from
           here.
         </p>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut()
-            router.push("/auth")
-          }}
-        >
-          Sign Out
-        </button>
         {/* Add links to other dashboard sections, e.g., /dashboard/pages */}
         <p>
           Go to <Link href="/schema">Models Management</Link>{" "}

@@ -18,7 +18,6 @@ import {
 } from "@dnd-kit/sortable"
 import { useAuth } from "@/hooks/use-auth"
 import { CMSField } from "@/types/fields"
-import { FIELD_DEFINITIONS } from "@/utils/field-types"
 import FieldModal from "../field-modal"
 import { SortableFieldCard } from "./sortable-field-card"
 import s from "./style.module.css"

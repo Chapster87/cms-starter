@@ -12,8 +12,6 @@ type TitleBarProps = {
 
 export default function TitleBar({ className = "" }: TitleBarProps) {
   const pathname = usePathname()
-
-  console.log("Current pathname:", pathname)
   const lastSegment = pathname
     ? pathname.split("/").filter(Boolean).slice(-1)[0]
     : null

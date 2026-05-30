@@ -1,9 +1,8 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { supabase } from "@/utils/supabaseClient" // Using alias for supabaseClient
-import * as Label from "@radix-ui/react-label"
-import s from "./style.module.css" // CSS module for styling
+import { supabase } from "@/utils/supabaseClient"
+import s from "./style.module.css"
 
 /**
  * Renders the authentication form with Google OAuth.
