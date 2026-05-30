@@ -1,6 +1,5 @@
 import Link from "@components/link"
 import AuthStatus from "./_components/auth-status"
-import Logo from "./_components/logo"
 
 import s from "./styles.module.css"
 
@@ -51,22 +50,7 @@ export default function Header() {
       </div> */}
       <header className={s.header}>
         <div className={s.headerMain}>
-          <Logo />
           <AuthStatus />
-        </div>
-        <div className={s.headerSub}>
-          <nav className={s.nav}>
-            <ul className={s.navList}>
-              {NAV.map((item) => (
-                <li key={item.title}>
-                  <Link href={item.url} className={s.navLink}>
-                    {item.icon}
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
         </div>
       </header>
     </>

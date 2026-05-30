@@ -15,9 +15,7 @@ body {
   color: var(--foreground);
   background: var(--background);
   font-family: var(--font-inter);
-  background-color: #ffffff;
-  background-color: transparent;
-  background-image: url("/images/asfalt-dark.webp");
+  background-color: var(--color-grey-200);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

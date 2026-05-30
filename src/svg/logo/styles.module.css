@@ -2,14 +2,14 @@
 
 .logo {
   width: 100%;
-  max-width: 32px;
+  max-width: 40px;
 
   @media (--viewport-lg-up) {
-    max-width: 40px;
+    max-width: 48px;
   }
 
   .innerC {
-    fill: #ffffff;
+    fill: var(--color-white);
 
     [data-theme="dark"] & {
       fill: #3e3e3e;
@@ -17,7 +17,7 @@
   }
 
   .outerC {
-    fill: #3e4453;
+    fill: var(--color-black);
 
     [data-theme="dark"] & {
       fill: #ededed;
@@ -29,7 +29,7 @@
   }
 
   .outerA {
-    fill: #3e4453;
+    fill: var(--color-black);
 
     [data-theme="dark"] & {
       fill: #ededed;

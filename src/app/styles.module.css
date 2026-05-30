@@ -1,3 +1,14 @@
-.main {
+.site {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+}
+
+.primary {
   width: 100%;
+}
+
+.content {
+  height: 100%;
+  padding: 16px 24px;
 }

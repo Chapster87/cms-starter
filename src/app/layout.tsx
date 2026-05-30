@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Inter, Merriweather_Sans } from "next/font/google"
+import Navigation from "@/components/navigation"
 import Header from "@/components/header"
 import BreakpointIndicator from "@components/breakpoint-indicator"
 import "@styles/globals.css"
@@ -32,9 +33,14 @@ export default function RootLayout({
       className={`${inter.variable} ${merriweatherSans.variable}`}
     >
       <body data-theme="light">
-        <BreakpointIndicator />
-        <Header />
-        <main className={s.main}>{children}</main>
+        <div className={s.site}>
+          <BreakpointIndicator />
+          <Navigation />
+          <div className={s.primary}>
+            <Header />
+            <main className={s.content}>{children}</main>
+          </div>
+        </div>
       </body>
     </html>
   )

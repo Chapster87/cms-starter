@@ -50,38 +50,3 @@
   background-color: var(--color-green);
   color: var(--color-white);
 }
-
-.headerSub {
-  composes: global-grid-container from global;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0;
-  background-color: rgb(from #006d00 r g b / 0.9);
-  /* background-color: #006d00; */
-  color: var(--color-white);
-}
-
-.navList {
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 32px;
-  font-size: 18px;
-  font-weight: 700;
-  padding: 0;
-}
-
-.navLink {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  text-decoration: none;
-  color: inherit;
-  transition: color 0.3s ease;
-
-  &:hover {
-    color: var(--color-white);
-    text-decoration: underline;
-  }
-}
