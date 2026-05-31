@@ -5,9 +5,10 @@
 }
 
 .primary {
+  display: flex;
+  flex-direction: column;
   width: 100%;
 }
-
 .content {
-  padding: 16px 24px;
+  flex-grow: 1;
 }

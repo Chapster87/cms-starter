@@ -2,16 +2,17 @@
 
 This document summarizes the work completed to implement the CMS Schema Builder, a centralized field metadata registry, and a robust schema synchronization tool for existing database columns.
 
-## **Note for Next Session (Field Management & Sync)**
+## **Note for Next Session (URL-Driven Modals & State Sync)**
 
-The Schema management layer is now fully operational with metadata-driven field definitions.
+The Schema management layer has been refactored into a modern, reactive, URL-driven architecture.
 
-- **Field Registry Layer:** All custom fields are now tracked in a `public.fields` registry table, allowing for human-friendly labels, custom UI types, and validation rules that aren't native to Postgres.
-- **Atomic Schema Updates:** Field creation uses a custom RPC (`create_model_field`) that ensures physical database columns and CMS metadata are always kept in sync.
-- **Schema Discovery & Sync:** Added a "Sync" tool that automatically detects existing database columns not yet managed by the CMS and allows for one-click importation into the registry.
-- **Resilient Registry APIs:** Core metadata APIs (`/api/models`, `/api/models/schema/fields`) have been refactored to use system-level clients for registry lookups after verifying user authentication, bypassing RLS friction on internal CMS tables.
-- **Visual Auth Status:** A new Radix UI Avatar in the header provides instant feedback on the user's session state.
-- **Enhanced Record Forms:** The dynamic form engine now prioritizes registry metadata to provide specialized inputs (e.g., textareas for multi-line text) while maintaining a reliable fallback for unregistered tables.
+- **URL-Driven SchemaModal:** All model and field management actions (Create, Edit, Duplicate) are now handled by a centralized `SchemaModal` switcher that responds to query parameters (e.g., `?action=new-field`). This allows for deep-linking and a cleaner browser history.
+- **Zero-Prop Architecture:** Forms (`ModalModel`, `ModalField`) are now self-contained, fetching their own data and auth state. This eliminated significant prop-drilling.
+- **Global State Synchronization:**
+  - **Models:** The `useModels` hook now uses a global listener pattern to sync registry changes across all components (sidebar, dashboard, etc.) instantly.
+  - **Fields:** A custom `schema-update` event system ensures the `FieldList` refreshes automatically after any modal action without a page reload.
+- **Intelligent ID Generation:** Technical IDs (Table names, Column names) are auto-derived from Friendly Names/Labels but "detach" once manually edited, preserving user overrides.
+- **Smart Duplication:** Duplication now pre-fills fields with ` (copy)` and `_copy` suffixes for both models and individual fields.
 
 # Handoff: Dynamic Models, Routing Reorganization, and Persistence Refactor
 
@@ -33,6 +34,7 @@ The Schema management layer is now fully operational with metadata-driven field 
 - **Atomic Creation API:** Built `POST /api/models/schema/fields` which leverages a `SECURITY DEFINER` RPC to safely update both database schema and CMS metadata in one transaction.
 - **Schema Synchronization:** Created a detection and import mechanism (`/api/models/schema/fields/sync`) to bring pre-existing database columns into the CMS management layer.
 - **Centralized Mapping:** Established `src/utils/field-types.ts` as the single source of truth for mapping CMS types to physical Postgres types.
+- **Centralized SchemaModal:** Replaced local `FieldModal` with a global, URL-driven `SchemaModal` hosted in the shared layout.
 
 ### 1.2. Routing & Interface Reorganization
 
@@ -43,6 +45,7 @@ The Schema management layer is now fully operational with metadata-driven field 
 - **Schema Namespace (`/schema`):**
   - Consolidated all model/table management logic here (moved from `/models`).
   - Home for model registry dashboard and metadata settings.
+  - **Auto-Redirection:** The `/schema` root now automatically redirects to the first available model for a smoother workflow.
 - **Navigation Update:**
   - Updated global Header with "Content" (pointed to /editor route) and "Schema" links.
 
@@ -64,6 +67,7 @@ The Schema management layer is now fully operational with metadata-driven field 
 - **Auth Status Indicator:** Integrated `@radix-ui/react-avatar` in the header to show user status (LoggedIn/LoggedOut/Loading).
 - **Metadata-Driven Dashboard:** The Models management screen now displays human-readable "Friendly Names" and URL slugs instead of raw table names.
 - **Enhanced Record Form:** Updated to prioritize CMS labels and types, with automatic fallback for unregistered physical columns.
+- **Sidebar Navigation:** Integrated the `ModelList` into a persistent sidebar layout for the `/schema` section.
 
 ### 1.4. Technical Fixes & Persistence
 
@@ -77,17 +81,16 @@ The Schema management layer is now fully operational with metadata-driven field 
 
 - **Global Field Components:** Created a suite of reusable, accessible field components in `src/components/fields` using Radix primitives. Includes `TextField`, `TextAreaField`, `SelectField`, `CheckboxField`, `JsonField`, `NumberField`, and `DateField`.
 - **Field Wrapper Pattern:** Implemented a unified `FieldWrapper` that handles labels, required indicators, and "field notes" (inline descriptions) across all input types.
-- **Global Modal System:** Implemented a centralized `Modal` component based on `@radix-ui/react-dialog` for consistent overlay experiences, replacing legacy custom modal code.
+- **Global Modal System:** Implemented a centralized `Modal` component based on `@radix-ui/react-dialog` for consistent overlay experiences.
 - **Drag-and-Drop Reordering:** Fully implemented DND reordering for model fields using `@dnd-kit`.
   - **Reorder API:** Created `POST /api/models/schema/fields/reorder` for batch sequential order updates.
   - **Sortable UI:** Refactored the Schema Builder's field list into a sortable list with touch support, drag handles, and smooth transitions.
   - **Dynamic Persistence:** Field order is persisted to the database and automatically reflected in the `RecordForm` rendering order.
 - **Advanced Field Management & Metadata:**
-  - **Unified Field Modal:** Created a reusable `FieldModal` component supporting **Create**, **Edit**, and **Duplicate** modes, replacing legacy custom modals.
+  - **Unified Schema Modal:** Created reusable `ModalModel` and `ModalField` components supporting **Create**, **Edit**, and **Duplicate** modes.
   - **Full CRUD for Fields:** Implemented `PATCH` and `DELETE` handlers for field registry management, including an atomic database RPC (`drop_model_field`) to synchronize physical schema changes.
-  - **Smart Duplication:** Added a "Duplicate" feature that pre-populates metadata with `(copy)` and `_copy` suffixes to speed up model definition.
+  - **Smart Duplication:** Added a "Duplicate" feature that pre-populates metadata with `(copy)` and `_copy` suffixes to speed up model and field definition.
   - **Professional UX:** Integrated Radix Dropdown menus for field actions and refined the styling to match professional CMS standards (DatoCMS-inspired).
-  - **Internal Field Notes:** Added a `field_note` metadata column to the registry. Updated all global field components (`TextField`, `SelectField`, etc.) and the `FieldWrapper` to display these internal help notes distinct from system descriptions in the Record Form.
 
 ## 2. Current State
 
@@ -98,18 +101,20 @@ The Schema management layer is now fully operational with metadata-driven field 
 
 ## 3. Pending Tasks & Next Steps
 
-- **Advanced Field UI:** Support for complex editors (Markdown, Rich Text, Image Uploaders) for the new field types.
-- **Field Deletion/Archiving:** Implementation of soft-delete or physical column dropping for registered fields.
-- **Model Reordering:** Apply similar DND logic to the top-level Models list.
+- **Two-Step Field Creation:** Add functionality to the new field modal to have users choose a field type first, then render type-specific configuration fields.
+- **UI Consolidation:** Move model action buttons into a context menu (Radix Dropdown) to reduce clutter. Link "Fields & Settings" directly to the model name click.
+- **Model Reordering:** Apply similar DND logic to the top-level Models list (sidebar/dashboard).
+- **Blocks System:** Eventually add `[blocks]` routes to the `/schema` namespace for component-based schema definitions.
+- **Advanced Field UI:** Support for complex editors (Markdown, Rich Text, Image Uploaders).
+- **Implement Quality Project README.md** - want to have a professional grade explanation of all project functionality and explanation of configuration and use.
 
 ## 4. Relevant Files
 
 - `src/components/fields/`: Directory containing all global form components.
-- `src/components/modal/index.tsx`: Centralized Radix Dialog wrapper.
+- `src/app/schema/_components/schema-modal/`: Centralized modal logic and form components.
+- `src/hooks/use-models.ts`: Global singleton hook for registry state management.
 - `src/app/schema/[model]/_components/field-list/index.tsx`: Main Schema Builder UI with DND context.
-- `src/app/schema/[model]/_components/field-list/sortable-field-card.tsx`: Sortable item wrapper.
 - `src/app/editor/[model]/_components/record-form/index.tsx`: Dynamic form engine (respects `ui_order`).
-- `src/app/api/models/schema/fields/reorder/route.ts`: Batch reorder API.
 - `src/utils/field-types.ts`: Centralized field mapping and definitions.
 
 ## 5. Suggested Skills

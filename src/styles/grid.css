@@ -11,3 +11,9 @@
     /* max-width: 1468px; */
   }
 }
+
+.global-left-column {
+  display: grid;
+  grid-template-columns: 1fr 5fr;
+  height: 100%;
+}

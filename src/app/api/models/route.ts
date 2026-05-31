@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, friendly_name, is_singleton } = await req.json()
+    const { name, friendly_name, is_singleton, emoji } = await req.json()
 
     if (!name || typeof name !== "string" || name.trim() === "") {
       return NextResponse.json(
@@ -139,6 +139,7 @@ export async function POST(req: NextRequest) {
           friendly_name: friendly_name, // Use original casing from request
           is_singleton: is_singleton || false,
           display_order: nextOrder,
+          emoji: emoji || null,
         },
       ])
       .select()
@@ -163,6 +164,61 @@ export async function POST(req: NextRequest) {
     )
   } catch (err: unknown) {
     console.error("Unexpected error in POST /api/models:", err)
+    return NextResponse.json(
+      { error: (err as Error).message || "Internal Server Error" },
+      { status: 500 }
+    )
+  }
+}
+
+/**
+ * Handles PATCH requests to update an existing model's metadata.
+ * @param {NextRequest} req - The incoming request.
+ * @returns {NextResponse} A JSON response indicating success or failure.
+ */
+export async function PATCH(req: NextRequest) {
+  try {
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const {
+      data: { user },
+    } = await authenticatedSupabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized: User not authenticated." },
+        { status: 401 }
+      )
+    }
+
+    const { table_name, friendly_name, is_singleton, emoji } = await req.json()
+
+    if (!table_name) {
+      return NextResponse.json(
+        { error: "Table name is required for update." },
+        { status: 400 }
+      )
+    }
+
+    const { error } = await authenticatedSupabase
+      .from("models")
+      .update({
+        friendly_name,
+        is_singleton,
+        emoji: emoji || null,
+      })
+      .eq("table_name", table_name)
+
+    if (error) {
+      console.error(`Error updating model '${table_name}':`, error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(
+      { message: `Model '${table_name}' updated successfully.` },
+      { status: 200 }
+    )
+  } catch (err: unknown) {
+    console.error("Unexpected error in PATCH /api/models:", err)
     return NextResponse.json(
       { error: (err as Error).message || "Internal Server Error" },
       { status: 500 }

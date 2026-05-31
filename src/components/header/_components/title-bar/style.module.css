@@ -4,6 +4,7 @@
   justify-content: space-between;
   padding: 8px 16px;
   background-color: var(--color-white);
+  border-bottom: 1px solid var(--color-grey-200);
   box-shadow: var(--box-shadow);
 }
 

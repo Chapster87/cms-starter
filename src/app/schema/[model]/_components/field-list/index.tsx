@@ -16,9 +16,9 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
+import Link from "next/link"
 import { useAuth } from "@/hooks/use-auth"
 import { CMSField } from "@/types/fields"
-import FieldModal from "../field-modal"
 import { SortableFieldCard } from "./sortable-field-card"
 import s from "./style.module.css"
 
@@ -35,14 +35,7 @@ export default function FieldList({ modelId }: FieldListProps) {
   const [unregisteredCount, setUnregisteredCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
-
-  // Modal State
-  const [selectedField, setSelectedField] = useState<CMSField | null>(null)
-  const [modalMode, setModalMode] = useState<"create" | "edit" | "duplicate">(
-    "create"
-  )
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -116,7 +109,16 @@ export default function FieldList({ modelId }: FieldListProps) {
     const timer = setTimeout(() => {
       fetchFields()
     }, 0)
-    return () => clearTimeout(timer)
+
+    // Listen for schema-update events from the SchemaModal
+    const handleSchemaUpdate = () => {
+      fetchFields()
+    }
+    window.addEventListener("schema-update", handleSchemaUpdate)
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener("schema-update", handleSchemaUpdate)
+    }
   }, [fetchFields, accessToken])
 
   const handleSync = async () => {
@@ -208,18 +210,6 @@ export default function FieldList({ modelId }: FieldListProps) {
     return s.icon_text
   }
 
-  const handleEdit = (field: CMSField) => {
-    setSelectedField(field)
-    setModalMode("edit")
-    setIsModalOpen(true)
-  }
-
-  const handleDuplicate = (field: CMSField) => {
-    setSelectedField(field)
-    setModalMode("duplicate")
-    setIsModalOpen(true)
-  }
-
   const handleDelete = async (field: CMSField) => {
     if (!accessToken) return
     if (
@@ -249,12 +239,6 @@ export default function FieldList({ modelId }: FieldListProps) {
     }
   }
 
-  const handleAddNew = () => {
-    setSelectedField(null)
-    setModalMode("create")
-    setIsModalOpen(true)
-  }
-
   return (
     <div className={s.fieldListContainer}>
       <div className={s.header}>
@@ -273,9 +257,11 @@ export default function FieldList({ modelId }: FieldListProps) {
             </span>
           )}
         </div>
-        <button className={s.addFieldButton} onClick={handleAddNew}>
-          <span>+</span> Add new field
-        </button>
+        <Link href="?action=new-field">
+          <button type="button" className={s.addFieldButton}>
+            <span>+</span> Add new field
+          </button>
+        </Link>
       </div>
 
       {error && <p className={s.errorText}>{error}</p>}
@@ -300,24 +286,24 @@ export default function FieldList({ modelId }: FieldListProps) {
                 key={field.id}
                 field={field}
                 getIconCategory={getIconCategory}
-                onEdit={handleEdit}
-                onDuplicate={handleDuplicate}
+                onEdit={(field) => {
+                  const params = new URLSearchParams(window.location.search)
+                  params.set("action", "edit-field")
+                  params.set("fieldId", field.id)
+                  window.history.pushState(null, "", `?${params.toString()}`)
+                }}
+                onDuplicate={(field) => {
+                  const params = new URLSearchParams(window.location.search)
+                  params.set("action", "duplicate-field")
+                  params.set("fieldId", field.id)
+                  window.history.pushState(null, "", `?${params.toString()}`)
+                }}
                 onDelete={handleDelete}
               />
             ))}
           </SortableContext>
         </DndContext>
       </div>
-
-      <FieldModal
-        isOpen={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onSuccess={fetchFields}
-        modelId={modelId}
-        accessToken={accessToken}
-        field={selectedField}
-        mode={modalMode}
-      />
     </div>
   )
 }

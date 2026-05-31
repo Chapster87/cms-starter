@@ -1,28 +1,76 @@
-.pageListContainer {
-  background-color: var(--background);
-  border-radius: 8px;
-
-  @media (--viewport-md-up) {
-    padding: 32px;
-  }
+.modelListContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--color-grey-200);
 }
 
-.pageList {
+.modelList {
   list-style: none;
   padding: 0;
-  margin-top: 16px;
   display: grid;
-  gap: 16px;
+  gap: 4px;
 }
 
-.pageListItem {
+.modelListItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px;
-  background-color: var(--background);
-  border: 1px solid var(--color-grey-300);
-  border-radius: 4px;
+  gap: 16px;
+  padding: 8px;
+  transition: background-color 0.2s ease-in-out;
+
+  &.active {
+    background-color: rgb(from var(--color-green) r g b / 0.2);
+  }
+
+  &:hover {
+    background-color: var(--color-grey-100);
+  }
+}
+
+.modelLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--color-black);
+
+  &:hover {
+    color: var(--color-black);
+  }
+
+  .active & {
+    font-weight: 700;
+  }
+}
+
+.modelName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emojiPrefix {
+  font-size: 16px;
+  line-height: 1;
+  display: inline-block;
+  min-width: 1.2em;
+}
+
+.modelSlug {
+  font-size: 12px;
+  color: var(--color-grey-700);
+}
+
+.singletonBadge {
+  background-color: var(--color-grey-200);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
 }
 
 .actions {
@@ -30,23 +78,20 @@
   gap: 8px;
 }
 
-.editButton,
-.deleteButton {
-  padding: 8px 16px;
+.menuTrigger {
+  background: none;
   border: none;
-  border-radius: 4px;
+  color: #6b7280;
+  padding: 4px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.2s ease-in-out;
-}
-
-.editButton {
-  background-color: var(--color-blue);
-  color: var(--color-white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
 
   &:hover {
-    background-color: var(--color-blue-ada);
+    background-color: #f3f4f6;
+    color: #111;
   }
 }
 
@@ -66,11 +111,25 @@
   }
 }
 
-.deleteButton {
-  background-color: var(--color-danger);
+.footer {
+  padding: 16px;
+  border-top: 1px solid var(--color-grey-300);
+  display: flex;
+  justify-content: center;
+}
+
+.newButton {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--color-black);
   color: var(--color-white);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: opacity 0.2s;
 
   &:hover {
-    background-color: rgb(from var(--color-danger) r g b / 0.8);
+    opacity: 0.8;
   }
 }
