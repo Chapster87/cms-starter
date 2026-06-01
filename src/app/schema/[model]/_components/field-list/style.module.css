@@ -75,19 +75,18 @@
   display: flex;
   align-items: center;
   padding: 16px 20px;
-  border: 1px solid var(--color-border);
   border-radius: 8px;
-  background-color: #fff;
+  background-color: var(--color-white);
   transition: box-shadow 0.2s ease;
   gap: 20px;
+  box-shadow: var(--box-shadow);
 }
 
 .fieldCard:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .dragHandle {
-  color: #ccc;
+  color: var(--color-grey-400);
   display: flex;
   align-items: center;
   cursor: grab;

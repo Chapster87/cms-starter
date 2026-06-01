@@ -29,6 +29,8 @@
   --color-foreground-light: var(--color-black);
   --color-background-light: var(--color-white);
 
+  --color-border: var(--color-grey-200);
+
   --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
   --background: var(--color-white);

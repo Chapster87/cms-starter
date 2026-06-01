@@ -28,7 +28,7 @@ export default function ModelSchemaPage({ params }: ModelPageProps) {
   if (!modelData) return <p>Model not found: {modelSlug}</p>
 
   return (
-    <div className={s.container}>
+    <div className={s.modelMain}>
       <div className={s.header}>
         <div className={s.titleGroup}>
           <h1>
