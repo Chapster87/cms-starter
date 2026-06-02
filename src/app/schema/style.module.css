@@ -18,7 +18,10 @@
 }
 
 .placeholder {
-  padding: 16px;
-  color: var(--color-grey-600);
-  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 40px;
+  color: var(--text-secondary);
 }

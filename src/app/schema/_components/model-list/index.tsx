@@ -7,6 +7,7 @@ import { useParams } from "next/navigation"
 import { useModels, ModelRegistryEntry } from "@/hooks/use-models"
 import ContextMenu from "@/components/context-menu"
 import SvgIcon from "@/components/svg-icon"
+import clsx from "clsx"
 import s from "./style.module.css"
 
 interface ModelListProps {
@@ -52,14 +53,33 @@ export default function ModelList({ models }: ModelListProps) {
           {models.map((model) => (
             <li
               key={model.id}
-              className={`${s.modelListItem} ${activeModelSlug === model.slug ? s.active : ""}`}
+              className={clsx(
+                s.modelListItem,
+                activeModelSlug === model.slug && s.active
+              )}
             >
               <div>
                 <Link href={`/schema/${model.slug}`} className={s.modelLink}>
                   <div className={s.modelName}>
-                    {model.emoji && (
-                      <span className={s.emojiPrefix}>{model.emoji}</span>
-                    )}
+                    <span className={s.emoji}>
+                      {model.emoji || (
+                        <svg
+                          className={s.fallbackIcon}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                          style={{ width: "16px", height: "16px" }}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      )}
+                    </span>
                     <span>{model.friendly_name}</span>
                   </div>
                   <code className={s.modelSlug}>{model.slug}</code>

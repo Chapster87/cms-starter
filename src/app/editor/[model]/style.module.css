@@ -1,56 +1,130 @@
 .container {
+  padding: 16px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 24px;
   margin-bottom: 24px;
+  border-bottom: 1px solid var(--color-grey-200);
+}
+
+.titleGroup h1 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.emojiPrefix {
+  font-size: 28px;
 }
 
 .createButton {
-  padding: 8px 16px;
-  background-color: var(--color-primary, #0070f3);
+  background-color: var(--color-primary);
   color: white;
   border: none;
-  border-radius: 4px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
   cursor: pointer;
+  transition: opacity 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.createButton:hover {
+  opacity: 0.9;
 }
 
 .tableWrapper {
-  overflow-x: auto;
+  background: var(--background);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--box-shadow);
 }
 
 .table {
   width: 100%;
   border-collapse: collapse;
-}
-
-.table th,
-.table td {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
   text-align: left;
 }
 
-.rowActions {
+.table th {
+  background-color: var(--color-grey-100);
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-grey-600);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background-color: var(--color-grey-100);
+}
+
+.recordName {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.dateCell {
+  color: var(--color-grey-600);
+  font-size: 13px;
+}
+
+.actionsCell {
+  text-align: right;
+  width: 60px;
+}
+
+.actionsButton {
+  background: none;
+  border: none;
+  color: var(--color-grey-500);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
   display: flex;
-  gap: 8px;
+  align-items: center;
+  justify-content: center;
 }
 
-.editButton {
-  padding: 4px 8px;
-  background-color: #eee;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.actionsButton:hover {
+  background-color: var(--color-grey-200);
+  color: var(--text-primary);
 }
 
-.deleteButton {
-  padding: 4px 8px;
-  background-color: #ff4444;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+.empty {
+  padding: 48px !important;
+  text-align: center;
+  color: var(--color-grey-500);
+}
+
+.error {
+  color: var(--color-danger);
+  background-color: #fee2e2;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
 }

@@ -32,9 +32,15 @@ export default function NewRecordPage({ params }: NewRecordPageProps) {
     setLoading(true)
     setError(null)
     try {
-      await dataService.createRecord(model, formData)
+      const newRecord = await dataService.createRecord(model, formData)
       setSuccess("Record created successfully!")
-      setTimeout(() => router.push(`/editor/${model}`), 1500)
+
+      const nextId = newRecord?.slug || newRecord?.id
+      if (nextId) {
+        setTimeout(() => router.push(`/editor/${model}/${nextId}`), 1500)
+      } else {
+        setTimeout(() => router.push(`/editor/${model}`), 1500)
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to create record")
     } finally {

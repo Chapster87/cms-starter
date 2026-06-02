@@ -17,6 +17,7 @@ interface EditRecordPageProps {
 
 /**
  * Renders the page for editing an existing record.
+ * Supports both UUID and Slug-based lookups.
  */
 export default function EditRecordPage({ params }: EditRecordPageProps) {
   const router = useRouter()
@@ -34,7 +35,14 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     setLoading(true)
     setError(null)
     try {
-      const data = await dataService.getRecordById(model, id)
+      // 1. Try fetching by slug first
+      let data = await dataService.getRecordBySlug(model, id)
+
+      // 2. If no slug match, try ID
+      if (!data) {
+        data = await dataService.getRecordById(model, id)
+      }
+
       if (!data) {
         setError("Record not found.")
       } else {
@@ -48,24 +56,28 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
   }, [model, id])
 
   useEffect(() => {
-    if (!authLoading) {
-      // Small timeout to move state updates out of the synchronous render/effect cycle
+    if (!authLoading && accessToken) {
       const timer = setTimeout(() => {
         loadRecord()
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [loadRecord, authLoading])
+  }, [loadRecord, authLoading, accessToken])
 
   const handleSubmit = async (formData: Record<string, unknown>) => {
-    if (!model || !id) return
+    if (!model || !record?.id) return
 
     setLoading(true)
     setError(null)
     try {
-      await dataService.updateRecord(model, id, formData)
+      await dataService.updateRecord(model, record.id, formData)
       setSuccess("Record updated successfully!")
-      setTimeout(() => router.push(`/editor/${model}`), 1500)
+
+      // If the slug changed, we should redirect to the new slug-based URL
+      const nextSlug = formData.slug as string | undefined
+      const nextId = nextSlug || record.id
+
+      setTimeout(() => router.push(`/editor/${model}/${nextId}`), 1500)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to update record")
     } finally {

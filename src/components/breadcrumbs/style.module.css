@@ -10,13 +10,19 @@
 .breadcrumbItem {
   display: flex;
   align-items: center;
-  font-size: 16px;
+  font-size: 14px;
   gap: 6px;
 }
 
 .breadcrumbLink {
-  color: var(--color-primary-dark);
+  color: var(--color-grey-500);
   text-decoration: none;
+  transition: color 0.2s ease-in-out;
+
+  &:hover {
+    text-decoration: underline;
+    color: var(--color-green);
+  }
 }
 
 .breadcrumbLink:hover {

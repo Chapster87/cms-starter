@@ -1,7 +1,7 @@
 .fieldListContainer {
-  margin-top: 32px;
   padding-top: 24px;
-  border-top: 1px solid var(--color-border);
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .header {
@@ -68,7 +68,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 900px;
 }
 
 .fieldCard {

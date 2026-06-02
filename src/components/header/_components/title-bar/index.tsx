@@ -23,9 +23,9 @@ export default function TitleBar({ className = "" }: TitleBarProps) {
 
   return (
     <div className={clsx(s.titleBar, className)}>
-      <Heading level="h1" display="h5" className={s.pageTitle}>
+      {/* <Heading level="h1" display="h5" className={s.pageTitle}>
         {pageTitle}
-      </Heading>
+      </Heading> */}
       <Breadcrumbs hideOnRoot />
     </div>
   )

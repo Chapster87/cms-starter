@@ -3,12 +3,13 @@ import { supabase } from "@/utils/supabaseClient"
 export interface RecordBase {
   id: string
   created_at?: string
+  updated_at?: string
+  slug?: string
   [key: string]: unknown
 }
 
 /**
  * Service for handling native Supabase (PostgREST) operations for models.
- * This refactored version replaces GraphQL logic with standard Supabase client calls.
  */
 export const dataService = {
   /**
@@ -41,9 +42,12 @@ export const dataService = {
     id: string,
     fields: string = "*"
   ): Promise<RecordBase | null> {
-    // If fields is a newline-separated list, we need to convert it to comma-separated for Supabase
-    const sanitizedFields = fields.replace(/\s+/g, ",")
+    // Basic UUID validation to prevent 400 errors from Supabase
+    const isUuid =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
+    if (!isUuid) return null
 
+    const sanitizedFields = fields.replace(/\s+/g, ",")
     const { data, error } = await supabase
       .from(model)
       .select(sanitizedFields)
@@ -63,9 +67,35 @@ export const dataService = {
   },
 
   /**
-   * Deletes a record by its ID.
+   * Fetches a single record by its Slug.
    * @param model - The name of the model.
-   * @param id - The UUID of the record.
+   * @param slug - The slug of the record.
+   */
+  async getRecordBySlug(
+    model: string,
+    slug: string
+  ): Promise<RecordBase | null> {
+    try {
+      const { data, error } = await supabase
+        .from(model)
+        .select("*")
+        .eq("slug", slug)
+        .single()
+
+      if (error) {
+        if (error.code === "PGRST116") return null // Record not found
+        return null
+      }
+
+      return data as unknown as RecordBase
+    } catch (err) {
+      // Column might not exist
+      return null
+    }
+  },
+
+  /**
+   * Deletes a record by its ID.
    */
   async deleteRecord(model: string, id: string): Promise<void> {
     const { error } = await supabase.from(model).delete().eq("id", id)
@@ -81,9 +111,6 @@ export const dataService = {
 
   /**
    * Updates an existing record using upsert.
-   * @param model - The name of the model.
-   * @param id - The UUID of the record.
-   * @param changes - An object containing the fields to update.
    */
   async updateRecord(
     model: string,
@@ -106,18 +133,22 @@ export const dataService = {
 
   /**
    * Inserts a new record using upsert.
-   * @param model - The name of the model.
-   * @param recordData - The data for the new record.
    */
   async createRecord(
     model: string,
     recordData: Record<string, unknown>
-  ): Promise<void> {
-    const { error } = await supabase.from(model).upsert([recordData]).select()
+  ): Promise<RecordBase | null> {
+    const { data, error } = await supabase
+      .from(model)
+      .upsert([recordData])
+      .select()
+      .single()
 
     if (error) {
       console.error(`Error creating record in '${model}':`, error.message)
       throw error
     }
+
+    return data as RecordBase
   },
 }

@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, use } from "react"
 import Link from "next/link"
 import { dataService, RecordBase } from "@/client/data-service"
 import { useAuth } from "@/hooks/use-auth"
+import { useModels } from "@/hooks/use-models"
+import ContextMenu from "@/components/context-menu"
 import s from "./style.module.css"
 
 interface RecordListPageProps {
@@ -13,23 +15,25 @@ interface RecordListPageProps {
 }
 
 /**
- * Renders a list of records for a specific model.
- * Allows viewing, editing, and deleting records.
+ * Renders a list of records for a specific model in a branded table.
  */
 export default function RecordListPage({ params }: RecordListPageProps) {
-  const { model } = use(params)
+  const { model: modelSlug } = use(params)
   const { accessToken, loading: authLoading } = useAuth()
+  const { models } = useModels()
   const [records, setRecords] = useState<RecordBase[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const modelData = models.find((m) => m.slug === modelSlug)
+
   const loadRecords = useCallback(async () => {
-    if (!model) return
+    if (!modelSlug) return
 
     setLoading(true)
     setError(null)
     try {
-      const fetchedRecords = await dataService.getRecords(model)
+      const fetchedRecords = await dataService.getRecords(modelSlug)
       setRecords(fetchedRecords)
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error loading records"
@@ -37,40 +41,112 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     } finally {
       setLoading(false)
     }
-  }, [model])
+  }, [modelSlug])
 
   useEffect(() => {
-    if (!authLoading) {
-      // Small timeout to move state updates out of the synchronous render/effect cycle
+    if (!authLoading && accessToken) {
       const timer = setTimeout(() => {
         loadRecords()
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [loadRecords, authLoading])
+  }, [loadRecords, authLoading, accessToken])
 
   const handleDelete = async (id: string) => {
-    if (!model) return
+    if (!modelSlug) return
     if (!confirm("Are you sure you want to delete this record?")) return
 
     try {
-      await dataService.deleteRecord(model, id)
+      await dataService.deleteRecord(modelSlug, id)
       setRecords((prev) => prev.filter((r) => r.id !== id))
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to delete record")
     }
   }
 
-  if (loading || authLoading) return <p>Loading records...</p>
-  if (!model) return <p>Invalid model specified.</p>
+  const getDisplayName = (record: RecordBase) => {
+    // Try to find a sensible display name from the record data
+    const nameFields = ["name", "title", "label", "heading", "friendly_name"]
+    for (const field of nameFields) {
+      if (record[field] && typeof record[field] === "string") {
+        return record[field] as string
+      }
+    }
+
+    // Fallback: look for the first string field that isn't a system field
+    const systemFields = ["id", "created_at", "updated_at", "slug"]
+    for (const key in record) {
+      if (!systemFields.includes(key) && typeof record[key] === "string") {
+        return record[key] as string
+      }
+    }
+
+    return record.slug
+      ? (record.slug as string)
+      : `Record ${record.id.substring(0, 8)}...`
+  }
+
+  if (loading || authLoading)
+    return (
+      <div className={s.container}>
+        <p>Loading records...</p>
+      </div>
+    )
+
+  if (!modelSlug)
+    return (
+      <div className={s.container}>
+        <p>Invalid model specified.</p>
+      </div>
+    )
 
   return (
     <div className={s.container}>
       <header className={s.header}>
-        <h1>{model} Records</h1>
+        <div className={s.titleGroup}>
+          <h1>
+            <span className={s.emojiPrefix}>
+              {modelData?.emoji || (
+                <svg
+                  width="24"
+                  height="24"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              )}
+            </span>
+            {modelData?.friendly_name || modelSlug} Records
+          </h1>
+        </div>
         <div className={s.actions}>
-          <Link href={`/editor/${model}/new`}>
-            <button className={s.createButton}>Add New {model}</button>
+          <Link href={`/editor/${modelSlug}/new`}>
+            <button className={s.createButton}>
+              <svg
+                width="16"
+                height="16"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add New
+            </button>
           </Link>
         </div>
       </header>
@@ -81,36 +157,74 @@ export default function RecordListPage({ params }: RecordListPageProps) {
         <table className={s.table}>
           <thead>
             <tr>
-              <th>ID</th>
+              <th>Name</th>
+              <th>Updated At</th>
               <th>Created At</th>
-              <th>Actions</th>
+              <th className={s.actionsCell}></th>
             </tr>
           </thead>
           <tbody>
             {records.map((record) => (
               <tr key={record.id}>
-                <td>{record.id}</td>
                 <td>
-                  {record.created_at
-                    ? new Date(record.created_at).toLocaleString()
+                  <Link
+                    href={`/editor/${modelSlug}/${record.slug || record.id}`}
+                    className={s.recordName}
+                  >
+                    {getDisplayName(record)}
+                  </Link>
+                </td>
+                <td className={s.dateCell}>
+                  {record.updated_at
+                    ? new Date(record.updated_at as string).toLocaleString()
                     : "N/A"}
                 </td>
-                <td className={s.rowActions}>
-                  <Link href={`/editor/${model}/${record.id}`}>
-                    <button className={s.editButton}>Edit</button>
-                  </Link>
-                  <button
-                    className={s.deleteButton}
-                    onClick={() => handleDelete(record.id)}
-                  >
-                    Delete
-                  </button>
+                <td className={s.dateCell}>
+                  {record.created_at
+                    ? new Date(record.created_at as string).toLocaleString()
+                    : "N/A"}
+                </td>
+                <td className={s.actionsCell}>
+                  <ContextMenu>
+                    <ContextMenu.Trigger className={s.actionsButton}>
+                      <button type="button" aria-label="More options">
+                        <svg
+                          width="16"
+                          height="16"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                          />
+                        </svg>
+                      </button>
+                    </ContextMenu.Trigger>
+                    <ContextMenu.Content>
+                      <ContextMenu.Link
+                        href={`/editor/${modelSlug}/${record.slug || record.id}`}
+                      >
+                        Edit
+                      </ContextMenu.Link>
+                      <ContextMenu.Item
+                        onSelect={() => handleDelete(record.id)}
+                        variant="danger"
+                      >
+                        Delete
+                      </ContextMenu.Item>
+                    </ContextMenu.Content>
+                  </ContextMenu>
                 </td>
               </tr>
             ))}
             {records.length === 0 && !loading && (
               <tr>
-                <td colSpan={3} className={s.empty}>
+                <td colSpan={4} className={s.empty}>
                   No records found.
                 </td>
               </tr>
