@@ -8,3 +8,17 @@
   display: flex;
   flex-direction: column;
 }
+
+.schemaTabs {
+  height: 100%;
+}
+
+.schemaTabsContent {
+  padding: 0;
+}
+
+.placeholder {
+  padding: 16px;
+  color: var(--color-grey-600);
+  font-size: 14px;
+}

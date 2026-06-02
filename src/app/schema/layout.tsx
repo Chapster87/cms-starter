@@ -1,9 +1,13 @@
 "use client"
 
 import React, { Suspense } from "react"
-import { useModels } from "@/hooks/use-models"
+
 import ModelList from "./_components/model-list"
 import SchemaModal from "./_components/schema-modal"
+import Tabs from "@/components/tabs"
+
+import { useModels } from "@/hooks/use-models"
+
 import s from "./style.module.css"
 
 /**
@@ -33,8 +37,22 @@ export default function SchemaLayout({
   return (
     <div className={s.schemaContent}>
       <div className={s.sidebar}>
-        <h2>Models</h2>
-        <ModelList models={models} />
+        <Tabs defaultValue="models" className={s.schemaTabs}>
+          <Tabs.List>
+            <Tabs.Trigger value="models">Models</Tabs.Trigger>
+            <Tabs.Trigger value="blocks">Blocks</Tabs.Trigger>
+          </Tabs.List>
+
+          <Tabs.Content value="models" className={s.schemaTabsContent}>
+            <ModelList models={models} />
+          </Tabs.Content>
+
+          <Tabs.Content value="blocks" className={s.schemaTabsContent}>
+            <div className={s.placeholder}>
+              <p>Blocks content coming soon...</p>
+            </div>
+          </Tabs.Content>
+        </Tabs>
       </div>
 
       <div className={s.mainContent}>{children}</div>
