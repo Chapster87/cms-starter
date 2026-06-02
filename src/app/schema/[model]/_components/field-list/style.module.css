@@ -95,34 +95,36 @@
 .fieldIcon {
   width: 40px;
   height: 40px;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #fffbeb; /* Default light yellow */
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
   flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.fieldIcon svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }
 
 /* Specific icon colors based on type categories */
 .icon_text {
-  background-color: #fffbeb;
-  color: #d97706;
 }
 .icon_media {
-  background-color: #eff6ff;
-  color: #2563eb;
 }
 .icon_json {
-  background-color: #f0fdf4;
-  color: #16a34a;
 }
 .icon_seo {
-  background-color: #faf5ff;
-  color: #9333ea;
 }
 .icon_boolean {
-  background-color: #fef2f2;
-  color: #dc2626;
 }
 
 .fieldContent {

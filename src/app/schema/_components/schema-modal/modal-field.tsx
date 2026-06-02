@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { TextField, SelectField, CheckboxField } from "@/components/fields"
 import { useAuth } from "@/hooks/use-auth"
 import { CMSField } from "@/types/fields"
@@ -26,21 +27,30 @@ export default function ModalField({
   onCancel,
 }: ModalFieldProps) {
   const { accessToken } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const fieldTypeFromUrl = searchParams.get("fieldType") as
+    | CMSField["field_type"]
+    | null
 
   const [label, setLabel] = useState("")
   const [name, setName] = useState("")
-  const [type, setType] = useState(FIELD_DEFINITIONS[0].type)
+  const [type, setType] = useState<CMSField["field_type"]>(
+    fieldTypeFromUrl || FIELD_DEFINITIONS[0].type
+  )
   const [isRequired, setIsRequired] = useState(false)
   const [isUnique, setIsUnique] = useState(false)
   const [note, setNote] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isIdTouched, setIsIdTouched] = useState(false)
+  const [existingFields, setExistingFields] = useState<CMSField[]>([])
 
-  // Fetch field data if in edit or duplicate mode
+  // Fetch field data
   useEffect(() => {
     const fetchFieldData = async () => {
-      if (!fieldId || !accessToken || mode === "create" || !modelId) return
+      if (!accessToken || !modelId) return
 
       try {
         const response = await fetch(
@@ -53,7 +63,11 @@ export default function ModalField({
         )
         if (!response.ok) throw new Error("Failed to fetch field data")
 
-        const data = await response.json()
+        const data = (await response.json()) as CMSField[]
+        setExistingFields(data)
+
+        if (mode === "create" || !fieldId) return
+
         const field = data.find((f: CMSField) => f.id === fieldId)
 
         if (field) {
@@ -85,18 +99,19 @@ export default function ModalField({
       if (mode === "create") {
         setLabel("")
         setName("")
-        setType(FIELD_DEFINITIONS[0].type)
+        setType(fieldTypeFromUrl || FIELD_DEFINITIONS[0].type)
         setIsRequired(false)
         setIsUnique(false)
         setNote("")
         setIsIdTouched(false)
+        fetchFieldData() // Still fetch existing fields to calculate order
       } else {
         fetchFieldData()
       }
       setError(null)
     }, 0)
     return () => clearTimeout(timer)
-  }, [mode, fieldId, accessToken, modelId])
+  }, [mode, fieldId, accessToken, modelId, fieldTypeFromUrl])
 
   const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
@@ -111,6 +126,12 @@ export default function ModalField({
     setName(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "_"))
   }
 
+  const handleBack = useCallback(() => {
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.delete("fieldType")
+    router.push(`?${nextParams.toString()}`)
+  }, [router, searchParams])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!accessToken) return
@@ -122,6 +143,12 @@ export default function ModalField({
       const isEdit = mode === "edit"
       const url = "/api/models/schema/fields"
       const method = isEdit ? "PATCH" : "POST"
+
+      // Calculate next UI order for new fields
+      const nextUiOrder =
+        existingFields.length > 0
+          ? Math.max(...existingFields.map((f) => f.ui_order || 0)) + 1
+          : 0
 
       const body = isEdit
         ? {
@@ -138,6 +165,7 @@ export default function ModalField({
             field_type: type,
             is_required: isRequired,
             is_unique: isUnique,
+            ui_order: nextUiOrder,
           }
 
       const response = await fetch(url, {
@@ -164,6 +192,17 @@ export default function ModalField({
 
   return (
     <form onSubmit={handleSubmit} className={s.modalForm}>
+      {mode === "create" && (
+        <div className={s.modalNav}>
+          <button type="button" className={s.backButton} onClick={handleBack}>
+            <svg>
+              <use xlinkHref="/feather-sprite.svg#chevron-left" />
+            </svg>
+            Back to type selection
+          </button>
+        </div>
+      )}
+
       {error && <p className={s.errorText}>{error}</p>}
 
       {mode === "edit" && (
@@ -202,15 +241,17 @@ export default function ModalField({
             description="The physical column name in your database."
           />
 
-          <SelectField
-            label="Field Type"
-            value={type}
-            onChange={(val) => setType(val as CMSField["field_type"])}
-            options={FIELD_DEFINITIONS.map((def) => ({
-              value: def.type,
-              label: `${def.label} - ${def.description}`,
-            }))}
-          />
+          {!fieldTypeFromUrl && (
+            <SelectField
+              label="Field Type"
+              value={type}
+              onChange={(val) => setType(val as CMSField["field_type"])}
+              options={FIELD_DEFINITIONS.map((def) => ({
+                value: def.type,
+                label: `${def.label} - ${def.description}`,
+              }))}
+            />
+          )}
         </>
       )}
 

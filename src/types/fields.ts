@@ -41,4 +41,5 @@ export interface CMSFieldDefinition {
   label: string
   dbType: "text" | "numeric" | "boolean" | "timestamptz" | "jsonb"
   description: string
+  icon: string
 }

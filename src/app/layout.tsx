@@ -31,6 +31,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable} ${merriweatherSans.variable}`}
+      data-scroll-behavior="smooth"
     >
       <body data-theme="light">
         <div className={s.site}>

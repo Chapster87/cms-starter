@@ -4,6 +4,7 @@ import { useCallback, useMemo } from "react"
 import { useSearchParams, useRouter, useParams } from "next/navigation"
 import Modal from "@/components/modal"
 import { useModels, ModelRegistryEntry } from "@/hooks/use-models"
+import FieldTypeGrid from "./field-type-grid"
 import ModalField from "./modal-field"
 import ModalModel from "./modal-model"
 
@@ -31,6 +32,7 @@ export default function SchemaModal() {
   const action = searchParams.get("action")
   const modelSlug = searchParams.get("modelSlug")
   const fieldId = searchParams.get("fieldId")
+  const fieldType = searchParams.get("fieldType")
 
   const { models } = useModels()
 
@@ -56,6 +58,7 @@ export default function SchemaModal() {
       nextParams.delete("action")
       nextParams.delete("modelSlug")
       nextParams.delete("fieldId")
+      nextParams.delete("fieldType")
 
       const queryString = nextParams.toString()
       const url = queryString ? `?${queryString}` : window.location.pathname
@@ -102,17 +105,33 @@ export default function SchemaModal() {
       const mode = action.replace("-field", "") as "new" | "edit" | "duplicate"
       const normalizedMode = mode === "new" ? "create" : mode
 
+      if (mode === "new" && !fieldType) {
+        return {
+          title: "Select Field Type",
+          description: "Choose the type of data this field will store.",
+          content: (
+            <FieldTypeGrid
+              onSelect={(type) => {
+                const nextParams = new URLSearchParams(searchParams.toString())
+                nextParams.set("fieldType", type)
+                router.push(`?${nextParams.toString()}`)
+              }}
+            />
+          ),
+        }
+      }
+
       return {
         title:
           mode === "edit"
             ? "Edit Field"
             : mode === "duplicate"
               ? "Duplicate Field"
-              : "Add New Field",
+              : "Configure New Field",
         description:
           mode === "edit"
             ? "Update field configuration."
-            : "Define a new field for this model.",
+            : "Define the settings for your new field.",
         content: (
           <ModalField
             mode={normalizedMode}
@@ -126,7 +145,16 @@ export default function SchemaModal() {
     }
 
     return null
-  }, [action, modelSlug, fieldId, modelIdFromPath, handleClose])
+  }, [
+    action,
+    modelSlug,
+    fieldId,
+    fieldType,
+    resolvedModelId,
+    router,
+    searchParams,
+    handleClose,
+  ])
 
   if (!isOpen || !modalConfig) return null
 

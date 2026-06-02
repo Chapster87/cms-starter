@@ -39,7 +39,7 @@
   --text-primary: #000;
   --text-secondary: #666;
 
-  --background-overlay: rgba(255, 255, 255, 0.4);
+  --background-overlay: rgb(from var(--color-black) r g b / 0.2);
 
   --box-shadow: 0 3px 3px rgba(56, 65, 74, 0.1);
 }

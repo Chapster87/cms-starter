@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
       field_type,
       is_required,
       is_unique,
+      ui_order,
     } = await req.json()
 
     // 1. Validation
@@ -109,6 +110,16 @@ export async function POST(req: NextRequest) {
         )
       }
       return NextResponse.json({ error: rpcError.message }, { status: 500 })
+    }
+
+    // 4. Update the ui_order manually after creation since RPC doesn't support it yet
+    if (ui_order !== undefined) {
+      const systemClient = createClient(supabaseUrl, supabaseServiceKey)
+      await systemClient
+        .from("fields")
+        .update({ ui_order })
+        .eq("model_id", model_id)
+        .eq("field_name", sanitizedFieldName)
     }
 
     return NextResponse.json(

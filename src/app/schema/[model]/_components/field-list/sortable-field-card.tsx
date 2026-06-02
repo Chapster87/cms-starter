@@ -51,7 +51,23 @@ export function SortableFieldCard({
       </div>
 
       <div className={`${s.fieldIcon} ${getIconCategory(field.field_type)}`}>
-        {field.field_type === "json" ? "{...}" : "A"}
+        {definition?.icon ? (
+          <svg
+            style={{
+              width: 16,
+              height: 16,
+              stroke: "currentColor",
+              strokeWidth: 2,
+              fill: "none",
+            }}
+          >
+            <use xlinkHref={`/feather-sprite.svg#${definition.icon}`} />
+          </svg>
+        ) : field.field_type === "json" ? (
+          "{...}"
+        ) : (
+          "A"
+        )}
       </div>
 
       <div className={s.fieldContent}>

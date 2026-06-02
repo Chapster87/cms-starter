@@ -101,8 +101,9 @@ The Schema management layer has been refactored into a modern, reactive, URL-dri
 
 ## 3. Pending Tasks & Next Steps
 
-- **Two-Step Field Creation:** Add functionality to the new field modal to have users choose a field type first, then render type-specific configuration fields.
-- **UI Consolidation:** Move model action buttons into a context menu (Radix Dropdown) to reduce clutter. Link "Fields & Settings" directly to the model name click.
+- **Two-Step Field Creation:** [COMPLETED] Users now choose from a visual grid of field types before entering configuration details.
+- **Field-Specific Settings:** Add advanced configuration for certain types (e.g., number ranges, regex validation for text).
+- **UI Consolidation:** [COMPLETED] Move model action buttons into a context menu (Radix Dropdown) to reduce clutter. Link "Fields & Settings" directly to the model name click.
 - **Model Reordering:** Apply similar DND logic to the top-level Models list (sidebar/dashboard).
 - **Blocks System:** Eventually add `[blocks]` routes to the `/schema` namespace for component-based schema definitions.
 - **Advanced Field UI:** Support for complex editors (Markdown, Rich Text, Image Uploaders).

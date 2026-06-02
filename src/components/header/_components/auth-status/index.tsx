@@ -42,7 +42,11 @@ export default function AuthStatus() {
                     alt={user.email || "User"}
                   />
                   <Avatar.Fallback className={s.avatarFallback} delayMs={600}>
-                    {user.user_metadata.avatar_url.name
+                    {(
+                      user.user_metadata.full_name ||
+                      user.user_metadata.name ||
+                      user.email
+                    )
                       ?.charAt(0)
                       .toUpperCase() || "U"}
                   </Avatar.Fallback>
