@@ -1,0 +1,227 @@
+.referenceContainer {
+  position: relative;
+  width: 100%;
+}
+
+.selectionArea {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-white);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectionArea:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-alt);
+}
+
+.selectionArea.disabled {
+  background: var(--color-bg-alt);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.pillList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex: 1;
+}
+
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-grey-100);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 13px;
+  color: var(--color-text);
+  z-index: 10;
+}
+
+.pillModel {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.placeholder {
+  color: var(--color-text-dim);
+  font-size: 14px;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.removeBtn:hover {
+  color: var(--color-error);
+}
+
+.browseIcon {
+  display: flex;
+  align-items: center;
+  color: var(--color-text-dim);
+  margin-left: 8px;
+}
+
+/* Modal Styling */
+.browseModal {
+  max-width: 600px !important;
+}
+
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 500px;
+}
+
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--color-text-dim);
+  pointer-events: none;
+}
+
+.modalSearch {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px 0 42px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg-alt);
+  color: var(--color-text);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modalSearch:focus {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+}
+
+.recordList {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+}
+
+.recordItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-bottom: 1px solid var(--color-border);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.recordItem:last-child {
+  border-bottom: none;
+}
+
+.recordItem:hover {
+  background: var(--color-bg-alt);
+}
+
+.recordItem.selected {
+  background: var(--color-primary-faded, rgba(0, 112, 243, 0.05));
+}
+
+.recordIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-dim);
+}
+
+.recordMeta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recordTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.recordSubtitle {
+  font-size: 12px;
+  color: var(--color-text-dim);
+}
+
+.recordType {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.typeBadge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-text-dim);
+  background: var(--color-bg-alt);
+  padding: 2px 8px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-grey-300);
+}
+
+.statusDot.active {
+  background: #10b981; /* Green */
+}
+
+.checkIcon {
+  color: var(--color-primary);
+  display: flex;
+  align-items: center;
+}
+
+.statusMessage {
+  padding: 32px;
+  text-align: center;
+  color: var(--color-text-dim);
+  font-size: 14px;
+}

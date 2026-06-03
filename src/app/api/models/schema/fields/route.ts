@@ -58,6 +58,7 @@ export async function POST(req: NextRequest) {
       is_required,
       is_unique,
       ui_order,
+      settings,
     } = await req.json()
 
     // 1. Validation
@@ -112,12 +113,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: rpcError.message }, { status: 500 })
     }
 
-    // 4. Update the ui_order manually after creation since RPC doesn't support it yet
-    if (ui_order !== undefined) {
+    // 4. Update metadata manually after creation since RPC doesn't support all CMS fields yet
+    const updatePayload: Record<string, unknown> = {}
+    if (ui_order !== undefined) updatePayload.ui_order = ui_order
+    if (settings !== undefined) updatePayload.settings = settings
+
+    if (Object.keys(updatePayload).length > 0) {
       const systemClient = createClient(supabaseUrl, supabaseServiceKey)
       await systemClient
         .from("fields")
-        .update({ ui_order })
+        .update(updatePayload)
         .eq("model_id", model_id)
         .eq("field_name", sanitizedFieldName)
     }
@@ -157,7 +162,8 @@ export async function PATCH(req: NextRequest) {
 
     const body = await req.json()
     console.log("PATCH /api/models/schema/fields request body:", body)
-    const { id, field_label, field_note, is_required, is_unique } = body
+    const { id, field_label, field_note, is_required, is_unique, settings } =
+      body
 
     if (!id) {
       return NextResponse.json(
@@ -176,6 +182,7 @@ export async function PATCH(req: NextRequest) {
         field_note,
         is_required: !!is_required,
         is_unique: !!is_unique,
+        settings: settings || {},
       })
       .eq("id", id)
       .select()

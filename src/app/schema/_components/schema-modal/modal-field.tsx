@@ -2,8 +2,14 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
-import { TextField, SelectField, CheckboxField } from "@/components/fields"
+import {
+  TextField,
+  SelectField,
+  CheckboxField,
+  SlugField,
+} from "@/components/fields"
 import { useAuth } from "@/hooks/use-auth"
+import { useModels } from "@/hooks/use-models"
 import { CMSField } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 import s from "./style.module.css"
@@ -27,6 +33,7 @@ export default function ModalField({
   onCancel,
 }: ModalFieldProps) {
   const { accessToken } = useAuth()
+  const { models } = useModels()
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -46,6 +53,10 @@ export default function ModalField({
   const [error, setError] = useState<string | null>(null)
   const [isIdTouched, setIsIdTouched] = useState(false)
   const [existingFields, setExistingFields] = useState<CMSField[]>([])
+
+  // Reference field specific settings
+  const [allowedModels, setAllowedModels] = useState<string[]>([])
+  const [allowMultiple, setAllowMultiple] = useState(false)
 
   // Fetch field data
   useEffect(() => {
@@ -71,6 +82,8 @@ export default function ModalField({
         const field = data.find((f: CMSField) => f.id === fieldId)
 
         if (field) {
+          const settings = (field.settings || {}) as Record<string, unknown>
+
           if (mode === "edit") {
             setLabel(field.field_label)
             setName(field.field_name)
@@ -79,6 +92,11 @@ export default function ModalField({
             setIsUnique(field.is_unique)
             setNote(field.field_note || "")
             setIsIdTouched(true)
+            if (field.field_type === "reference") {
+              const allowed = settings.allowed_models as string[] | undefined
+              setAllowedModels(allowed || [])
+              setAllowMultiple(!!settings.allow_multiple)
+            }
           } else {
             // Duplicate mode: Pre-fill with _copy and (copy)
             setLabel(`${field.field_label} (copy)`)
@@ -88,6 +106,11 @@ export default function ModalField({
             setIsUnique(field.is_unique)
             setNote(field.field_note || "")
             setIsIdTouched(true)
+            if (field.field_type === "reference") {
+              const allowed = settings.allowed_models as string[] | undefined
+              setAllowedModels(allowed || [])
+              setAllowMultiple(!!settings.allow_multiple)
+            }
           }
         }
       } catch (err) {
@@ -114,16 +137,7 @@ export default function ModalField({
   }, [mode, fieldId, accessToken, modelId, fieldTypeFromUrl])
 
   const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setLabel(val)
-    if (!isIdTouched && mode !== "edit") {
-      setName(val.toLowerCase().replace(/[^a-z0-9]/g, "_"))
-    }
-  }
-
-  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsIdTouched(true)
-    setName(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, "_"))
+    setLabel(e.target.value)
   }
 
   const handleBack = useCallback(() => {
@@ -150,6 +164,14 @@ export default function ModalField({
           ? Math.max(...existingFields.map((f) => f.ui_order || 0)) + 1
           : 0
 
+      const settings =
+        type === "reference"
+          ? {
+              allowed_models: allowedModels,
+              allow_multiple: allowMultiple,
+            }
+          : {}
+
       const body = isEdit
         ? {
             id: fieldId,
@@ -157,6 +179,7 @@ export default function ModalField({
             field_note: note,
             is_required: isRequired,
             is_unique: isUnique,
+            settings,
           }
         : {
             model_id: modelId,
@@ -166,6 +189,7 @@ export default function ModalField({
             is_required: isRequired,
             is_unique: isUnique,
             ui_order: nextUiOrder,
+            settings,
           }
 
       const response = await fetch(url, {
@@ -233,11 +257,14 @@ export default function ModalField({
 
       {mode !== "edit" && (
         <>
-          <TextField
+          <SlugField
             label="Field Name (Database Column)"
             placeholder="e.g. featured_image"
             value={name}
-            onChange={handleNameChange}
+            sourceValue={label}
+            onChange={setName}
+            isTouched={isIdTouched}
+            onToggleTouched={setIsIdTouched}
             description="The physical column name in your database."
           />
 
@@ -280,6 +307,43 @@ export default function ModalField({
         description="Prevent duplicate values in this column."
         variant="switch"
       />
+
+      {type === "reference" && (
+        <div className={s.referenceSettings}>
+          <hr className={s.separator} />
+          <h4 className={s.settingsTitle}>Linked Record Settings</h4>
+
+          <div className={s.modelsGrid}>
+            <label className={s.fieldLabel}>Allow selection from:</label>
+            <div className={s.checkboxGroup}>
+              {models.map((model) => (
+                <CheckboxField
+                  key={model.id}
+                  label={model.friendly_name}
+                  checked={allowedModels.includes(model.id)}
+                  onChange={(checked) => {
+                    if (checked) {
+                      setAllowedModels([...allowedModels, model.id])
+                    } else {
+                      setAllowedModels(
+                        allowedModels.filter((id) => id !== model.id)
+                      )
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <CheckboxField
+            label="Allow Multiple Selection"
+            checked={allowMultiple}
+            onChange={setAllowMultiple}
+            description="Allow editors to select more than one record."
+            variant="switch"
+          />
+        </div>
+      )}
 
       <div className={s.modalActions}>
         <button

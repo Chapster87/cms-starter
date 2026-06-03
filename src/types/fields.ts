@@ -11,7 +11,11 @@ export type CMSFieldType =
   | "seo_slug" // text (Unique constraint, automatic frontend sluggification)
   | "media" // jsonb (Array of references to uploaded assets)
   | "json" // jsonb (Raw Metadata block or custom data payload)
+  | "tags" // jsonb (Collection of strings/keywords)
+  | "rich_text" // text (WYSIWYG HTML content)
   | "modular_content" // jsonb (Dynamic block layouts)
+  | "seo_metadata" // jsonb (Grouped SEO metadata)
+  | "reference" // jsonb (Link to other records)
 
 /**
  * Represents a field configuration in the registry.

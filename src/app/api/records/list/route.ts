@@ -1,0 +1,126 @@
+import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@supabase/supabase-js"
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+/**
+ * API route for listing records from specific models for browsing.
+ */
+export async function POST(req: NextRequest) {
+  try {
+    const authorization = req.headers.get("Authorization")
+    const accessToken = authorization?.split(" ")[1]
+
+    if (!accessToken) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const { models: allowedModelIds } = body
+
+    if (
+      !allowedModelIds ||
+      !Array.isArray(allowedModelIds) ||
+      allowedModelIds.length === 0
+    ) {
+      return NextResponse.json([], { status: 200 })
+    }
+
+    const systemClient = createClient(supabaseUrl, supabaseServiceKey)
+
+    // 1. Fetch model metadata
+    const { data: allModels, error: modelsError } = await systemClient
+      .from("models")
+      .select("id, table_name, friendly_name")
+
+    if (modelsError || !allModels) {
+      console.error("List API: Error fetching models registry:", modelsError)
+      return NextResponse.json(
+        { error: "Failed to fetch model metadata" },
+        { status: 500 }
+      )
+    }
+
+    const modelsData = allModels.filter(
+      (m) =>
+        allowedModelIds.includes(m.id) || allowedModelIds.includes(m.table_name)
+    )
+
+    if (modelsData.length === 0) {
+      return NextResponse.json([], { status: 200 })
+    }
+
+    // 2. Fetch records from all allowed models
+    const listResults = await Promise.all(
+      modelsData.map(async (model) => {
+        const tableName = model.table_name
+        const friendlyName = model.friendly_name
+        const modelId = model.id
+
+        // Resolve table structure
+        // NOTE: Fixed parameter name from 'p_table_name' to 't_name' to match DB RPC definition
+        const { data: columns, error: colError } = await systemClient.rpc(
+          "get_table_columns",
+          { t_name: tableName }
+        )
+
+        if (colError) {
+          console.error(`Error fetching columns for ${tableName}:`, colError)
+          return []
+        }
+
+        const typedColumns = (columns as Array<{ column_name: string }>) || []
+        const columnNames = typedColumns.map((c) => c.column_name)
+
+        // Choose best display field
+        let displayColumn = "id"
+        if (columnNames.includes("friendly_name"))
+          displayColumn = "friendly_name"
+        else if (columnNames.includes("title")) displayColumn = "title"
+        else if (columnNames.includes("name")) displayColumn = "name"
+        else if (columnNames.includes("label")) displayColumn = "label"
+
+        // Choose best subtitle field (slug or handle)
+        let subtitleColumn: string | null = null
+        if (columnNames.includes("slug")) subtitleColumn = "slug"
+        else if (columnNames.includes("handle")) subtitleColumn = "handle"
+
+        const selectFields = ["id", displayColumn]
+        if (subtitleColumn) selectFields.push(subtitleColumn)
+
+        const { data, error } = await systemClient
+          .from(tableName)
+          .select(selectFields.join(","))
+          .limit(100)
+
+        if (error) {
+          console.error(`Error listing table ${tableName}:`, error)
+          return []
+        }
+
+        const records =
+          (data as unknown as Array<Record<string, unknown>>) || []
+        return records.map((record) => ({
+          id: record.id as string,
+          display_name:
+            (record[displayColumn] as string) || (record.id as string),
+          subtitle: subtitleColumn
+            ? (record[subtitleColumn] as string)
+            : undefined,
+          model_name: friendlyName,
+          model_id: modelId,
+        }))
+      })
+    )
+
+    const flattenedResults = listResults.flat()
+    return NextResponse.json(flattenedResults)
+  } catch (err: unknown) {
+    console.error("List API Error:", err)
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    )
+  }
+}

@@ -225,7 +225,51 @@
 }
 
 .errorText {
-  color: red;
-  font-size: 0.9em;
+  color: var(--color-error);
+  font-size: 14px;
   margin-bottom: 16px;
+}
+
+.referenceSettings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.separator {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 0;
+}
+
+.settingsTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.modelsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.checkboxGroup {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 12px;
+  background: var(--color-bg-alt);
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
 }

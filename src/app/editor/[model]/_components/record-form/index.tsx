@@ -4,10 +4,17 @@ import { useState, useEffect } from "react"
 import {
   TextField,
   NumberField,
-  TextAreaField,
+  MarkdownField,
+  RichTextField,
   CheckboxField,
   JsonField,
+  TagField,
+  ColorField,
+  MediaField,
+  SlugField,
+  SeoField,
   DateField,
+  ReferenceField,
 } from "@/components/fields"
 import { useAuth } from "@/hooks/use-auth"
 import { CMSField } from "@/types/fields"
@@ -42,6 +49,17 @@ export default function RecordForm({
     initialData || {}
   )
   const [fetchingSchema, setFetchingSchema] = useState(true)
+
+  // Sync internal form data with initialData when it changes from above
+  useEffect(() => {
+    if (initialData) {
+      // Use setTimeout to move state update out of the synchronous render cycle
+      const timer = setTimeout(() => {
+        setFormData(initialData)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  }, [initialData])
 
   useEffect(() => {
     let isMounted = true
@@ -128,7 +146,7 @@ export default function RecordForm({
         const commonProps = {
           label: field.field_label,
           description: field.field_description,
-          fieldNote: (field as any).field_note || undefined,
+          fieldNote: field.field_note || undefined,
           required: field.is_required,
           disabled: isLoading,
           name: field.field_name,
@@ -158,17 +176,96 @@ export default function RecordForm({
 
         if (field.field_type === "text_multi") {
           return (
-            <TextAreaField
+            <MarkdownField
               key={field.field_name}
               {...commonProps}
               value={(formData[field.field_name] as string) || ""}
-              onChange={(e) => handleChange(field.field_name, e.target.value)}
-              rows={4}
+              onChange={(val) => handleChange(field.field_name, val)}
+              rows={6}
             />
           )
         }
 
-        if (["json", "media", "modular_content"].includes(field.field_type)) {
+        if (field.field_type === "rich_text") {
+          return (
+            <RichTextField
+              key={field.field_name}
+              {...commonProps}
+              value={(formData[field.field_name] as string) || ""}
+              onChange={(val) => handleChange(field.field_name, val)}
+            />
+          )
+        }
+
+        if (field.field_type === "color") {
+          return (
+            <ColorField
+              key={field.field_name}
+              {...commonProps}
+              value={(formData[field.field_name] as string) || ""}
+              onChange={(val) => handleChange(field.field_name, val)}
+            />
+          )
+        }
+
+        if (field.field_type === "seo_slug") {
+          // Attempt to find a "source" field for the slug (like 'title' or 'name')
+          const sourceField = schema.find(
+            (f) =>
+              f.field_name === "title" ||
+              f.field_name === "name" ||
+              f.field_label.toLowerCase() === "title"
+          )
+          const sourceValue = sourceField
+            ? (formData[sourceField.field_name] as string)
+            : ""
+
+          return (
+            <SlugField
+              key={field.field_name}
+              {...commonProps}
+              value={(formData[field.field_name] as string) || ""}
+              sourceValue={sourceValue}
+              onChange={(val) => handleChange(field.field_name, val)}
+            />
+          )
+        }
+
+        if (field.field_type === "media") {
+          return (
+            <MediaField
+              key={field.field_name}
+              {...commonProps}
+              value={(formData[field.field_name] as string) || ""}
+              onChange={(val) => handleChange(field.field_name, val)}
+              multiple
+            />
+          )
+        }
+
+        if (field.field_type === "seo_metadata") {
+          return (
+            <SeoField
+              key={field.field_name}
+              {...commonProps}
+              value={(formData[field.field_name] as string) || ""}
+              onChange={(val) => handleChange(field.field_name, val)}
+            />
+          )
+        }
+
+        if (field.field_type === "tags") {
+          return (
+            <TagField
+              key={field.field_name}
+              {...commonProps}
+              value={(formData[field.field_name] as string) || []}
+              onChange={(val) => handleChange(field.field_name, val)}
+            />
+          )
+        }
+
+        if (["json", "modular_content"].includes(field.field_type)) {
           const jsonValue =
             typeof formData[field.field_name] === "object"
               ? JSON.stringify(formData[field.field_name], null, 2)
@@ -192,6 +289,20 @@ export default function RecordForm({
               showTime
               value={(formData[field.field_name] as string) || ""}
               onChange={(e) => handleChange(field.field_name, e.target.value)}
+            />
+          )
+        }
+
+        if (field.field_type === "reference") {
+          const settings = (field.settings || {}) as Record<string, unknown>
+          return (
+            <ReferenceField
+              key={field.field_name}
+              {...commonProps}
+              allowedModels={(settings.allowed_models as string[]) || []}
+              allowMultiple={!!settings.allow_multiple}
+              value={(formData[field.field_name] as string | string[]) || null}
+              onChange={(val) => handleChange(field.field_name, val)}
             />
           )
         }

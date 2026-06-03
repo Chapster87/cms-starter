@@ -61,11 +61,25 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     icon: "image",
   },
   {
+    type: "rich_text",
+    label: "Rich Text",
+    dbType: "text",
+    description: "Visual editor for formatted content.",
+    icon: "edit-3",
+  },
+  {
     type: "json",
-    label: "JSON Metadata",
+    label: "JSON",
     dbType: "jsonb",
     description: "Structured data payload for advanced use cases.",
     icon: "code",
+  },
+  {
+    type: "tags",
+    label: "Tags / List",
+    dbType: "jsonb",
+    description: "Collection of strings or keywords.",
+    icon: "tag",
   },
   {
     type: "modular_content",
@@ -73,6 +87,20 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "jsonb",
     description: "Dynamic blocks and component layouts.",
     icon: "layers",
+  },
+  {
+    type: "seo_metadata",
+    label: "SEO Metadata",
+    dbType: "jsonb",
+    description: "Grouped SEO fields (Title, OG, Keywords, etc.)",
+    icon: "search",
+  },
+  {
+    type: "reference",
+    label: "Linked Record",
+    dbType: "jsonb",
+    description: "Reference to other records in the CMS.",
+    icon: "external-link",
   },
 ]
 

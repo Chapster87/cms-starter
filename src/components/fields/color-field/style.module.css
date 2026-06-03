@@ -1,0 +1,43 @@
+.colorInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+}
+
+.colorInput {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.colorInput::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.colorInput::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.colorText {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 4px;
+  background-color: var(--input-bg, #ffffff);
+  color: var(--text-primary, #1a202c);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.colorText:focus {
+  outline: none;
+  border-color: var(--primary-color, #3182ce);
+  box-shadow: 0 0 0 1px var(--primary-color, #3182ce);
+}

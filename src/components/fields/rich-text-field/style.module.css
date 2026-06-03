@@ -1,0 +1,209 @@
+.editorContainer {
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--input-bg, #ffffff);
+}
+
+.editorContainer:focus-within {
+  border-color: var(--primary-color, #3182ce);
+  box-shadow: 0 0 0 1px var(--primary-color, #3182ce);
+}
+
+.menuBar {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 8px;
+  gap: 4px;
+  background-color: var(--sidebar-bg, #f7fafc);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+  align-items: center;
+}
+
+.selectTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: 4px;
+  padding: 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  height: 32px;
+  gap: 8px;
+  background-color: var(--input-bg, #ffffff);
+  color: var(--text-primary, #1a202c);
+  border: 1px solid var(--border-color, #e2e8f0);
+  cursor: pointer;
+  min-width: 130px;
+  outline: none;
+}
+
+.selectTrigger:focus {
+  border-color: var(--primary-color, #3182ce);
+}
+
+.selectIcon {
+  color: var(--text-secondary, #4a5568);
+}
+
+.selectContent {
+  overflow: hidden;
+  background-color: var(--input-bg, #ffffff);
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  box-shadow:
+    0px 10px 38px -10px rgba(22, 23, 24, 0.35),
+    0px 10px 20px -15px rgba(22, 23, 24, 0.2);
+  z-index: 1000;
+}
+
+.selectViewport {
+  padding: 5px;
+}
+
+.selectItem {
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-primary, #1a202c);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 35px 0 25px;
+  position: relative;
+  user-select: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.selectItem[data-highlighted] {
+  background-color: var(--primary-color, #3182ce);
+  color: #ffffff;
+}
+
+.selectItemIndicator {
+  position: absolute;
+  left: 0;
+  width: 25px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Option Preview Styles */
+.optionP {
+  font-weight: normal;
+}
+.optionH1 {
+  font-weight: 800;
+  font-size: 1.2em;
+}
+.optionH2 {
+  font-weight: 700;
+  font-size: 1.1em;
+}
+.optionH3 {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+.optionH4 {
+  font-weight: 600;
+}
+.optionH5 {
+  font-weight: 500;
+}
+.optionH6 {
+  font-weight: 500;
+  color: var(--text-secondary, #4a5568);
+}
+
+.menuBar button {
+  padding: 4px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-secondary, #4a5568);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.menuBar button:hover {
+  background-color: var(--hover-bg, #edf2f7);
+  color: var(--text-primary, #1a202c);
+}
+
+.menuBar button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.menuBar button.isActive {
+  background-color: var(--primary-light, #ebf8ff);
+  color: var(--primary-color, #3182ce);
+  border-color: var(--primary-color, #3182ce);
+}
+
+.divider {
+  width: 1px;
+  height: 20px;
+  background-color: var(--border-color, #e2e8f0);
+  margin: 0 4px;
+  align-self: center;
+}
+
+.colorPickerWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.colorPicker {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.editorContent {
+  padding: 16px;
+  min-height: 150px;
+}
+
+.editorContent :global(.ProseMirror) {
+  outline: none;
+}
+
+.editorContent :global(.ProseMirror p) {
+  margin-bottom: 1em;
+}
+
+.editorContent :global(.ProseMirror h1) {
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.editorContent :global(.ProseMirror h2) {
+  font-size: 1.25em;
+  margin-bottom: 0.5em;
+}
+
+.editorContent :global(.ProseMirror ul),
+.editorContent :global(.ProseMirror ol) {
+  padding-left: 20px;
+  margin-bottom: 1em;
+}
+
+.editorContent :global(.ProseMirror blockquote) {
+  border-left: 3px solid var(--border-color, #e2e8f0);
+  padding-left: 16px;
+  font-style: italic;
+  color: var(--text-secondary, #4a5568);
+}

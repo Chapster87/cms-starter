@@ -73,11 +73,19 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
       await dataService.updateRecord(model, record.id, formData)
       setSuccess("Record updated successfully!")
 
+      // Re-fetch data to show the latest changes immediately
+      await loadRecord()
+
       // If the slug changed, we should redirect to the new slug-based URL
       const nextSlug = formData.slug as string | undefined
       const nextId = nextSlug || record.id
 
-      setTimeout(() => router.push(`/editor/${model}/${nextId}`), 1500)
+      if (nextId !== id) {
+        setTimeout(() => router.push(`/editor/${model}/${nextId}`), 1500)
+      } else {
+        // Clear success message after a while if not redirecting
+        setTimeout(() => setSuccess(null), 3000)
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Failed to update record")
     } finally {

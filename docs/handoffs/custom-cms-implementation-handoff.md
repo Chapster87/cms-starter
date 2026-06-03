@@ -1,4 +1,4 @@
-# Handoff: Schema Builder, Field Registry, and Unified Auth Metadata
+# Handoff: Custom CMS - Implementation Storybook
 
 This document summarizes the work completed to implement the CMS Schema Builder, a centralized field metadata registry, and a robust schema synchronization tool for existing database columns.
 
@@ -92,6 +92,29 @@ The Schema management layer has been refactored into a modern, reactive, URL-dri
   - **Smart Duplication:** Added a "Duplicate" feature that pre-populates metadata with `(copy)` and `_copy` suffixes to speed up model and field definition.
   - **Professional UX:** Integrated Radix Dropdown menus for field actions and refined the styling to match professional CMS standards (DatoCMS-inspired).
 
+### 1.6. Advanced Field UI Suite
+
+Implemented a professional suite of specialized field editors to replace generic fallbacks:
+
+- **Smart ID & Slug Management:**
+  - Created `SlugField` component which auto-generates sanitized technical names from friendly labels until manually overridden.
+  - Refactored all Modals and the Content Editor to use this unified logic.
+- **Pro-Grade Rich Text (WYSIWYG):**
+  - Implemented `RichTextField` using **Tiptap**.
+  - Features a high-fidelity toolbar with a styled Heading Dropdown (matching option typography to the trigger), alignment controls, and advanced formatting (Highlight, Underline, Strike).
+  - Integrated real-time cursor tracking to sync toolbar state with editor content.
+- **Upgraded Markdown Editor:**
+  - Replaced naive regex parser with the **`marked`** library for full spec support (lists, tables, code blocks).
+  - Maintained the dual-tab Write/Preview interface.
+- **Composite SEO Metadata Field:**
+  - Created a specialized `SeoField` that groups Meta Title, Description, Keywords, OG Images, and JSON-LD into a single collapsible Radix Accordion section.
+  - Standardized on **camelCase keys** for the internal JSON object to ensure seamless frontend metadata generation.
+- **Pill-Based Tag Management:**
+  - Built `TagField` for keyword and category collections, storing data as `jsonb` arrays.
+- **Visual Color & Media Foundation:**
+  - Implemented `ColorField` using the native browser picker with a custom Radix wrapper.
+  - Created `MediaField` visual grid for asset management (currently supporting URL-based image selection).
+
 ## 2. Current State
 
 - The dynamic routing, form generation, and schema management are fully operational.
@@ -101,13 +124,17 @@ The Schema management layer has been refactored into a modern, reactive, URL-dri
 
 ## 3. Pending Tasks & Next Steps
 
+- **Linked Records Field Type** - Add other records as data in a model, i.e. add an author to a page, create a site navigation model that allows setting other page records as links, ad well as defining external links within (another field type?)
 - **Two-Step Field Creation:** [COMPLETED] Users now choose from a visual grid of field types before entering configuration details.
 - **Field-Specific Settings:** Add advanced configuration for certain types (e.g., number ranges, regex validation for text).
 - **UI Consolidation:** [COMPLETED] Move model action buttons into a context menu (Radix Dropdown) to reduce clutter. Link "Fields & Settings" directly to the model name click.
 - **Model Reordering:** Apply similar DND logic to the top-level Models list (sidebar/dashboard).
-- **Blocks System:** Eventually add `[blocks]` routes to the `/schema` namespace for component-based schema definitions.
-- **Advanced Field UI:** Support for complex editors (Markdown, Rich Text, Image Uploaders).
+- **Blocks System (Modular Content):** A robust "mini-model" registry (inspired by DatoCMS `dast`) to allow defining reusable component schemas that can be dropped into page layouts via a drag-and-drop `ModularField`.
+- **Advanced Media Integration:** Transition `MediaField` from external URLs to full **Supabase or Cloudinary Storage** integration, including a centralized Media Library browser.
+- **Field Type Expansion:** Add `rich_text` and `tags` to the schema generation layer to support even more automated frontend type-safety.
 - **Implement Quality Project README.md** - want to have a professional grade explanation of all project functionality and explanation of configuration and use.
+- **Develop Installation CLI** - This will be responsible for gathering required crendtials, creating environment variables, and initializing default supabase setup.
+- **Evaluate need for Schema & Type Generation** - Alot of other CMS (Sanity, Strapi, DatoCMS) use this on the frontend side, i'm just curious about the benefit and effort involved with adopting this setup.
 
 ## 4. Relevant Files
 

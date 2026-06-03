@@ -35,11 +35,9 @@ export default function Modal({
         <Dialog.Content className={clsx(s.content, className)}>
           <div className={s.header}>
             <Dialog.Title className={s.title}>{title}</Dialog.Title>
-            {description && (
-              <Dialog.Description className={s.description}>
-                {description}
-              </Dialog.Description>
-            )}
+            <Dialog.Description className={s.description}>
+              {description || `Manage ${title} settings and selection.`}
+            </Dialog.Description>
           </div>
 
           {children}

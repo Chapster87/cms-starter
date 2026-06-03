@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
-import { TextField, CheckboxField } from "@/components/fields"
+import { TextField, CheckboxField, SlugField } from "@/components/fields"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import s from "./style.module.css"
@@ -82,16 +82,7 @@ export default function ModalModel({
   }, [mode, modelSlug, models])
 
   const handleFriendlyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
-    setFriendlyName(val)
-    if (!isIdTouched && mode !== "edit") {
-      setModelName(val.toLowerCase().replace(/[^a-z0-9_]/g, "_"))
-    }
-  }
-
-  const handleModelNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setIsIdTouched(true)
-    setModelName(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))
+    setFriendlyName(e.target.value)
   }
 
   const onEmojiClick = (emojiData: EmojiClickData) => {
@@ -190,11 +181,14 @@ export default function ModalModel({
         </p>
       </div>
 
-      <TextField
+      <SlugField
         label="Model ID (Database Table)"
         placeholder="e.g. blog_posts"
         value={modelName}
-        onChange={handleModelNameChange}
+        sourceValue={friendlyName}
+        onChange={setModelName}
+        isTouched={isIdTouched}
+        onToggleTouched={setIsIdTouched}
         disabled={isSaving || mode === "edit"}
         required
         description="Lowercase, no spaces. This will be the physical table name."
