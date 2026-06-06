@@ -54,6 +54,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - [x] **Linked Records Stability:** Fixed RPC parameter naming (`t_name`) across List, Search, and Previews APIs.
 - [x] **Site Navigation Model:** Modern, hierarchical drag-and-drop navigation system with automatic path resolution and group management.
 - [x] **Unified Button Infrastructure:** Converted all frontend-facing `<button>` tags to a standardized `<Button />` component with consistent Primary/Secondary brand styling.
+- [x] **Singleton Model Workflow:** Implemented specialized handling for singleton models (Global Settings, etc.), including modal-based initialization, custom "Empty State" branded cards, and automatic redirect to the editor. Added strict safeguards to block duplicate record creation both in the UI and submission logic.
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Model Reordering:** Apply DND logic to the top-level Models sidebar and dashboard.
@@ -80,5 +81,6 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - `src/app/editor/`: Content Management and dynamic form engine.
 - `src/utils/supabase.ts` & `src/utils/supabase-server.ts`: Standardized SSR-friendly Supabase clients.
 - `src/middleware.ts`: Global session refreshing and cookie synchronization.
+- `src/app/graphql/`: High-fidelity GraphQL playground implementation.
 - `src/utils/field-types.ts`: Source of truth for field and Postgres type mapping.
 - `src/client/data-service.ts`: Centralized service for CRUD operations using native Supabase patterns.

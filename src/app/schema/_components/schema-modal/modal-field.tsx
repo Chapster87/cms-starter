@@ -235,7 +235,8 @@ export default function ModalField({
         <div className={s.modalNav}>
           <Button
             type="button"
-            variant="secondary"
+            unstyled
+            className={s.backButton}
             onClick={handleBack}
             beforeText={
               <svg>

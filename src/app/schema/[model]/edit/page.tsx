@@ -33,13 +33,9 @@ export default function EditModelPage({ params }: EditModelPageProps) {
   useEffect(() => {
     const loadModelMetadata = async () => {
       if (authLoading || !model) {
-        console.log(
-          "EditModelPage: Skipping load, authLoading or no model name."
-        )
         return
       }
 
-      console.log(`EditModelPage: Loading metadata for model: ${model}`)
       setLoading(true)
       try {
         const headers: Record<string, string> = {}
@@ -61,7 +57,6 @@ export default function EditModelPage({ params }: EditModelPageProps) {
           throw new Error(`Model '${model}' not found in registry.`)
         }
 
-        console.log("EditModelPage: Loaded model data:", data)
         setModelId(data.id)
         setFriendlyName(data.friendly_name)
         setSlug(data.slug)

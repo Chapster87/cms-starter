@@ -68,7 +68,6 @@ export default function RecordForm({
     let isMounted = true
     const fetchSchema = async () => {
       if (!isMounted) return
-      console.log(`RecordForm: Fetching schema for model table: ${model}`)
       setFetchingSchema(true)
       try {
         const headers: Record<string, string> = {}
@@ -86,7 +85,6 @@ export default function RecordForm({
 
         if (data && data.length > 0) {
           if (!isMounted) return
-          console.log(`RecordForm: Loaded ${data.length} fields from registry.`)
           setSchema(data)
         } else {
           // Fallback: If no registry entry found, try to fetch raw schema

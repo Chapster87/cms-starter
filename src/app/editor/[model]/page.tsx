@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, use } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { dataService, RecordBase } from "@/client/data-service"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
@@ -21,6 +22,7 @@ interface RecordListPageProps {
  */
 export default function RecordListPage({ params }: RecordListPageProps) {
   const { model: modelSlug } = use(params)
+  const router = useRouter()
   const { accessToken, loading: authLoading } = useAuth()
   const { models } = useModels()
   const [records, setRecords] = useState<RecordBase[]>([])
@@ -53,6 +55,14 @@ export default function RecordListPage({ params }: RecordListPageProps) {
       return () => clearTimeout(timer)
     }
   }, [loadRecords, authLoading, accessToken])
+
+  // Redirect singletons if a record already exists
+  useEffect(() => {
+    if (modelData?.is_singleton && records.length === 1 && !loading) {
+      const record = records[0]
+      router.replace(`/editor/${modelSlug}/${record.slug || record.id}`)
+    }
+  }, [modelData, records, loading, modelSlug, router])
 
   const handleDelete = async (id: string) => {
     if (!modelSlug) return
@@ -102,6 +112,51 @@ export default function RecordListPage({ params }: RecordListPageProps) {
       </div>
     )
 
+  // Avoid flash of table for singletons that are about to redirect
+  if (modelData?.is_singleton && records.length === 1 && !loading) {
+    return (
+      <div className={s.container}>
+        <p>Redirecting to editor...</p>
+      </div>
+    )
+  }
+
+  if (modelData?.is_singleton && records.length === 0 && !loading) {
+    return (
+      <div className={s.singletonEmpty}>
+        <div className={s.emptyCard}>
+          <div className={s.emptyIcon}>
+            {modelData?.emoji || (
+              <svg
+                width="48"
+                height="48"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            )}
+          </div>
+          <h2>{modelData?.friendly_name || modelSlug}</h2>
+          <p>
+            This is a singleton model, which means it only ever has one record.
+            Initialize it to start managing your content.
+          </p>
+          <Link href={`?action=new-record`}>
+            <Button size="large">Initialize {modelData?.friendly_name}</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className={s.container}>
       <header className={s.header}>
@@ -130,29 +185,37 @@ export default function RecordListPage({ params }: RecordListPageProps) {
           </h1>
         </div>
         <div className={s.actions}>
-          <Link href={`/editor/${modelSlug}/new`}>
-            <Button
-              beforeText={
-                <svg
-                  width="16"
-                  height="16"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
+          {(!modelData?.is_singleton || records.length === 0) && (
+            <Link
+              href={
+                modelData?.is_singleton
+                  ? `?action=new-record`
+                  : `/editor/${modelSlug}/new`
               }
             >
-              Add New
-            </Button>
-          </Link>
+              <Button
+                beforeText={
+                  <svg
+                    width="16"
+                    height="16"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                }
+              >
+                Add New
+              </Button>
+            </Link>
+          )}
         </div>
       </header>
 

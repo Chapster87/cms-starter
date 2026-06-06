@@ -141,7 +141,6 @@ export async function PATCH(req: NextRequest) {
     }
 
     const body = await req.json()
-    console.log("PATCH /api/models/schema/fields request body:", body)
     const { id, field_label, field_note, is_required, is_unique, settings } =
       body
 
@@ -288,8 +287,6 @@ export async function GET(req: NextRequest) {
     if (!finalModelId) {
       return NextResponse.json([], { status: 200 })
     }
-
-    console.log(`Fetching fields for model_id: ${finalModelId}`)
 
     // Fetch from fields registry using system client to ensure we can see metadata
     const { data, error } = await systemClient

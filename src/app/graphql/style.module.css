@@ -1,0 +1,15 @@
+.container {
+  width: 100%;
+  height: calc(100vh - 100px);
+  overflow: hidden;
+}
+
+.playground {
+  height: 100%;
+  width: 100%;
+}
+
+.playground :global(.graphiql-container) {
+  height: 100%;
+  width: 100%;
+}

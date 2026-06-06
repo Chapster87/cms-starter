@@ -36,12 +36,25 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     setLoading(true)
     setError(null)
     try {
-      // 1. Try fetching by slug first
-      let data = await dataService.getRecordBySlug(model, id)
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          id
+        )
 
-      // 2. If no slug match, try ID
-      if (!data) {
+      let data = null
+
+      if (isUuid) {
+        // If it looks like a UUID, try ID first to avoid noisy 400 errors if 'slug' doesn't exist
         data = await dataService.getRecordById(model, id)
+        if (!data) {
+          data = await dataService.getRecordBySlug(model, id)
+        }
+      } else {
+        // If not a UUID, it must be a slug
+        data = await dataService.getRecordBySlug(model, id)
+        if (!data) {
+          data = await dataService.getRecordById(model, id)
+        }
       }
 
       if (!data) {

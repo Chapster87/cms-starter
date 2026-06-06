@@ -12,7 +12,7 @@ interface NavItem {
   icon: React.ReactNode
 }
 
-const NAV: NavItem[] = [
+const NAV_TOP: NavItem[] = [
   {
     title: "Content",
     url: "/editor",
@@ -33,33 +33,68 @@ const NAV: NavItem[] = [
   },
 ]
 
+const NAV_BOTTOM: NavItem[] = [
+  {
+    title: "GraphQL Playground",
+    url: "/graphql",
+    icon: (
+      <svg className={`feather-icon ${s.navIcon}`} width="24" height="24">
+        <use href="/feather-sprite.svg#code" />
+      </svg>
+    ),
+  },
+]
+
 export default function Navigation() {
   const pathname = usePathname()
 
   return (
     <nav className={s.nav}>
       <Logo showText={false} />
-      <ul className={s.navList}>
-        {NAV.map((item) => {
-          const isActive =
-            item.url === "/"
-              ? pathname === item.url
-              : pathname.startsWith(item.url)
+      <div className={s.navInner}>
+        <ul className={s.navList}>
+          {NAV_TOP.map((item) => {
+            const isActive =
+              item.url === "/"
+                ? pathname === item.url
+                : pathname.startsWith(item.url)
 
-          return (
-            <li key={item.title}>
-              <Link
-                href={item.url}
-                className={`${s.navLink} ${isActive ? s.active : ""}`}
-                aria-current={isActive ? "page" : undefined}
-              >
-                <span className={s.navLinkIcon}>{item.icon}</span>
-                <span className={s.navLinkTitle}>{item.title}</span>
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
+            return (
+              <li key={item.title}>
+                <Link
+                  href={item.url}
+                  className={`${s.navLink} ${isActive ? s.active : ""}`}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <span className={s.navLinkIcon}>{item.icon}</span>
+                  <span className={s.navLinkTitle}>{item.title}</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+        <ul className={s.navList}>
+          {NAV_BOTTOM.map((item) => {
+            const isActive =
+              item.url === "/"
+                ? pathname === item.url
+                : pathname.startsWith(item.url)
+
+            return (
+              <li key={item.title}>
+                <Link
+                  href={item.url}
+                  className={`${s.navLink} ${isActive ? s.active : ""}`}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <span className={s.navLinkIcon}>{item.icon}</span>
+                  <span className={s.navLinkTitle}>{item.title}</span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
     </nav>
   )
 }

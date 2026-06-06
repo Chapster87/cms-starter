@@ -99,14 +99,10 @@ export default function ReferenceField({
   // Fetch all available records for the browser
   const fetchRecords = useCallback(async () => {
     if (!accessToken || !allowedModels || allowedModels.length === 0) {
-      console.log("ReferenceField: No allowed models configured.", {
-        allowedModels,
-      })
       setAllRecords([])
       return
     }
 
-    console.log("ReferenceField: Fetching records for models:", allowedModels)
     setIsLoading(true)
     try {
       const response = await fetch(`/api/records/list`, {
@@ -119,7 +115,6 @@ export default function ReferenceField({
       })
       if (response.ok) {
         const data = await response.json()
-        console.log(`ReferenceField: Received ${data.length} records.`, data)
         setAllRecords(data)
       } else {
         const errorData = await response.json()

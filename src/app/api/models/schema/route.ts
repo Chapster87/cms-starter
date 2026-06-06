@@ -52,8 +52,6 @@ export async function GET(req: NextRequest) {
       t_name: sanitizedTable,
     })
 
-    console.log(`Schema for '${sanitizedTable}':`, data)
-
     if (error) {
       console.error(`Error fetching schema for '${sanitizedTable}':`, error)
       return NextResponse.json({ error: error.message }, { status: 500 })

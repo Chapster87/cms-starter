@@ -116,9 +116,53 @@
 }
 
 .empty {
-  padding: 48px !important;
   text-align: center;
+  padding: 40px;
   color: var(--color-grey-500);
+}
+
+.singletonEmpty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 24px;
+}
+
+.emptyCard {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-grey-200);
+  border-radius: 8px;
+  padding: 48px;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.emptyIcon {
+  font-size: 48px;
+  color: var(--color-grey-400);
+  margin-bottom: 8px;
+}
+
+.emptyCard h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-grey-900);
+}
+
+.emptyCard p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--color-grey-600);
+  margin-bottom: 8px;
 }
 
 .error {

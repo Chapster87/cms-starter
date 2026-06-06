@@ -24,6 +24,10 @@ Read: src/styles/colors.css for the full list of available color variables.
 
 src/styles/fonts.css contains these classes.
 
+### Use our global <Button> component
+
+Utilize the global context when appropriate. `unstyled` prop cna be leveraged to remove default styling for special case buttons
+
 ### Use mobile-first styles
 
 - Leverage custom media vars within nested blocks
