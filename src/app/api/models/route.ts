@@ -1,35 +1,16 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-import { supabase } from "@/utils/supabaseClient"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@/utils/supabase-server"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 /**
  * Helper to get an authenticated Supabase client for API routes.
+ * Uses the standardized server client which handles cookies automatically.
  */
-async function getAuthenticatedSupabaseClient(req: NextRequest) {
-  const authorization = req.headers.get("Authorization")
-  const accessToken = authorization?.split(" ")[1]
-
-  if (accessToken) {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(accessToken)
-
-    if (error || !user) {
-      console.error("Authentication error in API route:", error?.message)
-      return supabase
-    }
-
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: accessToken,
-    })
-    return supabase
-  }
-  return supabase
+async function getAuthenticatedSupabaseClient() {
+  return await createClient()
 }
 
 /**
@@ -38,7 +19,7 @@ async function getAuthenticatedSupabaseClient(req: NextRequest) {
  */
 export async function GET(req: NextRequest) {
   try {
-    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient()
     const {
       data: { user },
     } = await authenticatedSupabase.auth.getUser()
@@ -51,7 +32,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Use system client for registry lookup to avoid RLS friction on metadata
-    const systemClient = createClient(supabaseUrl, supabaseServiceKey)
+    const systemClient = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
     // Fetch from our new models registry table
     const { data, error } = await systemClient
@@ -81,7 +62,7 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient()
     const {
       data: { user },
     } = await authenticatedSupabase.auth.getUser()
@@ -178,7 +159,7 @@ export async function POST(req: NextRequest) {
  */
 export async function PATCH(req: NextRequest) {
   try {
-    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient()
     const {
       data: { user },
     } = await authenticatedSupabase.auth.getUser()
@@ -234,7 +215,7 @@ export async function PATCH(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient()
     const {
       data: { user },
     } = await authenticatedSupabase.auth.getUser()

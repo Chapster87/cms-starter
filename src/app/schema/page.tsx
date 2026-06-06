@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import Button from "@/components/button"
 import { useModels } from "@/hooks/use-models"
 
 /**
@@ -30,7 +31,7 @@ export default function ModelsDashboard() {
         <div>
           <p>No models found. Get started by creating your first one.</p>
           <Link href="/schema/new">
-            <button type="button">Create New Model</button>
+            <Button>Create New Model</Button>
           </Link>
         </div>
       )}

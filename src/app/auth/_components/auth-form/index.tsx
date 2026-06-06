@@ -1,7 +1,8 @@
 "use client"
 
 import { useCallback, useState } from "react"
-import { supabase } from "@/utils/supabaseClient"
+import Button from "@/components/button"
+import { createClient } from "@/utils/supabase"
 import s from "./style.module.css"
 
 /**
@@ -17,6 +18,7 @@ export default function AuthForm() {
   const handleGoogleSignIn = useCallback(async () => {
     setLoading(true)
     setError(null)
+    const supabase = createClient()
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
@@ -40,13 +42,13 @@ export default function AuthForm() {
   return (
     <div className={s.authFormContainer}>
       {/* Google Sign-In Button */}
-      <button
-        className={s.googleButton}
+      <Button
         onClick={handleGoogleSignIn}
+        isLoading={loading}
         disabled={loading}
       >
-        {loading ? "Signing in..." : "Sign in with Google"}
-      </button>
+        Sign in with Google
+      </Button>
 
       {error && <p className={s.errorText}>{error}</p>}
 

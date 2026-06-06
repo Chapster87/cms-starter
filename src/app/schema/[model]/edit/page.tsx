@@ -3,10 +3,10 @@
 import { useState, useEffect, useCallback, use } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import Button from "@/components/button"
 import s from "./style.module.css"
 import { useAuth } from "@/hooks/use-auth"
-import { supabase } from "@/utils/supabaseClient"
-import FieldList from "../_components/field-list"
+import { createClient } from "@/utils/supabase"
 
 interface EditModelPageProps {
   params: Promise<{
@@ -75,7 +75,7 @@ export default function EditModelPage({ params }: EditModelPageProps) {
       }
     }
     loadModelMetadata()
-  }, [model, authLoading])
+  }, [model, authLoading, accessToken])
 
   const handleSubmit = useCallback(
     async (event: React.FormEvent) => {
@@ -88,6 +88,7 @@ export default function EditModelPage({ params }: EditModelPageProps) {
 
       try {
         // Use upsert by ID for more reliable updates
+        const supabase = createClient()
         const { error: updateError } = await supabase
           .from("models")
           .upsert({
@@ -110,7 +111,7 @@ export default function EditModelPage({ params }: EditModelPageProps) {
         setLoading(false)
       }
     },
-    [modelId, friendlyName, slug, isSingleton, accessToken, router]
+    [model, modelId, friendlyName, slug, isSingleton, accessToken, router]
   )
 
   if (loading || authLoading) return <p>Loading settings...</p>
@@ -177,13 +178,13 @@ export default function EditModelPage({ params }: EditModelPageProps) {
         </div>
 
         <div className={s.actions}>
-          <button type="submit" disabled={loading} className={s.submitButton}>
-            {loading ? "Saving..." : "Save Settings"}
-          </button>
+          <Button type="submit" isLoading={loading} disabled={loading}>
+            Save Settings
+          </Button>
           <Link href={`/schema/${model}`}>
-            <button type="button" className={s.cancelButton}>
+            <Button variant="secondary" type="button">
               Cancel
-            </button>
+            </Button>
           </Link>
         </div>
       </form>

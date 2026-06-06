@@ -23,7 +23,7 @@
   user-select: none;
   outline: none;
   cursor: pointer;
-  gap: 8px;
+  gap: 12px;
   text-decoration: none;
 
   &[data-highlighted] {
@@ -49,6 +49,22 @@
   color: inherit;
   text-decoration: none;
   gap: inherit;
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-grey-500);
+  flex-shrink: 0;
+}
+
+.menuItem[data-highlighted] .iconWrapper {
+  color: inherit;
+}
+
+.itemLabel {
+  flex: 1;
 }
 
 .trigger {

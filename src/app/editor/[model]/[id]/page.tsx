@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, use } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { dataService, RecordBase } from "@/client/data-service"
+import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import RecordForm from "@/app/editor/[model]/_components/record-form"
 import s from "./style.module.css"
@@ -99,9 +100,9 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
   return (
     <div className={s.container}>
       <header className={s.header}>
-        <h1>Edit {model} Record</h1>
+        <h1>Edit {model}</h1>
         <Link href={`/editor/${model}`}>
-          <button className={s.backButton}>Back to List</button>
+          <Button variant="secondary">Back to List</Button>
         </Link>
       </header>
 

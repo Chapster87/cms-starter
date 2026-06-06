@@ -50,9 +50,13 @@ export async function POST(req: NextRequest) {
         const hasTitle = columnList.some((c) => c.column_name === "title")
         if (hasTitle) displayColumn = "title"
 
+        const hasSlug = columnList.some((c) => c.column_name === "slug")
+        const selectFields = [`id`, `${displayColumn}`]
+        if (hasSlug) selectFields.push("slug")
+
         const { data, error } = await systemClient
           .from(model.table_name)
-          .select(`id, ${displayColumn}`)
+          .select(selectFields.join(", "))
           .in("id", ids)
 
         if (error) {
@@ -65,7 +69,9 @@ export async function POST(req: NextRequest) {
           id: record.id as string,
           display_name:
             (record[displayColumn] as string) || (record.id as string),
+          subtitle: record.slug as string | undefined,
           model_name: model.friendly_name,
+          model_id: model.id,
         }))
       })
     )

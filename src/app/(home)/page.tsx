@@ -2,7 +2,6 @@
 
 import { useEffect } from "react"
 import Link from "next/link"
-import { supabase } from "@/utils/supabaseClient"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import Card from "@/components/card"

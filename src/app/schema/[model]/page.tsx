@@ -2,6 +2,7 @@
 
 import { use } from "react"
 import Link from "next/link"
+import Button from "@/components/button"
 import { useModels } from "@/hooks/use-models"
 import FieldList from "./_components/field-list"
 import s from "./style.module.css"
@@ -55,9 +56,7 @@ export default function ModelSchemaPage({ params }: ModelPageProps) {
           </h1>
         </div>
         <Link href={`?action=edit-model&modelSlug=${modelSlug}`}>
-          <button type="button" className={s.settingsButton}>
-            Model Settings
-          </button>
+          <Button variant="secondary">Model Settings</Button>
         </Link>
       </div>
 

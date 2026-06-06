@@ -9,6 +9,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - **Separation of Concerns:** Routes are split into `/editor` (Content Management/Record editing) and `/schema` (Model & Table Definitions).
 - **Metadata-Driven Architecture:** Field types, labels, validation, and UI ordering are stored in a `fields` registry and utilized by a dynamic form engine (`RecordForm`).
 - **Native Supabase Integration:** Uses the native Supabase client (PostgREST) for reliability and `SECURITY DEFINER` RPCs (e.g., `create_table`, `drop_model_field`) for schema-modifying operations.
+- **Supabase SSR & Middleware:** Implements `@supabase/ssr` for robust authentication. Uses Next.js Middleware to automatically refresh sessions and synchronize tokens with cookies, preventing "Refresh Token Not Found" errors.
 - **URL-Driven State:** Modals and management actions are driven by query parameters (e.g., `?action=new-field`) for deep-linking and cleaner state synchronization.
 - **Zero-Prop Architecture:** Forms (`ModalModel`, `ModalField`) are self-contained, fetching their own data and auth state.
 - **Local-First Organization:** Components are grouped within feature directories (e.g., `_components`, `_data`) close to their point of use.
@@ -51,6 +52,8 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 ### 2. Next Steps (In Progress/Upcoming)
 
 - [x] **Linked Records Stability:** Fixed RPC parameter naming (`t_name`) across List, Search, and Previews APIs.
+- [x] **Site Navigation Model:** Modern, hierarchical drag-and-drop navigation system with automatic path resolution and group management.
+- [x] **Unified Button Infrastructure:** Converted all frontend-facing `<button>` tags to a standardized `<Button />` component with consistent Primary/Secondary brand styling.
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Model Reordering:** Apply DND logic to the top-level Models sidebar and dashboard.
@@ -75,5 +78,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - `src/components/fields/`: Directory containing all global form components.
 - `src/app/schema/`: Schema Builder and model management logic.
 - `src/app/editor/`: Content Management and dynamic form engine.
+- `src/utils/supabase.ts` & `src/utils/supabase-server.ts`: Standardized SSR-friendly Supabase clients.
+- `src/middleware.ts`: Global session refreshing and cookie synchronization.
 - `src/utils/field-types.ts`: Source of truth for field and Postgres type mapping.
 - `src/client/data-service.ts`: Centralized service for CRUD operations using native Supabase patterns.

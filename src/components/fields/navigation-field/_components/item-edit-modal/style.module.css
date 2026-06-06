@@ -1,0 +1,61 @@
+.editModal {
+  max-width: 500px;
+}
+
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.typeSelector {
+  display: flex;
+  background: var(--bg-hover, #f1f5f9);
+  padding: 4px;
+  border-radius: 8px;
+  gap: 4px;
+}
+
+.typeSelector button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted, #64748b);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.typeSelector button:hover {
+  color: var(--text-main, #1e293b);
+}
+
+.typeSelector button.activeType {
+  background: var(--bg-surface, #ffffff);
+  color: var(--primary-color, #3b82f6);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.externalFields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toggleRow {
+  display: flex;
+  gap: 24px;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}

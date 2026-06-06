@@ -1,4 +1,4 @@
-import { supabase } from "@/utils/supabaseClient"
+import { createClient } from "@/utils/supabase"
 
 export interface RecordBase {
   id: string
@@ -18,6 +18,7 @@ export const dataService = {
    * @returns A promise that resolves to an array of records.
    */
   async getRecords(model: string): Promise<RecordBase[]> {
+    const supabase = createClient()
     const { data, error } = await supabase
       .from(model)
       .select("*")
@@ -42,6 +43,7 @@ export const dataService = {
     id: string,
     fields: string = "*"
   ): Promise<RecordBase | null> {
+    const supabase = createClient()
     // Basic UUID validation to prevent 400 errors from Supabase
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
@@ -75,6 +77,7 @@ export const dataService = {
     model: string,
     slug: string
   ): Promise<RecordBase | null> {
+    const supabase = createClient()
     try {
       const { data, error } = await supabase
         .from(model)
@@ -98,6 +101,7 @@ export const dataService = {
    * Deletes a record by its ID.
    */
   async deleteRecord(model: string, id: string): Promise<void> {
+    const supabase = createClient()
     const { error } = await supabase.from(model).delete().eq("id", id)
 
     if (error) {
@@ -117,6 +121,7 @@ export const dataService = {
     id: string,
     changes: Record<string, unknown>
   ): Promise<void> {
+    const supabase = createClient()
     const { error } = await supabase
       .from(model)
       .upsert({ ...changes, id })
@@ -138,6 +143,7 @@ export const dataService = {
     model: string,
     recordData: Record<string, unknown>
   ): Promise<RecordBase | null> {
+    const supabase = createClient()
     const { data, error } = await supabase
       .from(model)
       .upsert([recordData])

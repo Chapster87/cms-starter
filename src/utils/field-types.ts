@@ -102,6 +102,13 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     description: "Reference to other records in the CMS.",
     icon: "external-link",
   },
+  {
+    type: "navigation",
+    label: "Site Navigation",
+    dbType: "jsonb",
+    description: "Hierarchical menu with internal/external links.",
+    icon: "menu",
+  },
 ]
 
 /**

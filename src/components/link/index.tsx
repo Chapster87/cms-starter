@@ -1,7 +1,7 @@
 import React from "react"
 import NextLink from "next/link"
 import clsx from "clsx"
-import buttonStyles from "../button/styles.module.css"
+import buttonStyles from "../button/style.module.css"
 import s from "./styles.module.css"
 
 type LinkProps = {

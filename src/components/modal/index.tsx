@@ -2,6 +2,9 @@ import React from "react"
 import * as Dialog from "@radix-ui/react-dialog"
 import { X } from "lucide-react"
 import { clsx } from "clsx"
+
+import Button from "@/components/button"
+
 import s from "./style.module.css"
 
 interface ModalProps {
@@ -43,9 +46,14 @@ export default function Modal({
           {children}
 
           <Dialog.Close asChild>
-            <button className={s.closeButton} aria-label="Close">
+            <Button
+              variant="secondary"
+              unstyled
+              className={s.closeButton}
+              aria-label="Close"
+            >
               <X size={20} />
-            </button>
+            </Button>
           </Dialog.Close>
         </Dialog.Content>
       </Dialog.Portal>

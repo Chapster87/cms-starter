@@ -10,6 +10,7 @@ import {
 } from "@/components/fields"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
+import Button from "@/components/button"
 import { CMSField } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 import s from "./style.module.css"
@@ -92,10 +93,15 @@ export default function ModalField({
             setIsUnique(field.is_unique)
             setNote(field.field_note || "")
             setIsIdTouched(true)
-            if (field.field_type === "reference") {
+            if (
+              field.field_type === "reference" ||
+              field.field_type === "navigation"
+            ) {
               const allowed = settings.allowed_models as string[] | undefined
               setAllowedModels(allowed || [])
-              setAllowMultiple(!!settings.allow_multiple)
+              if (field.field_type === "reference") {
+                setAllowMultiple(!!settings.allow_multiple)
+              }
             }
           } else {
             // Duplicate mode: Pre-fill with _copy and (copy)
@@ -106,10 +112,15 @@ export default function ModalField({
             setIsUnique(field.is_unique)
             setNote(field.field_note || "")
             setIsIdTouched(true)
-            if (field.field_type === "reference") {
+            if (
+              field.field_type === "reference" ||
+              field.field_type === "navigation"
+            ) {
               const allowed = settings.allowed_models as string[] | undefined
               setAllowedModels(allowed || [])
-              setAllowMultiple(!!settings.allow_multiple)
+              if (field.field_type === "reference") {
+                setAllowMultiple(!!settings.allow_multiple)
+              }
             }
           }
         }
@@ -170,7 +181,11 @@ export default function ModalField({
               allowed_models: allowedModels,
               allow_multiple: allowMultiple,
             }
-          : {}
+          : type === "navigation"
+            ? {
+                allowed_models: allowedModels,
+              }
+            : {}
 
       const body = isEdit
         ? {
@@ -218,12 +233,18 @@ export default function ModalField({
     <form onSubmit={handleSubmit} className={s.modalForm}>
       {mode === "create" && (
         <div className={s.modalNav}>
-          <button type="button" className={s.backButton} onClick={handleBack}>
-            <svg>
-              <use xlinkHref="/feather-sprite.svg#chevron-left" />
-            </svg>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleBack}
+            beforeText={
+              <svg>
+                <use xlinkHref="/feather-sprite.svg#chevron-left" />
+              </svg>
+            }
+          >
             Back to type selection
-          </button>
+          </Button>
         </div>
       )}
 
@@ -345,24 +366,51 @@ export default function ModalField({
         </div>
       )}
 
+      {type === "navigation" && (
+        <div className={s.referenceSettings}>
+          <hr className={s.separator} />
+          <h4 className={s.settingsTitle}>Navigation Link Settings</h4>
+
+          <div className={s.modelsGrid}>
+            <label className={s.fieldLabel}>Allow internal links from:</label>
+            <div className={s.checkboxGroup}>
+              {models.map((model) => (
+                <CheckboxField
+                  key={model.id}
+                  label={model.friendly_name}
+                  checked={allowedModels.includes(model.id)}
+                  onChange={(checked) => {
+                    if (checked) {
+                      setAllowedModels([...allowedModels, model.id])
+                    } else {
+                      setAllowedModels(
+                        allowedModels.filter((id) => id !== model.id)
+                      )
+                    }
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={s.modalActions}>
-        <button
+        <Button
           type="button"
-          className={s.cancelButton}
+          variant="secondary"
           onClick={onCancel}
           disabled={isSaving}
         >
           Cancel
-        </button>
-        <button type="submit" className={s.saveButton} disabled={isSaving}>
-          {isSaving
-            ? "Saving..."
-            : mode === "edit"
-              ? "Update Field"
-              : mode === "duplicate"
-                ? "Create Duplicate"
-                : "Create Field"}
-        </button>
+        </Button>
+        <Button type="submit" isLoading={isSaving} disabled={isSaving}>
+          {mode === "edit"
+            ? "Update Field"
+            : mode === "duplicate"
+              ? "Create Duplicate"
+              : "Create Field"}
+        </Button>
       </div>
     </form>
   )

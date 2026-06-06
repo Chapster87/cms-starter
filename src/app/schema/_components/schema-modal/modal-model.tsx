@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from "react"
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
-import { TextField, CheckboxField, SlugField } from "@/components/fields"
+import Button from "@/components/button"
+import { CheckboxField, SlugField } from "@/components/fields"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import s from "./style.module.css"
@@ -147,14 +148,16 @@ export default function ModalModel({
         <label className={s.fieldLabel}>Display Name</label>
         <div className={s.nameInputRow}>
           <div className={s.emojiFieldWrapper}>
-            <button
+            <Button
+              variant="secondary"
+              unstyled
               type="button"
               className={s.emojiButton}
               onClick={() => setShowPicker(!showPicker)}
               disabled={isSaving}
             >
               {emoji || "⬚"}
-            </button>
+            </Button>
             {showPicker && (
               <div className={s.pickerContainer} ref={pickerRef}>
                 <EmojiPicker
@@ -204,21 +207,17 @@ export default function ModalModel({
       />
 
       <div className={s.modalActions}>
-        <button
+        <Button
           type="button"
-          className={s.cancelButton}
+          variant="secondary"
           onClick={onCancel}
           disabled={isSaving}
         >
           Cancel
-        </button>
-        <button type="submit" className={s.saveButton} disabled={isSaving}>
-          {isSaving
-            ? "Saving..."
-            : mode === "edit"
-              ? "Update Model"
-              : "Create Model"}
-        </button>
+        </Button>
+        <Button type="submit" isLoading={isSaving} disabled={isSaving}>
+          {mode === "edit" ? "Update Model" : "Create Model"}
+        </Button>
       </div>
     </form>
   )

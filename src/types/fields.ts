@@ -16,6 +16,7 @@ export type CMSFieldType =
   | "modular_content" // jsonb (Dynamic block layouts)
   | "seo_metadata" // jsonb (Grouped SEO metadata)
   | "reference" // jsonb (Link to other records)
+  | "navigation" // jsonb (Site navigation tree)
 
 /**
  * Represents a field configuration in the registry.

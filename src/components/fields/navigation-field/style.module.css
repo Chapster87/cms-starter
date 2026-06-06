@@ -1,0 +1,60 @@
+.navigationContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 8px;
+  background: var(--bg-surface, #ffffff);
+}
+
+.addActions {
+  display: flex;
+  gap: 12px;
+}
+
+.addBtn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  background: var(--bg-surface, #ffffff);
+  border: 1px dashed var(--border-color, #e2e8f0);
+  border-radius: 6px;
+  color: var(--text-main, #1e293b);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.addBtn:hover {
+  border-color: var(--primary-color, #3b82f6);
+  color: var(--primary-color, #3b82f6);
+  background: var(--bg-hover, #f1f5f9);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: var(--bg-card, #f8fafc);
+  border: 1px dashed var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  color: var(--text-muted, #94a3b8);
+  gap: 12px;
+}
+
+.emptyIcon {
+  opacity: 0.5;
+}

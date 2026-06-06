@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { TextField, SelectField, CheckboxField } from "@/components/fields"
+import Button from "@/components/button"
 import Modal from "@/components/modal"
 import { CMSField } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
@@ -206,22 +207,20 @@ export default function FieldModal({
         />
 
         <div className={s.modalActions}>
-          <button
+          <Button
             type="button"
-            className={s.cancelButton}
+            variant="secondary"
             onClick={() => onOpenChange(false)}
           >
             Cancel
-          </button>
-          <button type="submit" className={s.saveButton} disabled={isSaving}>
-            {isSaving
-              ? "Saving..."
-              : mode === "edit"
-                ? "Update Field"
-                : mode === "duplicate"
-                  ? "Create Duplicate"
-                  : "Create Field"}
-          </button>
+          </Button>
+          <Button type="submit" isLoading={isSaving} disabled={isSaving}>
+            {mode === "edit"
+              ? "Update Field"
+              : mode === "duplicate"
+                ? "Create Duplicate"
+                : "Create Field"}
+          </Button>
         </div>
       </form>
     </Modal>

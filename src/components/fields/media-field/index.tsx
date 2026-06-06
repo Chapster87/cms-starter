@@ -1,7 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
+
+import Button from "@/components/button"
 import FieldWrapper from "../field-wrapper"
+
 import s from "./style.module.css"
 
 interface MediaAsset {
@@ -91,14 +94,16 @@ export default function MediaField({
               </div>
               <div className={s.assetInfo}>
                 <span className={s.assetName}>{asset.name}</span>
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="small"
                   className={s.removeButton}
                   onClick={() => handleRemove(index)}
                   disabled={disabled}
                 >
                   ✕
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -113,14 +118,14 @@ export default function MediaField({
                   className={s.urlInput}
                   disabled={disabled}
                 />
-                <button
+                <Button
                   type="button"
                   onClick={handleAddUrl}
                   className={s.addButton}
                   disabled={disabled || !urlInput}
                 >
                   Add
-                </button>
+                </Button>
               </div>
               <p className={s.hint}>
                 @TODO: Implement Supabase Storage Uploader

@@ -1,9 +1,10 @@
 import React from "react"
-import s from "./styles.module.css"
+
+import s from "./style.module.css"
 
 type ButtonProps = {
   children: React.ReactNode
-  onClick?: () => void
+  onClick?: React.MouseEventHandler<HTMLButtonElement>
   variant?: "primary" | "secondary"
   size?: "small" | "default" | "large"
   shape?: "standard" | "square" | "circle"

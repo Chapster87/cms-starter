@@ -1,7 +1,9 @@
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import Button from "@/components/button"
 import ContextMenu from "@/components/context-menu"
 import SvgIcon from "@/components/svg-icon"
+import { Copy, Trash2 } from "lucide-react"
 import { CMSField } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 
@@ -92,29 +94,39 @@ export function SortableFieldCard({
           {field.is_system && <span className={s.systemBadge}>System</span>}
         </div>
 
-        <button
-          className={s.editFieldButton}
+        <Button
+          variant="secondary"
+          size="small"
           onClick={() => onEdit(field)}
           type="button"
         >
           Edit field
-        </button>
+        </Button>
 
         <ContextMenu>
           <ContextMenu.Trigger className={s.menuTrigger}>
-            <button type="button" aria-label="More options">
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              aria-label="More options"
+            >
               <SvgIcon icon="more-vertical" size={20} />
-            </button>
+            </Button>
           </ContextMenu.Trigger>
 
           <ContextMenu.Content>
-            <ContextMenu.Item onSelect={() => onDuplicate(field)}>
+            <ContextMenu.Item
+              onSelect={() => onDuplicate(field)}
+              icon={<Copy size={14} />}
+            >
               Duplicate
             </ContextMenu.Item>
             {!field.is_system && (
               <ContextMenu.Item
                 onSelect={() => onDelete(field)}
                 variant="danger"
+                icon={<Trash2 size={14} />}
               >
                 Delete
               </ContextMenu.Item>

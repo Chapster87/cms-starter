@@ -1,5 +1,5 @@
 import { GraphQLClient } from "graphql-request"
-import { supabase } from "@/utils/supabaseClient"
+import { createClient } from "@/utils/supabase"
 
 const graphqlEndpoint = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/graphql/v1`
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -22,6 +22,7 @@ export async function getGraphqlClient(
     headers["Authorization"] = `Bearer ${accessToken}`
   } else {
     // Attempt to get session if accessToken not explicitly provided
+    const supabase = createClient()
     const {
       data: { session },
     } = await supabase.auth.getSession()

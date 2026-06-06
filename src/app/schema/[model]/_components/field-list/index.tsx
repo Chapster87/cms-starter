@@ -17,7 +17,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import Link from "next/link"
+import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
+import { createClient } from "@/utils/supabase"
 import { CMSField } from "@/types/fields"
 import { SortableFieldCard } from "./sortable-field-card"
 import s from "./style.module.css"
@@ -68,9 +70,8 @@ export default function FieldList({ modelId }: FieldListProps) {
       setFields(data)
 
       // 2. Resolve table name to check for unregistered columns
-      const { data: modelData } = await (
-        await import("@/utils/supabaseClient")
-      ).supabase
+      const supabase = createClient()
+      const { data: modelData } = await supabase
         .from("models")
         .select("table_name")
         .eq("id", modelId)
@@ -125,9 +126,8 @@ export default function FieldList({ modelId }: FieldListProps) {
     if (!accessToken || !modelId) return
     setIsSyncing(true)
     try {
-      const { data: modelData } = await (
-        await import("@/utils/supabaseClient")
-      ).supabase
+      const supabase = createClient()
+      const { data: modelData } = await supabase
         .from("models")
         .select("table_name")
         .eq("id", modelId)
@@ -247,20 +247,21 @@ export default function FieldList({ modelId }: FieldListProps) {
           {unregisteredCount > 0 && (
             <span className={s.syncHint}>
               {unregisteredCount} existing columns detected.
-              <button
-                className={s.syncButton}
+              <Button
+                variant="secondary"
+                size="small"
                 onClick={handleSync}
+                isLoading={isSyncing}
                 disabled={isSyncing}
+                className={s.syncButton}
               >
-                {isSyncing ? "Syncing..." : "Import them"}
-              </button>
+                Import them
+              </Button>
             </span>
           )}
         </div>
         <Link href="?action=new-field">
-          <button type="button" className={s.addFieldButton}>
-            <span>+</span> Add new field
-          </button>
+          <Button beforeText={<span>+</span>}>Add new field</Button>
         </Link>
       </div>
 

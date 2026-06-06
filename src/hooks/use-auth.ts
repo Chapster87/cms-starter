@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { User } from "@supabase/supabase-js"
-import { supabase } from "@/utils/supabaseClient"
+import { createClient } from "@/utils/supabase"
 
 /**
  * Custom hook to manage Supabase authentication state.
@@ -12,6 +12,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const supabase = createClient()
 
   useEffect(() => {
     /**
@@ -45,7 +46,7 @@ export function useAuth() {
     return () => {
       authListener?.subscription.unsubscribe()
     }
-  }, [])
+  }, [supabase])
 
   return { user, accessToken, loading }
 }

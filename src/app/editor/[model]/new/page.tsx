@@ -4,6 +4,7 @@ import { useState, use } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { dataService } from "@/client/data-service"
+import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import RecordForm from "@/app/editor/[model]/_components/record-form"
 import s from "./style.module.css"
@@ -56,7 +57,7 @@ export default function NewRecordPage({ params }: NewRecordPageProps) {
       <header className={s.header}>
         <h1>Create New {model}</h1>
         <Link href={`/editor/${model}`}>
-          <button className={s.backButton}>Back to List</button>
+          <Button variant="secondary">Back to List</Button>
         </Link>
       </header>
 

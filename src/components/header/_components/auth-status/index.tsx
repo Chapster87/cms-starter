@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@/hooks/use-auth"
-import { supabase } from "@/utils/supabaseClient"
+import { createClient } from "@/utils/supabase"
 import { useRouter } from "next/navigation"
 import * as Avatar from "@radix-ui/react-avatar"
 import Text from "@components/typography/text"
@@ -14,6 +14,7 @@ import s from "./style.module.css"
 export default function AuthStatus() {
   const router = useRouter()
   const { user, loading } = useAuth()
+  const supabase = createClient()
 
   const handleGoogleSignIn = async () => {
     await supabase.auth.signInWithOAuth({

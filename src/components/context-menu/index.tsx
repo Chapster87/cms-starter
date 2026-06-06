@@ -3,6 +3,7 @@ import Link from "next/link"
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu"
 import clsx from "clsx"
 
+import Button from "@/components/button"
 import SvgIcon from "@/components/svg-icon"
 
 import s from "./style.module.css"
@@ -46,9 +47,14 @@ function ContextMenuTrigger({
       className={clsx(s.trigger, className)}
     >
       {children || (
-        <button type="button" aria-label="Open menu">
+        <Button
+          variant="secondary"
+          unstyled
+          type="button"
+          aria-label="Open menu"
+        >
           <SvgIcon icon="more-vertical" size={20} />
-        </button>
+        </Button>
       )}
     </DropdownMenu.Trigger>
   )
@@ -79,6 +85,7 @@ function ContextMenuContent({
         className={clsx(s.menuContent, className)}
         align={align}
         sideOffset={sideOffset}
+        collisionPadding={16}
         {...props}
       >
         {children}
@@ -89,6 +96,7 @@ function ContextMenuContent({
 
 interface ContextMenuItemProps {
   children: React.ReactNode
+  icon?: React.ReactNode
   onSelect?: (event: Event) => void
   className?: string
   disabled?: boolean
@@ -101,6 +109,7 @@ interface ContextMenuItemProps {
  */
 function ContextMenuItem({
   children,
+  icon,
   onSelect,
   className,
   disabled,
@@ -112,13 +121,15 @@ function ContextMenuItem({
       onSelect={onSelect}
       disabled={disabled}
     >
-      {children}
+      {icon && <span className={s.iconWrapper}>{icon}</span>}
+      <span className={s.itemLabel}>{children}</span>
     </DropdownMenu.Item>
   )
 }
 
 interface ContextMenuLinkProps {
   children: React.ReactNode
+  icon?: React.ReactNode
   href: string
   className?: string
   disabled?: boolean
@@ -130,6 +141,7 @@ interface ContextMenuLinkProps {
  */
 function ContextMenuLink({
   children,
+  icon,
   href,
   className,
   disabled,
@@ -140,7 +152,10 @@ function ContextMenuLink({
       disabled={disabled}
       asChild
     >
-      <Link href={href}>{children}</Link>
+      <Link href={href}>
+        {icon && <span className={s.iconWrapper}>{icon}</span>}
+        <span className={s.itemLabel}>{children}</span>
+      </Link>
     </DropdownMenu.Item>
   )
 }

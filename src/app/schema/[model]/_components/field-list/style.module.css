@@ -32,36 +32,8 @@
 }
 
 .syncButton {
-  background: none;
-  border: none;
-  color: var(--color-primary);
-  text-decoration: underline;
-  padding: 0;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-.syncButton:disabled {
-  color: #ccc;
-  cursor: not-allowed;
-}
-
-.addFieldButton {
-  padding: 8px 16px;
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.addFieldButton:hover {
-  filter: brightness(1.1);
+  padding: 0 !important;
+  text-decoration: underline !important;
 }
 
 .fieldStack {
@@ -165,21 +137,6 @@
   align-items: center;
   gap: 12px;
   margin-left: auto;
-}
-
-.editFieldButton {
-  padding: 6px 12px;
-  background-color: #e0f2fe;
-  color: #0369a1;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.editFieldButton:hover {
-  background-color: #bae6fd;
 }
 
 .menuTrigger {
@@ -345,37 +302,6 @@
   justify-content: flex-end;
   gap: 12px;
   margin-top: 32px;
-}
-
-.saveButton {
-  padding: 10px 24px;
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.saveButton:disabled {
-  background-color: #d1d5db;
-  cursor: not-allowed;
-}
-
-.cancelButton {
-  padding: 10px 24px;
-  background-color: #fff;
-  color: #374151;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.cancelButton:hover {
-  background-color: #f9fafb;
 }
 
 .errorText {

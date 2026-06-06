@@ -2,15 +2,19 @@
 
 import React, { useState, useEffect, useCallback } from "react"
 import { Search, ChevronDown, FileText, Check } from "lucide-react"
+
+import Button from "@/components/button"
 import Modal from "@/components/modal"
 import { useAuth } from "@/hooks/use-auth"
 import FieldWrapper from "../field-wrapper"
+
 import s from "./style.module.css"
 
 interface ReferenceFieldProps {
   label: string
   value: string | string[] | null
   onChange: (value: string | string[] | null) => void
+  onSelectRecord?: (record: RecordPreview) => void
   allowedModels: string[]
   allowMultiple?: boolean
   description?: string
@@ -35,6 +39,7 @@ export default function ReferenceField({
   label,
   value,
   onChange,
+  onSelectRecord,
   allowedModels,
   allowMultiple = false,
   description,
@@ -137,6 +142,8 @@ export default function ReferenceField({
   }, [isModalOpen, fetchRecords])
 
   const handleSelect = (record: RecordPreview) => {
+    onSelectRecord?.(record)
+
     if (allowMultiple) {
       const isAlreadySelected = selectedIds.includes(record.id)
       const newValue = isAlreadySelected
@@ -180,8 +187,11 @@ export default function ReferenceField({
               <span key={record.id} className={s.pill}>
                 <span className={s.pillModel}>{record.model_name}:</span>
                 {record.display_name}
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
+                  size="small"
+                  unstyled
                   className={s.removeBtn}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -190,7 +200,7 @@ export default function ReferenceField({
                   disabled={disabled}
                 >
                   ✕
-                </button>
+                </Button>
               </span>
             ))}
             {selectedRecords.length === 0 && (

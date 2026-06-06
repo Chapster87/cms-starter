@@ -1,21 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/utils/supabaseClient"
+import { createClient } from "@/utils/supabase-server"
 
 /**
  * Helper to get an authenticated Supabase client for API routes.
  */
-async function getAuthenticatedSupabaseClient(req: NextRequest) {
-  const authorization = req.headers.get("Authorization")
-  const accessToken = authorization?.split(" ")[1]
-
-  if (accessToken) {
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: accessToken,
-    })
-    return supabase
-  }
-  return supabase
+async function getAuthenticatedSupabaseClient() {
+  return await createClient()
 }
 
 /**
@@ -23,7 +13,7 @@ async function getAuthenticatedSupabaseClient(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient()
     const { model_id, table_name } = await req.json()
 
     if (!model_id || !table_name) {

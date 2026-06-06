@@ -1,7 +1,10 @@
 "use client"
 
 import React, { useState, KeyboardEvent } from "react"
+
+import Button from "@/components/button"
 import FieldWrapper from "../field-wrapper"
+
 import s from "./style.module.css"
 
 interface TagFieldProps {
@@ -84,14 +87,17 @@ export default function TagField({
           {tags.map((tag, index) => (
             <span key={index} className={s.tag}>
               {tag}
-              <button
+              <Button
                 type="button"
+                variant="secondary"
+                size="small"
+                unstyled
                 className={s.removeBtn}
                 onClick={() => removeTag(index)}
                 disabled={disabled}
               >
                 ✕
-              </button>
+              </Button>
             </span>
           ))}
           <input

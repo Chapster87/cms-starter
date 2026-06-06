@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback, use } from "react"
 import Link from "next/link"
 import { dataService, RecordBase } from "@/client/data-service"
+import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import ContextMenu from "@/components/context-menu"
+import { Edit2, Trash2 } from "lucide-react"
 import s from "./style.module.css"
 
 interface RecordListPageProps {
@@ -129,24 +131,27 @@ export default function RecordListPage({ params }: RecordListPageProps) {
         </div>
         <div className={s.actions}>
           <Link href={`/editor/${modelSlug}/new`}>
-            <button className={s.createButton}>
-              <svg
-                width="16"
-                height="16"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 4v16m8-8H4"
-                />
-              </svg>
+            <Button
+              beforeText={
+                <svg
+                  width="16"
+                  height="16"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+              }
+            >
               Add New
-            </button>
+            </Button>
           </Link>
         </div>
       </header>
@@ -187,7 +192,12 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                 <td className={s.actionsCell}>
                   <ContextMenu>
                     <ContextMenu.Trigger className={s.actionsButton}>
-                      <button type="button" aria-label="More options">
+                      <Button
+                        variant="secondary"
+                        unstyled
+                        type="button"
+                        aria-label="More options"
+                      >
                         <svg
                           width="16"
                           height="16"
@@ -203,17 +213,19 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                             d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
                           />
                         </svg>
-                      </button>
+                      </Button>
                     </ContextMenu.Trigger>
                     <ContextMenu.Content>
                       <ContextMenu.Link
                         href={`/editor/${modelSlug}/${record.slug || record.id}`}
+                        icon={<Edit2 size={14} />}
                       >
                         Edit
                       </ContextMenu.Link>
                       <ContextMenu.Item
                         onSelect={() => handleDelete(record.id)}
                         variant="danger"
+                        icon={<Trash2 size={14} />}
                       >
                         Delete
                       </ContextMenu.Item>

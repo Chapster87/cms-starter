@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-import { supabase } from "@/utils/supabaseClient"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { createClient } from "@/utils/supabase-server"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -8,24 +8,8 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 /**
  * Helper to get an authenticated Supabase client for API routes.
  */
-async function getAuthenticatedSupabaseClient(req: NextRequest) {
-  const authorization = req.headers.get("Authorization")
-  const accessToken = authorization?.split(" ")[1]
-
-  if (accessToken) {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(accessToken)
-
-    if (error || !user) {
-      console.error("Authentication error in API route:", error?.message)
-      return null
-    }
-
-    return supabase
-  }
-  return null
+async function getAuthenticatedSupabaseClient() {
+  return await createClient()
 }
 
 /**
@@ -34,7 +18,7 @@ async function getAuthenticatedSupabaseClient(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const authenticatedSupabase = await getAuthenticatedSupabaseClient(req)
+    const authenticatedSupabase = await getAuthenticatedSupabaseClient()
     if (!authenticatedSupabase) {
       return NextResponse.json(
         { error: "Unauthorized: User not authenticated." },
@@ -52,7 +36,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Create a system client to bypass RLS on metadata tables for updates
-    const systemClient = createClient(supabaseUrl, supabaseServiceKey)
+    const systemClient = createSupabaseClient(supabaseUrl, supabaseServiceKey)
 
     // Perform updates in parallel
     // NOTE: In a high-traffic production app, an RPC for batch updates would be more efficient

@@ -1,5 +1,6 @@
 "use client"
 
+import Button from "@/components/button"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 import s from "./style.module.css"
 
@@ -14,7 +15,9 @@ export default function FieldTypeGrid({ onSelect }: FieldTypeGridProps) {
   return (
     <div className={s.typeGrid}>
       {FIELD_DEFINITIONS.map((field) => (
-        <button
+        <Button
+          variant="secondary"
+          unstyled
           key={field.type}
           type="button"
           className={s.typeCard}
@@ -29,7 +32,7 @@ export default function FieldTypeGrid({ onSelect }: FieldTypeGridProps) {
             <span className={s.typeLabel}>{field.label}</span>
             <p className={s.typeDescription}>{field.description}</p>
           </div>
-        </button>
+        </Button>
       ))}
     </div>
   )

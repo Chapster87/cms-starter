@@ -4,9 +4,11 @@ import { useCallback } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
+import Button from "@/components/button"
 import { useModels, ModelRegistryEntry } from "@/hooks/use-models"
 import ContextMenu from "@/components/context-menu"
 import SvgIcon from "@/components/svg-icon"
+import { Edit2, ExternalLink, Copy, Trash2 } from "lucide-react"
 import clsx from "clsx"
 import s from "./style.module.css"
 
@@ -93,28 +95,39 @@ export default function ModelList({ models }: ModelListProps) {
               <div className={s.actions}>
                 <ContextMenu>
                   <ContextMenu.Trigger className={s.menuTrigger}>
-                    <button type="button" aria-label="More options">
+                    <Button
+                      variant="secondary"
+                      unstyled
+                      type="button"
+                      aria-label="More options"
+                    >
                       <SvgIcon icon="more-vertical" size={20} />
-                    </button>
+                    </Button>
                   </ContextMenu.Trigger>
 
                   <ContextMenu.Content>
                     <ContextMenu.Link
                       href={`?action=edit-model&modelSlug=${model.slug}`}
+                      icon={<Edit2 size={14} />}
                     >
                       Edit
                     </ContextMenu.Link>
-                    <ContextMenu.Link href={`/editor/${model.slug}`}>
+                    <ContextMenu.Link
+                      href={`/editor/${model.slug}`}
+                      icon={<ExternalLink size={14} />}
+                    >
                       {model.is_singleton ? "Edit Content" : "View Records"}
                     </ContextMenu.Link>
                     <ContextMenu.Link
                       href={`?action=duplicate-model&modelSlug=${model.slug}`}
+                      icon={<Copy size={14} />}
                     >
                       Duplicate
                     </ContextMenu.Link>
                     <ContextMenu.Item
                       onSelect={() => handleDeleteModel(model.table_name)}
                       variant="danger"
+                      icon={<Trash2 size={14} />}
                     >
                       Delete
                     </ContextMenu.Item>
@@ -127,9 +140,7 @@ export default function ModelList({ models }: ModelListProps) {
       )}
       <div className={s.footer}>
         <Link href="?action=new-model">
-          <button type="button" className={s.newButton}>
-            + Create New Model
-          </button>
+          <Button beforeText="+">Create New Model</Button>
         </Link>
       </div>
     </div>

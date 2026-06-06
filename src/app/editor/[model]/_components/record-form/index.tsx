@@ -15,9 +15,12 @@ import {
   SeoField,
   DateField,
   ReferenceField,
+  NavigationField,
 } from "@/components/fields"
+import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import { CMSField } from "@/types/fields"
+import { NavigationData } from "@/types/navigation"
 import s from "./style.module.css"
 
 interface FieldSchema {
@@ -307,6 +310,19 @@ export default function RecordForm({
           )
         }
 
+        if (field.field_type === "navigation") {
+          const settings = (field.settings || {}) as Record<string, unknown>
+          return (
+            <NavigationField
+              key={field.field_name}
+              {...commonProps}
+              value={(formData[field.field_name] as NavigationData) || null}
+              onChange={(val) => handleChange(field.field_name, val)}
+              settings={settings}
+            />
+          )
+        }
+
         return (
           <TextField
             key={field.field_name}
@@ -316,9 +332,9 @@ export default function RecordForm({
           />
         )
       })}
-      <button type="submit" disabled={isLoading} className={s.submitButton}>
-        {isLoading ? "Saving..." : "Save Record"}
-      </button>
+      <Button type="submit" isLoading={isLoading} disabled={isLoading}>
+        Save Record
+      </Button>
     </form>
   )
 }

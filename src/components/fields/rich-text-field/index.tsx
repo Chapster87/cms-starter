@@ -33,7 +33,10 @@ import {
   Underline as UnderlineIcon,
   Undo,
 } from "lucide-react"
+
+import Button from "@/components/button"
 import FieldWrapper from "../field-wrapper"
+
 import s from "./style.module.css"
 
 interface RichTextFieldProps {
@@ -156,137 +159,173 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
 
       <div className={s.divider} />
 
-      <button
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().toggleBold().run()}
         className={editor.isActive("bold") ? s.isActive : ""}
         title="Bold"
       >
         <Bold size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().toggleItalic().run()}
         className={editor.isActive("italic") ? s.isActive : ""}
         title="Italic"
       >
         <Italic size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().toggleUnderline().run()}
         className={editor.isActive("underline") ? s.isActive : ""}
         title="Underline"
       >
         <UnderlineIcon size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().toggleStrike().run()}
         className={editor.isActive("strike") ? s.isActive : ""}
         title="Strikethrough"
       >
         <Strikethrough size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().toggleHighlight().run()}
         className={editor.isActive("highlight") ? s.isActive : ""}
         title="Highlight"
       >
         <Highlighter size={16} />
-      </button>
+      </Button>
 
       <div className={s.divider} />
 
-      <button
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().setTextAlign("left").run()}
         className={editor.isActive({ textAlign: "left" }) ? s.isActive : ""}
         title="Align Left"
       >
         <AlignLeft size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().setTextAlign("center").run()}
         className={editor.isActive({ textAlign: "center" }) ? s.isActive : ""}
         title="Align Center"
       >
         <AlignCenter size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().setTextAlign("right").run()}
         className={editor.isActive({ textAlign: "right" }) ? s.isActive : ""}
         title="Align Right"
       >
         <AlignRight size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().setTextAlign("justify").run()}
         className={editor.isActive({ textAlign: "justify" }) ? s.isActive : ""}
         title="Align Justify"
       >
         <AlignJustify size={16} />
-      </button>
+      </Button>
 
       <div className={s.divider} />
 
-      <button
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().toggleBulletList().run()}
         className={editor.isActive("bulletList") ? s.isActive : ""}
         title="Bullet List"
       >
         <List size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().toggleOrderedList().run()}
         className={editor.isActive("orderedList") ? s.isActive : ""}
         title="Ordered List"
       >
         <ListOrdered size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().toggleBlockquote().run()}
         className={editor.isActive("blockquote") ? s.isActive : ""}
         title="Blockquote"
       >
         <Quote size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().setHorizontalRule().run()}
         title="Horizontal Rule"
       >
         <Minus size={16} />
-      </button>
+      </Button>
 
       <div className={s.divider} />
 
-      <button
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={addLink}
         className={editor.isActive("link") ? s.isActive : ""}
         title="Add Link"
       >
         <LinkIcon size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().unsetLink().run()}
         disabled={!editor.isActive("link")}
         title="Remove Link"
       >
         <Link2Off size={16} />
-      </button>
-      <button type="button" onClick={addImage} title="Add Image">
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
+        type="button"
+        onClick={addImage}
+        title="Add Image"
+      >
         <ImageIcon size={16} />
-      </button>
+      </Button>
 
       <div className={s.divider} />
 
@@ -308,22 +347,26 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
 
       <div className={s.divider} />
 
-      <button
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().undo().run()}
         disabled={!editor.can().chain().focus().undo().run()}
         title="Undo"
       >
         <Undo size={16} />
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="secondary"
+        unstyled
         type="button"
         onClick={() => editor.chain().focus().redo().run()}
         disabled={!editor.can().chain().focus().redo().run()}
         title="Redo"
       >
         <Redo size={16} />
-      </button>
+      </Button>
     </div>
   )
 }
