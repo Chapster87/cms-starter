@@ -1,34 +1,14 @@
 "use client"
 
 import React, { useState, useEffect, useMemo } from "react"
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragOverEvent,
-  DragOverlay,
-  DragStartEvent,
-  DragMoveEvent,
-} from "@dnd-kit/core"
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
+import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { Menu, Plus, FolderPlus } from "lucide-react"
 import Button from "@/components/button"
 import { NavigationData, NavigationItem } from "@/types/navigation"
 import { useAuth } from "@/hooks/use-auth"
-import FieldWrapper from "../field-wrapper"
-import NavigationItemRow from "./_components/navigation-item-row"
-import ItemEditModal from "./_components/item-edit-modal"
-import GroupEditModal from "./_components/group-edit-modal"
+import { useTreeDnd } from "@/hooks/use-tree-dnd"
 import {
-  flattenTree,
   findItem,
   removeItem,
   insertItem,
@@ -36,9 +16,13 @@ import {
   deleteItemFromTree,
   addItemToTree,
   addSubItemToTree,
-  RecordPreview,
-  INDENTATION_WIDTH,
-} from "./_helpers/tree-helpers"
+  flattenTree,
+} from "@/helpers/tree-helpers"
+import FieldWrapper from "../field-wrapper"
+import NavigationItemRow from "./_components/navigation-item-row"
+import ItemEditModal from "./_components/item-edit-modal"
+import GroupEditModal from "./_components/group-edit-modal"
+import { RecordPreview } from "./_helpers/tree-helpers"
 import s from "./style.module.css"
 
 interface NavigationFieldProps {
@@ -79,9 +63,6 @@ export default function NavigationField({
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false)
   const [newItemConfig, setNewItemConfig] = useState<NewItemConfig | null>(null)
   const [previews, setPreviews] = useState<Record<string, RecordPreview>>({})
-  const [activeId, setActiveId] = useState<string | null>(null)
-  const [overId, setOverId] = useState<string | null>(null)
-  const [offsetLeft, setOffsetLeft] = useState(0)
 
   const allowedModels = (settings?.allowed_models as string[]) || []
 
@@ -127,80 +108,40 @@ export default function NavigationField({
     fetchPreviews()
   }, [accessToken, linkedIds])
 
-  // Sensors for DND
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
-
   const flattenedItems = useMemo(() => flattenTree(items), [items])
 
-  const handleDragStart = ({ active }: DragStartEvent) => {
-    setActiveId(active.id as string)
-    setOverId(active.id as string)
-    setOffsetLeft(0)
-    document.body.classList.add("dragging")
-  }
+  const {
+    activeId,
+    overId,
+    sensors,
+    handleDragStart,
+    handleDragMove,
+    handleDragOver,
+    handleDragEnd,
+    handleDragCancel,
+    getProjectedDepth,
+  } = useTreeDnd({
+    flattenedItems,
+    onDragEnd: ({ activeId, overId, newDepth, activeIndex, overIndex }) => {
+      const overItem = flattenedItems[overIndex]
+      const nextItems = JSON.parse(JSON.stringify(items))
+      const sourceItem = findItem(items, activeId)
+      if (!sourceItem) return
 
-  const handleDragMove = (event: DragMoveEvent) => {
-    setOffsetLeft(event.delta.x)
-  }
+      const itemToMove = JSON.parse(JSON.stringify(sourceItem))
+      removeItem(nextItems, activeId)
+      insertItem(
+        nextItems,
+        overId,
+        itemToMove,
+        activeIndex < overIndex,
+        newDepth,
+        overItem
+      )
 
-  const handleDragOver = ({ over }: DragOverEvent) => {
-    const id = (over?.id as string) ?? null
-    setOverId(id)
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over, delta } = event
-    resetState()
-    document.body.classList.remove("dragging")
-
-    if (!over || active.id === over.id) return
-
-    const activeIndex = flattenedItems.findIndex((i) => i.id === active.id)
-    const overIndex = flattenedItems.findIndex((i) => i.id === over.id)
-    const activeItem = flattenedItems[activeIndex]
-    const overItem = flattenedItems[overIndex]
-
-    if (!activeItem || !overItem) return
-
-    const projectedDepth =
-      activeItem.depth + Math.round(delta.x / INDENTATION_WIDTH)
-    const prevItem = flattenedItems[overIndex]
-    const maxDepth = prevItem ? prevItem.depth + 1 : 0
-    const newDepth = Math.max(0, Math.min(projectedDepth, maxDepth))
-
-    const nextItems = JSON.parse(JSON.stringify(items))
-    const sourceItem = findItem(items, active.id as string)
-    if (!sourceItem) return
-
-    const itemToMove = JSON.parse(JSON.stringify(sourceItem))
-    removeItem(nextItems, active.id as string)
-    insertItem(
-      nextItems,
-      over.id as string,
-      itemToMove,
-      activeIndex < overIndex,
-      newDepth,
-      overItem
-    )
-
-    onChange(nextItems)
-  }
-
-  const handleDragCancel = () => {
-    resetState()
-    document.body.classList.remove("dragging")
-  }
-
-  const resetState = () => {
-    setActiveId(null)
-    setOverId(null)
-    setOffsetLeft(0)
-  }
+      onChange(nextItems)
+    },
+  })
 
   const handleOpenAddModal = (
     type: NavigationItem["type"],
@@ -256,20 +197,7 @@ export default function NavigationField({
                 items={flattenedItems.map((i) => i.id)}
                 strategy={verticalListSortingStrategy}
               >
-                {flattenedItems.map((fItem, fIndex) => {
-                  let projectedDepth = fItem.depth
-                  if (activeId === fItem.id) {
-                    const depthDelta = Math.round(
-                      offsetLeft / INDENTATION_WIDTH
-                    )
-                    const prevItem = flattenedItems[fIndex - 1]
-                    const maxDepth = prevItem ? prevItem.depth + 1 : 0
-                    projectedDepth = Math.max(
-                      0,
-                      Math.min(fItem.depth + depthDelta, maxDepth)
-                    )
-                  }
-
+                {flattenedItems.map((fItem) => {
                   return (
                     <NavigationItemRow
                       key={fItem.id}
@@ -279,7 +207,7 @@ export default function NavigationField({
                       isOver={overId === fItem.id}
                       isDragging={activeId === fItem.id}
                       allowedModels={allowedModels}
-                      depth={projectedDepth}
+                      depth={getProjectedDepth(fItem.id, fItem.depth)}
                       onChange={(updated) => {
                         const nextItems = JSON.parse(JSON.stringify(items))
                         updateItemInTree(nextItems, fItem.id, updated)
@@ -316,26 +244,10 @@ export default function NavigationField({
                       previews={previews}
                       overId={null}
                       allowedModels={allowedModels}
-                      depth={
-                        (() => {
-                          const fItem = flattenedItems.find(
-                            (i) => i.id === activeId
-                          )
-                          if (!fItem) return 0
-                          const fIndex = flattenedItems.findIndex(
-                            (i) => i.id === activeId
-                          )
-                          const depthDelta = Math.round(
-                            offsetLeft / INDENTATION_WIDTH
-                          )
-                          const prevItem = flattenedItems[fIndex - 1]
-                          const maxDepth = prevItem ? prevItem.depth + 1 : 0
-                          return Math.max(
-                            0,
-                            Math.min(fItem.depth + depthDelta, maxDepth)
-                          )
-                        })() || 0
-                      }
+                      depth={getProjectedDepth(
+                        activeId,
+                        flattenedItems.find((i) => i.id === activeId)!.depth
+                      )}
                       onChange={() => {}}
                       onDelete={() => {}}
                       onAddAfter={() => {}}

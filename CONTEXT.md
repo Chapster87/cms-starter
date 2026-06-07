@@ -8,7 +8,8 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 - **Separation of Concerns:** Routes are split into `/editor` (Content Management/Record editing) and `/schema` (Model & Table Definitions).
 - **Metadata-Driven Architecture:** Field types, labels, validation, and UI ordering are stored in a `fields` registry and utilized by a dynamic form engine (`RecordForm`).
-- **Native Supabase Integration:** Uses the native Supabase client (PostgREST) for reliability and `SECURITY DEFINER` RPCs (e.g., `create_table`, `drop_model_field`) for schema-modifying operations.
+- **Native Supabase Integration:** Uses the native Supabase client (PostgREST via `dataService`) for reliable data operations and `SECURITY DEFINER` RPCs for schema-modifying operations.
+- **SQL Execution:** A specialized `exec_sql(sql text)` RPC is available for advanced schema migrations and direct table manipulation when standard PostgREST or specific RPCs are insufficient. Direct SQL access (e.g., `psql`) is generally avoided in favor of this RPC to maintain consistency with the application's security model.
 - **Supabase SSR & Middleware:** Implements `@supabase/ssr` for robust authentication. Uses Next.js Middleware to automatically refresh sessions and synchronize tokens with cookies, preventing "Refresh Token Not Found" errors.
 - **URL-Driven State:** Modals and management actions are driven by query parameters (e.g., `?action=new-field`) for deep-linking and cleaner state synchronization.
 - **Zero-Prop Architecture:** Forms (`ModalModel`, `ModalField`) are self-contained, fetching their own data and auth state.
@@ -55,6 +56,11 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - [x] **Site Navigation Model:** Modern, hierarchical drag-and-drop navigation system with automatic path resolution and group management.
 - [x] **Unified Button Infrastructure:** Converted all frontend-facing `<button>` tags to a standardized `<Button />` component with consistent Primary/Secondary brand styling.
 - [x] **Singleton Model Workflow:** Implemented specialized handling for singleton models (Global Settings, etc.), including modal-based initialization, custom "Empty State" branded cards, and automatic redirect to the editor. Added strict safeguards to block duplicate record creation both in the UI and submission logic.
+- [x] **Model Grouping & Hierarchical DND**:
+  - Implemented full CRUD for Model Groups (folders) to organize the schema.
+  - Developed a specialized **Global Tree DND System** (`useTreeDnd` hook and `tree-helpers.ts`) supporting vertical reordering and horizontal nesting (indentation).
+  - Features real-time "neighbor-aware" depth calculation and visual indentation guides.
+  - Applied this system to both the **Schema Model List** and the **Navigation Field**, ensuring a consistent UX across the platform.
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Model Reordering:** Apply DND logic to the top-level Models sidebar and dashboard.

@@ -74,7 +74,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, friendly_name, is_singleton, emoji } = await req.json()
+    const { name, friendly_name, is_singleton, emoji, group_id } =
+      await req.json()
 
     if (!name || typeof name !== "string" || name.trim() === "") {
       return NextResponse.json(
@@ -121,6 +122,7 @@ export async function POST(req: NextRequest) {
           is_singleton: is_singleton || false,
           display_order: nextOrder,
           emoji: emoji || null,
+          group_id: group_id || null,
         },
       ])
       .select()
@@ -171,7 +173,8 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const { table_name, friendly_name, is_singleton, emoji } = await req.json()
+    const { table_name, friendly_name, is_singleton, emoji, group_id } =
+      await req.json()
 
     if (!table_name) {
       return NextResponse.json(
@@ -186,6 +189,7 @@ export async function PATCH(req: NextRequest) {
         friendly_name,
         is_singleton,
         emoji: emoji || null,
+        group_id: group_id || null,
       })
       .eq("table_name", table_name)
 

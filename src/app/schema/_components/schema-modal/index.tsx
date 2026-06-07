@@ -7,6 +7,7 @@ import { useModels, ModelRegistryEntry } from "@/hooks/use-models"
 import FieldTypeGrid from "./field-type-grid"
 import ModalField from "./modal-field"
 import ModalModel from "./modal-model"
+import ModalModelGroup from "./modal-model-group"
 
 /**
  * URL Schema for Schema Management Modals:
@@ -31,6 +32,7 @@ export default function SchemaModal() {
 
   const action = searchParams.get("action")
   const modelSlug = searchParams.get("modelSlug")
+  const groupId = searchParams.get("groupId")
   const fieldId = searchParams.get("fieldId")
   const fieldType = searchParams.get("fieldType")
 
@@ -74,6 +76,27 @@ export default function SchemaModal() {
 
   const modalConfig = useMemo(() => {
     if (!action) return null
+
+    if (action.includes("group")) {
+      const mode = action.replace("-group", "") as "new" | "edit"
+      const normalizedMode = mode === "new" ? "create" : mode
+
+      return {
+        title: mode === "edit" ? "Edit Group" : "Create New Group",
+        description:
+          mode === "edit"
+            ? "Update folder metadata."
+            : "Organize your models into a folder.",
+        content: (
+          <ModalModelGroup
+            mode={normalizedMode}
+            groupId={groupId}
+            onSuccess={() => handleClose(true)}
+            onCancel={() => handleClose(false)}
+          />
+        ),
+      }
+    }
 
     if (action.includes("model")) {
       const mode = action.replace("-model", "") as "new" | "edit" | "duplicate"

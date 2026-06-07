@@ -1,36 +1,51 @@
 import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/hooks/use-auth"
 
+export interface ModelGroup {
+  id: string
+  name: string
+  emoji?: string | null
+  display_order: number
+  type: "schema" | "editor"
+  created_at?: string
+  updated_at?: string
+}
+
 export interface ModelRegistryEntry {
   id: string
   table_name: string
   slug: string
   friendly_name: string
-  group_name?: string
+  group_id?: string | null
   emoji?: string | null
   is_singleton: boolean
   display_order: number
 }
 
+interface GlobalModelState {
+  models: ModelRegistryEntry[]
+  groups: ModelGroup[]
+}
+
 // Global state to sync multiple instances of useModels
-let globalModels: ModelRegistryEntry[] = []
-let globalListeners: Array<(models: ModelRegistryEntry[]) => void> = []
+let globalState: GlobalModelState = { models: [], groups: [] }
+let globalListeners: Array<(state: GlobalModelState) => void> = []
 
 /**
- * Custom hook to fetch and manage models from the registry.
+ * Custom hook to fetch and manage models and groups from the registry.
  * Uses a global singleton pattern to ensure all instances of the hook stay in sync.
  */
 export function useModels() {
   const { accessToken, loading: authLoading } = useAuth()
-  const [models, setModels] = useState<ModelRegistryEntry[]>(globalModels)
-  const [loading, setLoading] = useState(globalModels.length === 0)
+  const [state, setState] = useState<GlobalModelState>(globalState)
+  const [loading, setLoading] = useState(globalState.models.length === 0)
   const [error, setError] = useState<string | null>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   // Subscribe to global updates
   useEffect(() => {
-    const listener = (newModels: ModelRegistryEntry[]) => {
-      setModels(newModels)
+    const listener = (newState: GlobalModelState) => {
+      setState(newState)
     }
     globalListeners.push(listener)
     return () => {
@@ -38,24 +53,35 @@ export function useModels() {
     }
   }, [])
 
-  const updateGlobalModels = useCallback((newModels: ModelRegistryEntry[]) => {
-    globalModels = newModels
-    globalListeners.forEach((l) => l(newModels))
+  const updateGlobalState = useCallback((newState: GlobalModelState) => {
+    globalState = newState
+    globalListeners.forEach((l) => l(newState))
   }, [])
 
-  const fetchModels = useCallback(async (currentAccessToken: string) => {
+  const fetchData = useCallback(async (currentAccessToken: string) => {
     try {
-      const response = await fetch("/api/models", {
+      // Fetch Models
+      const modelsRes = await fetch("/api/models", {
         headers: {
           Authorization: `Bearer ${currentAccessToken}`,
         },
       })
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to fetch models.")
+
+      // Fetch Groups
+      const groupsRes = await fetch("/api/models/groups", {
+        headers: {
+          Authorization: `Bearer ${currentAccessToken}`,
+        },
+      })
+
+      if (!modelsRes.ok || !groupsRes.ok) {
+        throw new Error("Failed to fetch models or groups.")
       }
-      const data: ModelRegistryEntry[] = await response.json()
-      return data
+
+      const models: ModelRegistryEntry[] = await modelsRes.json()
+      const groups: ModelGroup[] = await groupsRes.json()
+
+      return { models, groups }
     } catch (err: unknown) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch models."
@@ -69,7 +95,7 @@ export function useModels() {
   }, [])
 
   useEffect(() => {
-    const loadModels = async () => {
+    const loadData = async () => {
       if (authLoading) return
 
       if (!accessToken) {
@@ -80,8 +106,8 @@ export function useModels() {
       setLoading(true)
       setError(null)
       try {
-        const fetchedModels = await fetchModels(accessToken)
-        updateGlobalModels(fetchedModels)
+        const data = await fetchData(accessToken)
+        updateGlobalState(data)
       } catch (err: unknown) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to load models."
@@ -90,14 +116,8 @@ export function useModels() {
         setLoading(false)
       }
     }
-    loadModels()
-  }, [
-    fetchModels,
-    refreshTrigger,
-    accessToken,
-    authLoading,
-    updateGlobalModels,
-  ])
+    loadData()
+  }, [fetchData, refreshTrigger, accessToken, authLoading, updateGlobalState])
 
   const deleteModel = useCallback(
     async (modelName: string) => {
@@ -124,7 +144,8 @@ export function useModels() {
   )
 
   return {
-    models,
+    models: state.models,
+    groups: state.groups,
     loading: loading || authLoading,
     error,
     refresh,

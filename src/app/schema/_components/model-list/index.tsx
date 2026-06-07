@@ -1,29 +1,141 @@
 "use client"
 
-import { useCallback } from "react"
+import { useCallback, useState, useMemo, useEffect } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
 import Button from "@/components/button"
-import { useModels, ModelRegistryEntry } from "@/hooks/use-models"
-import ContextMenu from "@/components/context-menu"
-import SvgIcon from "@/components/svg-icon"
-import { Edit2, ExternalLink, Copy, Trash2 } from "lucide-react"
-import clsx from "clsx"
+import { useModels, ModelRegistryEntry, ModelGroup } from "@/hooks/use-models"
+import { useAuth } from "@/hooks/use-auth"
+import { useTreeDnd } from "@/hooks/use-tree-dnd"
+import { INDENTATION_WIDTH, flattenTree } from "@/helpers/tree-helpers"
+import {
+  buildTree,
+  TreeItem,
+  TreeItemModel,
+  FlattenedTreeItem,
+} from "../../_helpers/model-tree-helpers"
+import ModelItemRow from "./model-item-row"
+import { FolderPlus } from "lucide-react"
 import s from "./style.module.css"
 
 interface ModelListProps {
   models: ModelRegistryEntry[]
+  groups: ModelGroup[]
 }
 
 /**
- * Renders a list of models (Supabase tables).
- * @param {ModelListProps} props - The component props.
+ * Renders a list of models (Supabase tables) organized by groups with DND reordering.
  */
-export default function ModelList({ models }: ModelListProps) {
-  const { deleteModel } = useModels()
+export default function ModelList({ models, groups }: ModelListProps) {
+  const { deleteModel, refresh } = useModels()
+  const { accessToken } = useAuth()
   const params = useParams()
   const activeModelSlug = params?.model as string | undefined
+
+  const [items, setItems] = useState<TreeItem[]>([])
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setItems(buildTree(models, groups))
+    }, 0)
+    return () => clearTimeout(timer)
+  }, [models, groups])
+
+  /**
+   * Filter tree to only show items that are not within a collapsed group
+   */
+  const flattenedItems = useMemo(() => {
+    const allFlat = flattenTree(items) as FlattenedTreeItem[]
+    const visible: typeof allFlat = []
+
+    allFlat.forEach((item: FlattenedTreeItem) => {
+      // Check if any ancestor is collapsed
+      let isHidden = false
+      let currentParentId = item.parentId
+      while (currentParentId) {
+        if (collapsedIds.has(currentParentId)) {
+          isHidden = true
+          break
+        }
+        // Find parent's parent
+        const parent = allFlat.find(
+          (p: FlattenedTreeItem) => p.id === currentParentId
+        )
+        currentParentId = parent?.parentId || null
+      }
+
+      if (!isHidden) {
+        visible.push(item)
+      }
+    })
+
+    return visible
+  }, [items, collapsedIds])
+
+  const toggleGroup = useCallback((id: string) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }, [])
+
+  const {
+    activeId,
+    overId,
+    sensors,
+    handleDragStart,
+    handleDragMove,
+    handleDragOver,
+    handleDragEnd,
+    handleDragCancel,
+    getProjectedDepth,
+  } = useTreeDnd({
+    flattenedItems,
+    onDragEnd: async ({ activeId, newParentId, activeIndex, overIndex }) => {
+      // Prepare update payload
+      // 1. Move item in the flat list
+      const newFlat = [...flattenedItems]
+      const [movedItem] = newFlat.splice(activeIndex, 1)
+      newFlat.splice(overIndex, 0, movedItem)
+
+      // 2. Map to final DB items
+      const updatePayload = newFlat.map((item, index) => {
+        const isMovedItem = item.id === activeId
+        const finalGroupId = isMovedItem ? newParentId : item.parentId
+
+        return {
+          id: item.id,
+          type: item.type,
+          display_order: index,
+          group_id: item.type === "model" ? finalGroupId : undefined,
+        }
+      })
+
+      try {
+        await fetch("/api/models/reorder", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ items: updatePayload }),
+        })
+        refresh()
+      } catch (err) {
+        console.error("Failed to persist reorder:", err)
+        refresh()
+      }
+    },
+  })
 
   const handleDeleteModel = useCallback(
     async (modelName: string) => {
@@ -46,102 +158,98 @@ export default function ModelList({ models }: ModelListProps) {
     [deleteModel]
   )
 
+  const handleDeleteGroup = useCallback(
+    async (id: string) => {
+      if (
+        !window.confirm(
+          "Are you sure you want to delete this group? Models will be moved to the top level."
+        )
+      )
+        return
+      try {
+        await fetch(`/api/models/groups?id=${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${accessToken}` },
+        })
+        refresh()
+      } catch (err) {
+        alert("Failed to delete group")
+      }
+    },
+    [accessToken, refresh]
+  )
+
   return (
     <div className={s.modelListContainer}>
-      {models.length === 0 ? (
+      {items.length === 0 ? (
         <p>No models found. Create a new one!</p>
       ) : (
-        <ul className={s.modelList}>
-          {models.map((model) => (
-            <li
-              key={model.id}
-              className={clsx(
-                s.modelListItem,
-                activeModelSlug === model.slug && s.active
-              )}
-            >
-              <div>
-                <Link href={`/schema/${model.slug}`} className={s.modelLink}>
-                  <div className={s.modelName}>
-                    <span className={s.emoji}>
-                      {model.emoji || (
-                        <svg
-                          className={s.fallbackIcon}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                          style={{ width: "16px", height: "16px" }}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      )}
-                    </span>
-                    <span>{model.friendly_name}</span>
-                  </div>
-                  <code className={s.modelSlug}>{model.slug}</code>
-                </Link>
-
-                {model.is_singleton && (
-                  <span className={s.singletonBadge}>Singleton</span>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
+          onDragOver={handleDragOver}
+          onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
+        >
+          <SortableContext
+            items={flattenedItems.map((i: FlattenedTreeItem) => i.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className={s.modelList}>
+              {flattenedItems.map((fItem: FlattenedTreeItem) => {
+                return (
+                  <ModelItemRow
+                    key={fItem.id}
+                    item={fItem}
+                    depth={getProjectedDepth(fItem.id, fItem.depth)}
+                    isActive={
+                      fItem.type === "model" &&
+                      activeModelSlug === (fItem as TreeItemModel).slug
+                    }
+                    isExpanded={!collapsedIds.has(fItem.id)}
+                    onToggle={() => toggleGroup(fItem.id)}
+                    onDelete={handleDeleteModel}
+                    onDeleteGroup={handleDeleteGroup}
+                  />
+                )
+              })}
+            </ul>
+          </SortableContext>
+          <DragOverlay adjustScale={false}>
+            {activeId ? (
+              <ModelItemRow
+                item={
+                  flattenedItems.find(
+                    (i: FlattenedTreeItem) => i.id === activeId
+                  ) as TreeItem
+                }
+                depth={getProjectedDepth(
+                  activeId,
+                  flattenedItems.find(
+                    (i: FlattenedTreeItem) => i.id === activeId
+                  )!.depth
                 )}
-              </div>
-
-              <div className={s.actions}>
-                <ContextMenu>
-                  <ContextMenu.Trigger className={s.menuTrigger}>
-                    <Button
-                      variant="secondary"
-                      unstyled
-                      type="button"
-                      aria-label="More options"
-                    >
-                      <SvgIcon icon="more-vertical" size={20} />
-                    </Button>
-                  </ContextMenu.Trigger>
-
-                  <ContextMenu.Content>
-                    <ContextMenu.Link
-                      href={`?action=edit-model&modelSlug=${model.slug}`}
-                      icon={<Edit2 size={14} />}
-                    >
-                      Edit
-                    </ContextMenu.Link>
-                    <ContextMenu.Link
-                      href={`/editor/${model.slug}`}
-                      icon={<ExternalLink size={14} />}
-                    >
-                      {model.is_singleton ? "Edit Content" : "View Records"}
-                    </ContextMenu.Link>
-                    <ContextMenu.Link
-                      href={`?action=duplicate-model&modelSlug=${model.slug}`}
-                      icon={<Copy size={14} />}
-                    >
-                      Duplicate
-                    </ContextMenu.Link>
-                    <ContextMenu.Item
-                      onSelect={() => handleDeleteModel(model.table_name)}
-                      variant="danger"
-                      icon={<Trash2 size={14} />}
-                    >
-                      Delete
-                    </ContextMenu.Item>
-                  </ContextMenu.Content>
-                </ContextMenu>
-              </div>
-            </li>
-          ))}
-        </ul>
+                isActive={false}
+                onDelete={() => {}}
+                isOverlay
+              />
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       )}
       <div className={s.footer}>
-        <Link href="?action=new-model">
-          <Button beforeText="+">Create New Model</Button>
-        </Link>
+        <div className={s.footerActions}>
+          <Link href="?action=new-model">
+            <Button beforeText="+">New Model</Button>
+          </Link>
+          <Link href="?action=new-group">
+            <Button variant="secondary" beforeText={<FolderPlus size={16} />}>
+              Add Group
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   )

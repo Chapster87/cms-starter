@@ -29,6 +29,7 @@ export default function ModalModel({
 
   const [modelName, setModelName] = useState("")
   const [friendlyName, setFriendlyName] = useState("")
+  const [groupId, setGroupId] = useState<string | null>(null)
   const [emoji, setEmoji] = useState("")
   const [showPicker, setShowPicker] = useState(false)
   const [isSingleton, setIsSingleton] = useState(false)
@@ -60,6 +61,7 @@ export default function ModalModel({
           if (mode === "edit") {
             setModelName(existing.table_name)
             setFriendlyName(existing.friendly_name)
+            setGroupId(existing.group_id || null)
             setEmoji(existing.emoji || "")
             setIsSingleton(existing.is_singleton)
             setIsIdTouched(true)
@@ -67,6 +69,7 @@ export default function ModalModel({
             // Duplicate mode
             setModelName(`${existing.table_name}_copy`)
             setFriendlyName(`${existing.friendly_name} (Copy)`)
+            setGroupId(existing.group_id || null)
             setEmoji(existing.emoji || "")
             setIsSingleton(existing.is_singleton)
             setIsIdTouched(true)
@@ -109,12 +112,14 @@ export default function ModalModel({
             friendly_name: friendlyName || modelName,
             is_singleton: isSingleton,
             emoji: emoji || null,
+            group_id: groupId,
           }
         : {
             name: modelName,
             friendly_name: friendlyName || modelName,
             is_singleton: isSingleton,
             emoji: emoji || null,
+            group_id: groupId,
           }
 
       const response = await fetch(url, {
@@ -139,6 +144,8 @@ export default function ModalModel({
       setIsSaving(false)
     }
   }
+
+  const { groups } = useModels()
 
   return (
     <form onSubmit={handleSubmit} className={s.modalForm}>
@@ -196,6 +203,26 @@ export default function ModalModel({
         required
         description="Lowercase, no spaces. This will be the physical table name."
       />
+
+      <div className={s.fieldSection}>
+        <label className={s.fieldLabel}>Group / Folder</label>
+        <select
+          className={s.selectField}
+          value={groupId || ""}
+          onChange={(e) => setGroupId(e.target.value || null)}
+          disabled={isSaving}
+        >
+          <option value="">(No Group)</option>
+          {groups
+            .filter((g) => g.type === "schema")
+            .map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.emoji} {group.name}
+              </option>
+            ))}
+        </select>
+        <p className={s.fieldDescription}>Organize this model into a folder.</p>
+      </div>
 
       <CheckboxField
         label="Is Singleton"

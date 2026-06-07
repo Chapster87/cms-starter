@@ -9,25 +9,156 @@
 .modelList {
   list-style: none;
   padding: 0;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 4px;
 }
 
 .modelListItem {
+  position: relative;
+  list-style: none;
+  transition: margin-left 0.2s ease-out;
+}
+
+.itemCard {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 8px 12px;
-  transition: background-color 0.2s ease-in-out;
+  padding: 4px 12px;
+  background-color: var(--color-white);
+  border: 1px solid transparent;
+  transition:
+    background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
 
-  &.active {
-    background-color: rgb(from var(--color-green) r g b / 0.2);
-  }
+/* Regular row hover */
+.modelListItem:not(.dragging) .itemCard:hover {
+  background-color: var(--color-grey-100);
+}
 
-  &:hover {
-    background-color: var(--color-grey-100);
-  }
+/* Active model state */
+.modelListItem.isActive .itemCard {
+  background-color: rgb(from var(--color-green) r g b / 0.15);
+}
+
+/* Dragging state (Placeholder) */
+.modelListItem.dragging .itemCard {
+  border: 1px dashed var(--color-grey-300);
+  background-color: var(--color-grey-50);
+  box-shadow: none;
+}
+
+.modelListItem.dragging .itemCard > * {
+  opacity: 0;
+}
+
+/* Overlay state (Floating item) */
+.modelListItem.overlay .itemCard {
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-primary, #3b82f6);
+  transform: scale(1.02);
+  background-color: var(--color-white);
+  opacity: 1;
+}
+
+/* Drop target state (Hovering over) */
+.modelListItem.isOver .itemCard {
+  background-color: var(--color-grey-50);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-100);
+}
+
+/* Indentation Guides */
+.guidesContainer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.guidePath {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-grey-200);
+  border-left: 1px dotted var(--color-grey-400);
+  opacity: 0.5;
+}
+
+.itemMain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  margin-left: -4px;
+}
+
+.expandButton:hover {
+  background-color: var(--color-grey-200);
+}
+
+.dragHandle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.dragHandle:hover {
+  background-color: var(--color-grey-200);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.itemContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.modelInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.badgeRow {
+  display: flex;
+  margin-top: 2px;
+}
+
+.groupName {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: var(--color-black);
+  font-size: 14px;
 }
 
 .modelLink {
@@ -37,14 +168,6 @@
   text-decoration: none;
   color: var(--color-black);
   font-size: 14px;
-
-  &:hover {
-    color: var(--color-black);
-  }
-
-  .active & {
-    font-weight: 700;
-  }
 }
 
 .modelName {
@@ -61,12 +184,6 @@
   justify-content: center;
 }
 
-.fallbackIcon {
-  width: 20px;
-  height: 20px;
-  color: var(--color-grey-500);
-}
-
 .modelSlug {
   font-size: 12px;
   color: var(--color-grey-700);
@@ -77,7 +194,9 @@
   padding: 2px 6px;
   border-radius: 3px;
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
+  width: fit-content;
+  color: var(--color-grey-700);
 }
 
 .actions {
@@ -95,48 +214,20 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-
-  &:hover {
-    background-color: #f3f4f6;
-    color: #111;
-  }
 }
 
-.settingsButton {
-  background-color: var(--color-grey-100);
-  color: var(--color-black);
-  padding: 8px 16px;
-  border: 1px solid var(--color-grey-300);
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: all 0.2s ease-in-out;
-
-  &:hover {
-    background-color: var(--color-grey-300);
-  }
+.menuTrigger:hover {
+  background-color: #f3f4f6;
+  color: #111;
 }
 
 .footer {
   padding: 16px;
   border-top: 1px solid var(--color-grey-300);
-  display: flex;
-  justify-content: center;
 }
 
-.newButton {
-  width: 100%;
-  padding: 12px;
-  background-color: var(--color-black);
-  color: var(--color-white);
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: opacity 0.2s;
-
-  &:hover {
-    opacity: 0.8;
-  }
+.footerActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
 }

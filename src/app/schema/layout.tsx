@@ -19,7 +19,7 @@ export default function SchemaLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { models, loading, error } = useModels()
+  const { models, groups, loading, error } = useModels()
 
   if (loading)
     return (
@@ -44,7 +44,7 @@ export default function SchemaLayout({
           </Tabs.List>
 
           <Tabs.Content value="models" className={s.schemaTabsContent}>
-            <ModelList models={models} />
+            <ModelList models={models} groups={groups} />
           </Tabs.Content>
 
           <Tabs.Content value="blocks" className={s.schemaTabsContent}>

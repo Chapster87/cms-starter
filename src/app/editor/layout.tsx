@@ -16,7 +16,7 @@ export default function EditorLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { models, loading, error } = useModels()
+  const { models, groups, loading, error } = useModels()
   const params = useParams()
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -54,7 +54,7 @@ export default function EditorLayout({
   return (
     <div className={s.editorContent}>
       <aside className={s.sidebar}>
-        <ModelSidebar models={models} />
+        <ModelSidebar models={models} groups={groups} />
       </aside>
 
       <main className={s.mainContent}>{children}</main>
