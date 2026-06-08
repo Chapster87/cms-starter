@@ -115,6 +115,7 @@ export const dataService = {
 
   /**
    * Updates an existing record using upsert.
+   * Automatically unwraps stringified JSON for clean storage.
    */
   async updateRecord(
     model: string,
@@ -122,9 +123,26 @@ export const dataService = {
     changes: Record<string, unknown>
   ): Promise<void> {
     const supabase = createClient()
+
+    // Ensure we don't save stringified JSON into what should be native JSON columns
+    const cleanChanges = { ...changes }
+    Object.keys(cleanChanges).forEach((key) => {
+      const val = cleanChanges[key]
+      if (
+        typeof val === "string" &&
+        (val.trim().startsWith("{") || val.trim().startsWith("["))
+      ) {
+        try {
+          cleanChanges[key] = JSON.parse(val)
+        } catch {
+          /* Not valid JSON, keep as string */
+        }
+      }
+    })
+
     const { error } = await supabase
       .from(model)
-      .upsert({ ...changes, id })
+      .upsert({ ...cleanChanges, id })
       .select()
 
     if (error) {
@@ -138,15 +156,33 @@ export const dataService = {
 
   /**
    * Inserts a new record using upsert.
+   * Automatically unwraps stringified JSON for clean storage.
    */
   async createRecord(
     model: string,
     recordData: Record<string, unknown>
   ): Promise<RecordBase | null> {
     const supabase = createClient()
+
+    // Ensure we don't save stringified JSON into what should be native JSON columns
+    const cleanData = { ...recordData }
+    Object.keys(cleanData).forEach((key) => {
+      const val = cleanData[key]
+      if (
+        typeof val === "string" &&
+        (val.trim().startsWith("{") || val.trim().startsWith("["))
+      ) {
+        try {
+          cleanData[key] = JSON.parse(val)
+        } catch {
+          /* Not valid JSON, keep as string */
+        }
+      }
+    })
+
     const { data, error } = await supabase
       .from(model)
-      .upsert([recordData])
+      .upsert([cleanData])
       .select()
       .single()
 

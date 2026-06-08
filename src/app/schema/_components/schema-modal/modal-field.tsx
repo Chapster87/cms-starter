@@ -95,11 +95,15 @@ export default function ModalField({
             setIsIdTouched(true)
             if (
               field.field_type === "reference" ||
-              field.field_type === "navigation"
+              field.field_type === "navigation" ||
+              field.field_type === "media"
             ) {
               const allowed = settings.allowed_models as string[] | undefined
               setAllowedModels(allowed || [])
-              if (field.field_type === "reference") {
+              if (
+                field.field_type === "reference" ||
+                field.field_type === "media"
+              ) {
                 setAllowMultiple(!!settings.allow_multiple)
               }
             }
@@ -114,11 +118,15 @@ export default function ModalField({
             setIsIdTouched(true)
             if (
               field.field_type === "reference" ||
-              field.field_type === "navigation"
+              field.field_type === "navigation" ||
+              field.field_type === "media"
             ) {
               const allowed = settings.allowed_models as string[] | undefined
               setAllowedModels(allowed || [])
-              if (field.field_type === "reference") {
+              if (
+                field.field_type === "reference" ||
+                field.field_type === "media"
+              ) {
                 setAllowMultiple(!!settings.allow_multiple)
               }
             }
@@ -181,11 +189,15 @@ export default function ModalField({
               allowed_models: allowedModels,
               allow_multiple: allowMultiple,
             }
-          : type === "navigation"
+          : type === "media"
             ? {
-                allowed_models: allowedModels,
+                allow_multiple: allowMultiple,
               }
-            : {}
+            : type === "navigation"
+              ? {
+                  allowed_models: allowedModels,
+                }
+              : {}
 
       const body = isEdit
         ? {
@@ -393,6 +405,20 @@ export default function ModalField({
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {type === "media" && (
+        <div className={s.referenceSettings}>
+          <hr className={s.separator} />
+          <h4 className={s.settingsTitle}>Media Asset Settings</h4>
+          <CheckboxField
+            label="Multiple Assets"
+            checked={allowMultiple}
+            onChange={setAllowMultiple}
+            description="Allow editors to upload more than one image or file."
+            variant="switch"
+          />
         </div>
       )}
 

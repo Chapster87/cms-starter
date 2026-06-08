@@ -58,7 +58,6 @@ export default function ModelItemRow({
     transform: CSS.Translate.toString(transform),
     transition,
     marginLeft: `${depth * 24}px`,
-    minHeight: "44px",
   }
 
   const isModel = item.type === "model"

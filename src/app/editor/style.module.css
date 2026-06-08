@@ -9,6 +9,13 @@
   flex-direction: column;
 }
 
+.mainContent {
+  padding: 16px 24px;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
 .placeholder {
   display: flex;
   align-items: center;

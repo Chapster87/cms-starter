@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { MediaAsset } from "@/components/fields/media-field"
 import {
   TextField,
   NumberField,
@@ -56,9 +57,27 @@ export default function RecordForm({
   // Sync internal form data with initialData when it changes from above
   useEffect(() => {
     if (initialData) {
-      // Use setTimeout to move state update out of the synchronous render cycle
+      // Proactively "unwrap" stringified JSON for media/json fields on load
+      const unwrappedData = { ...initialData }
+
+      // We don't have schema yet in this effect usually, so we'll do a general check
+      // or rely on the fact that these strings look like JSON.
+      Object.keys(unwrappedData).forEach((key) => {
+        const val = unwrappedData[key]
+        if (
+          typeof val === "string" &&
+          (val.trim().startsWith("{") || val.trim().startsWith("["))
+        ) {
+          try {
+            unwrappedData[key] = JSON.parse(val)
+          } catch (e) {
+            /* ignore */
+          }
+        }
+      })
+
       const timer = setTimeout(() => {
-        setFormData(initialData)
+        setFormData(unwrappedData)
       }, 0)
       return () => clearTimeout(timer)
     }
@@ -136,7 +155,25 @@ export default function RecordForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+
+    // Unwrap stringified media/json fields before submission to ensure they save as native JSON
+    const cleanData = { ...formData }
+    schema.forEach((field) => {
+      const val = cleanData[field.field_name]
+      if (
+        (field.field_type === "media" || field.field_type === "json") &&
+        typeof val === "string" &&
+        (val.startsWith("{") || val.startsWith("["))
+      ) {
+        try {
+          cleanData[field.field_name] = JSON.parse(val)
+        } catch (e) {
+          // Not valid JSON, leave as is
+        }
+      }
+    })
+
+    onSubmit(cleanData)
   }
 
   if (fetchingSchema) return <p>Loading form fields...</p>
@@ -233,13 +270,19 @@ export default function RecordForm({
         }
 
         if (field.field_type === "media") {
+          const settings = (field.settings || {}) as Record<string, unknown>
+          const isMultiple =
+            settings.multiple === true || settings.allow_multiple === true
+
           return (
             <MediaField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || ""}
+              value={
+                formData[field.field_name] as string | MediaAsset | MediaAsset[]
+              }
               onChange={(val) => handleChange(field.field_name, val)}
-              multiple
+              multiple={isMultiple}
             />
           )
         }

@@ -61,6 +61,12 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Developed a specialized **Global Tree DND System** (`useTreeDnd` hook and `tree-helpers.ts`) supporting vertical reordering and horizontal nesting (indentation).
   - Features real-time "neighbor-aware" depth calculation and visual indentation guides.
   - Applied this system to both the **Schema Model List** and the **Navigation Field**, ensuring a consistent UX across the platform.
+- [x] **Content Delivery API (GraphQL CDA)**:
+  - Developed a custom, high-fidelity GraphQL engine (`/api/graphql`) that dynamically maps CMS models to professional PascalCase types.
+  - Implemented native resolution for **Linked Records (References)**, resolving UUID arrays into nested, structured objects.
+  - Enhanced **Media Asset** resolution, returning full asset metadata (URL, Name, Type) instead of raw JSON.
+  - Established a secure **API Token System** (`CMS_API_TOKEN`) with a dual-authentication strategy for internal playground and external project use.
+  - Created a comprehensive `CDA-GUIDE.md` for team onboarding and external implementation.
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Model Reordering:** Apply DND logic to the top-level Models sidebar and dashboard.
@@ -88,5 +94,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - `src/utils/supabase.ts` & `src/utils/supabase-server.ts`: Standardized SSR-friendly Supabase clients.
 - `src/middleware.ts`: Global session refreshing and cookie synchronization.
 - `src/app/graphql/`: High-fidelity GraphQL playground implementation.
+- `src/app/api/graphql/`: The production Content Delivery API (CDA) endpoint and schema generator.
 - `src/utils/field-types.ts`: Source of truth for field and Postgres type mapping.
 - `src/client/data-service.ts`: Centralized service for CRUD operations using native Supabase patterns.
+- `docs/CDA-GUIDE.md`: Comprehensive documentation for the GraphQL CDA.

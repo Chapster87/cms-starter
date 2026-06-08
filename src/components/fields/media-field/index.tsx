@@ -7,7 +7,7 @@ import FieldWrapper from "../field-wrapper"
 
 import s from "./style.module.css"
 
-interface MediaAsset {
+export interface MediaAsset {
   url: string
   name: string
   type: string
@@ -16,8 +16,8 @@ interface MediaAsset {
 
 interface MediaFieldProps {
   label: string
-  value: string | MediaAsset[] // JSON string or array of assets
-  onChange: (value: string) => void
+  value: string | MediaAsset | MediaAsset[] // JSON string, object, or array of assets
+  onChange: (value: MediaAsset | MediaAsset[] | null) => void
   description?: string
   fieldNote?: string
   required?: boolean
@@ -47,8 +47,9 @@ export default function MediaField({
   const assets: MediaAsset[] = React.useMemo(() => {
     if (!value) return []
     if (Array.isArray(value)) return value
+    if (typeof value === "object") return [value as MediaAsset]
     try {
-      const parsed = JSON.parse(value)
+      const parsed = JSON.parse(value as string)
       return Array.isArray(parsed) ? parsed : [parsed]
     } catch {
       return []
@@ -57,20 +58,49 @@ export default function MediaField({
 
   const handleAddUrl = () => {
     if (!urlInput) return
+
+    let finalUrl = urlInput.trim()
+    let finalName = ""
+
+    // Robust check: Did the user paste a JSON snippet?
+    // e.g. "team_logo": "[{\"url\": \"...\"}]" or just {"url": "..."}
+    if (finalUrl.includes('{"') || finalUrl.includes('["')) {
+      try {
+        // Try to strip potential key prefix like "field_name":
+        const cleanJson = finalUrl.replace(/^[^{[]+:\s*/, "")
+        const parsed = JSON.parse(cleanJson)
+        const extracted = Array.isArray(parsed) ? parsed[0] : parsed
+
+        if (extracted && typeof extracted === "object" && extracted.url) {
+          finalUrl = extracted.url
+          finalName = extracted.name || ""
+        }
+      } catch (e) {
+        // Not valid JSON, treat as raw URL
+      }
+    }
+
     const newAsset: MediaAsset = {
-      url: urlInput,
-      name: urlInput.split("/").pop() || "Asset",
+      url: finalUrl,
+      name: finalName || finalUrl.split("/").pop() || "Asset",
       type: "image/unknown",
     }
 
-    const newAssets = multiple ? [...assets, newAsset] : [newAsset]
-    onChange(JSON.stringify(newAssets))
+    if (multiple) {
+      onChange([...assets, newAsset])
+    } else {
+      onChange(newAsset)
+    }
     setUrlInput("")
   }
 
   const handleRemove = (index: number) => {
     const newAssets = assets.filter((_, i) => i !== index)
-    onChange(JSON.stringify(newAssets))
+    if (multiple) {
+      onChange(newAssets.length > 0 ? newAssets : null)
+    } else {
+      onChange(null)
+    }
   }
 
   return (

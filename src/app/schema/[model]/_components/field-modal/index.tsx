@@ -35,6 +35,7 @@ export default function FieldModal({
   const [type, setType] = useState(FIELD_DEFINITIONS[0].type)
   const [isRequired, setIsRequired] = useState(false)
   const [isUnique, setIsUnique] = useState(false)
+  const [settings, setSettings] = useState<Record<string, unknown>>({})
   const [note, setNote] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -51,6 +52,7 @@ export default function FieldModal({
             setType(field.field_type)
             setIsRequired(field.is_required)
             setIsUnique(field.is_unique)
+            setSettings(field.settings || {})
             setNote(field.field_note || "")
           } else if (mode === "duplicate") {
             setLabel(`${field.field_label} (copy)`)
@@ -58,6 +60,7 @@ export default function FieldModal({
             setType(field.field_type)
             setIsRequired(field.is_required)
             setIsUnique(field.is_unique)
+            setSettings(field.settings || {})
             setNote(field.field_note || "")
           }
         } else {
@@ -67,6 +70,7 @@ export default function FieldModal({
           setType(FIELD_DEFINITIONS[0].type)
           setIsRequired(false)
           setIsUnique(false)
+          setSettings({})
           setNote("")
         }
         setError(null)
@@ -94,6 +98,7 @@ export default function FieldModal({
             field_note: note,
             is_required: isRequired,
             is_unique: isUnique,
+            settings: settings,
           }
         : {
             model_id: modelId,
@@ -102,6 +107,7 @@ export default function FieldModal({
             field_type: type,
             is_required: isRequired,
             is_unique: isUnique,
+            settings: settings,
           }
 
       const response = await fetch(url, {
@@ -205,6 +211,18 @@ export default function FieldModal({
           description="Prevent duplicate values in this column."
           variant="switch"
         />
+
+        {type === "media" && (
+          <CheckboxField
+            label="Multiple Assets"
+            checked={!!settings.allow_multiple}
+            onChange={(val) =>
+              setSettings((prev) => ({ ...prev, allow_multiple: val }))
+            }
+            description="Allow multiple images or files to be uploaded."
+            variant="switch"
+          />
+        )}
 
         <div className={s.modalActions}>
           <Button

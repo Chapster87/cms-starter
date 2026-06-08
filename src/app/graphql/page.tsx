@@ -18,7 +18,7 @@ import "graphiql/style.css"
 export default function GraphQLPlayground() {
   const fetcher = useMemo(() => {
     return createGraphiQLFetcher({
-      url: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/graphql/v1`,
+      url: "/api/graphql",
       fetch: async (url, options) => {
         const supabase = createClient()
         const {
@@ -27,7 +27,11 @@ export default function GraphQLPlayground() {
 
         const headers = {
           ...options?.headers,
-          apiKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+          "Content-Type": "application/json",
+          // Add the API key if defined in env
+          ...(process.env.CMS_API_TOKEN
+            ? { "x-api-key": process.env.CMS_API_TOKEN }
+            : {}),
           ...(session
             ? { Authorization: `Bearer ${session.access_token}` }
             : {}),
