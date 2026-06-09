@@ -39,8 +39,6 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. Perform search across each model's table
-    // For simplicity, we search in 'name', 'title', or 'label' columns if they exist.
-    // In a more advanced version, we'd use the configured 'display_field'.
     const searchResults = await Promise.all(
       modelsData.map(async (model) => {
         // Find a suitable column to search in
@@ -48,11 +46,40 @@ export async function POST(req: NextRequest) {
           t_name: model.table_name,
         })
 
-        // Default to 'name' or 'title' or the first text column
-        const columnList = (columns as Array<{ column_name: string }>) || []
-        let searchColumn = "name"
-        const hasTitle = columnList.some((c) => c.column_name === "title")
-        if (hasTitle) searchColumn = "title"
+        const columnList =
+          (columns as Array<{ column_name: string; data_type: string }>) || []
+        const columnNames = columnList.map((c) => c.column_name)
+
+        const displayCandidates = [
+          "name",
+          "title",
+          "label",
+          "friendly_name",
+          "display_name",
+          "full_name",
+          "heading",
+          "text",
+          "slug",
+          "year",
+          "season_name",
+          "team_name",
+        ]
+
+        let searchColumn = displayCandidates.find((c) =>
+          columnNames.includes(c)
+        )
+
+        // Fallback
+        if (!searchColumn) {
+          const firstTextColumn = columnList.find(
+            (c) =>
+              (c.data_type.includes("text") || c.data_type.includes("char")) &&
+              !["id", "slug", "created_at", "updated_at"].includes(
+                c.column_name
+              )
+          )
+          searchColumn = firstTextColumn?.column_name || "id"
+        }
 
         const { data, error } = await systemClient
           .from(model.table_name)
@@ -70,14 +97,14 @@ export async function POST(req: NextRequest) {
         return records.map((record) => ({
           id: record.id as string,
           display_name:
-            (record[searchColumn] as string) || (record.id as string),
+            (record[searchColumn!] as string) || (record.id as string),
           model_name: model.friendly_name,
+          model_id: model.id,
         }))
       })
     )
 
     const flattenedResults = searchResults.flat()
-
     return NextResponse.json(flattenedResults)
   } catch (err: unknown) {
     console.error("Search API Error:", err)

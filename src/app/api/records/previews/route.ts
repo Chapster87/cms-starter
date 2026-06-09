@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { ids } = await req.json()
+    const { ids, allowedModels } = await req.json()
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json([])
@@ -24,10 +24,20 @@ export async function POST(req: NextRequest) {
 
     const systemClient = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Fetch all models to know which tables to check
-    const { data: modelsData, error: modelsError } = await systemClient
+    // Fetch models to check. Filter by allowedModels if provided to improve performance.
+    let modelsQuery = systemClient
       .from("models")
       .select("id, table_name, friendly_name")
+
+    if (
+      allowedModels &&
+      Array.isArray(allowedModels) &&
+      allowedModels.length > 0
+    ) {
+      modelsQuery = modelsQuery.in("id", allowedModels)
+    }
+
+    const { data: modelsData, error: modelsError } = await modelsQuery
 
     if (modelsError || !modelsData) {
       return NextResponse.json(
@@ -37,7 +47,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Iterate through models to find the records
-    // In a optimized version, we might store model_id alongside the reference
     const previewResults = await Promise.all(
       modelsData.map(async (model) => {
         // Find suitable columns
@@ -45,14 +54,45 @@ export async function POST(req: NextRequest) {
           t_name: model.table_name,
         })
 
-        const columnList = (columns as Array<{ column_name: string }>) || []
-        let displayColumn = "name"
-        const hasTitle = columnList.some((c) => c.column_name === "title")
-        if (hasTitle) displayColumn = "title"
+        const columnList =
+          (columns as Array<{ column_name: string; data_type: string }>) || []
+        const columnNames = columnList.map((c) => c.column_name)
 
-        const hasSlug = columnList.some((c) => c.column_name === "slug")
+        // Choose best display field
+        const displayCandidates = [
+          "name",
+          "title",
+          "label",
+          "friendly_name",
+          "display_name",
+          "full_name",
+          "heading",
+          "text",
+          "slug",
+          "year",
+          "season_name",
+          "team_name",
+        ]
+
+        let displayColumn = displayCandidates.find((c) =>
+          columnNames.includes(c)
+        )
+
+        // Fallback: If no candidate found, pick the first text/varchar column that isn't id/slug
+        if (!displayColumn) {
+          const firstTextColumn = columnList.find(
+            (c) =>
+              (c.data_type.includes("text") || c.data_type.includes("char")) &&
+              !["id", "slug", "created_at", "updated_at"].includes(
+                c.column_name
+              )
+          )
+          displayColumn = firstTextColumn?.column_name || "id"
+        }
+
+        const hasSlug = columnNames.includes("slug")
         const selectFields = [`id`, `${displayColumn}`]
-        if (hasSlug) selectFields.push("slug")
+        if (hasSlug && displayColumn !== "slug") selectFields.push("slug")
 
         const { data, error } = await systemClient
           .from(model.table_name)
@@ -68,7 +108,7 @@ export async function POST(req: NextRequest) {
         return records.map((record) => ({
           id: record.id as string,
           display_name:
-            (record[displayColumn] as string) || (record.id as string),
+            (record[displayColumn!] as string) || (record.id as string),
           subtitle: record.slug as string | undefined,
           model_name: model.friendly_name,
           model_id: model.id,
@@ -77,8 +117,12 @@ export async function POST(req: NextRequest) {
     )
 
     const flattenedResults = previewResults.flat()
+    // Ensure unique results if multiple models returned the same ID (unlikely but possible)
+    const uniqueResults = Array.from(
+      new Map(flattenedResults.map((r) => [r.id, r])).values()
+    )
 
-    return NextResponse.json(flattenedResults)
+    return NextResponse.json(uniqueResults)
   } catch (err: unknown) {
     console.error("Previews API Error:", err)
     return NextResponse.json(

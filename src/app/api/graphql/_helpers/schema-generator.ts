@@ -106,6 +106,8 @@ export const generateSchema = async () => {
       case "modular_content":
       case "navigation":
         return GraphQLJSON
+      case "select":
+        return GraphQLString
       default:
         return GraphQLString
     }

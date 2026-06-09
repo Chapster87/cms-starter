@@ -2,7 +2,7 @@ import React from "react"
 import * as Checkbox from "@radix-ui/react-checkbox"
 import * as Switch from "@radix-ui/react-switch"
 import { Check } from "lucide-react"
-import FieldWrapper from "../field-wrapper"
+import { FieldWrapperCheckbox } from "../field-wrapper"
 import s from "./style.module.css"
 
 interface CheckboxFieldProps {
@@ -39,7 +39,7 @@ export default function CheckboxField({
   const inputId = id || `checkbox-field-${name}`
 
   return (
-    <FieldWrapper
+    <FieldWrapperCheckbox
       id={inputId}
       label={label}
       description={description}
@@ -73,6 +73,6 @@ export default function CheckboxField({
           </Checkbox.Indicator>
         </Checkbox.Root>
       )}
-    </FieldWrapper>
+    </FieldWrapperCheckbox>
   )
 }

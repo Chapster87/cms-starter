@@ -1,9 +1,15 @@
 /**
  * Supported CMS field types.
  */
+export interface CMSFieldOption {
+  label: string
+  value: string
+}
+
 export type CMSFieldType =
   | "text_single" // text (Single-line Input)
   | "text_multi" // text (Markdown / Rich-text Block)
+  | "select" // text (Predefined dropdown)
   | "number" // numeric (Integers or Floats)
   | "boolean" // boolean (Switches / Toggles)
   | "date_time" // timestamptz (Date pickers)

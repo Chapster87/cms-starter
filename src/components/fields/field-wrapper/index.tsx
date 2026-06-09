@@ -51,3 +51,37 @@ export default function FieldWrapper({
     </div>
   )
 }
+
+export function FieldWrapperCheckbox({
+  id,
+  label,
+  description,
+  fieldNote,
+  error,
+  required,
+  children,
+  className,
+  variant = "default",
+}: FieldWrapperProps) {
+  return (
+    <div className={clsx(s.wrapperCheckbox, s[variant], className)}>
+      <div className={s.labelRow}>
+        {children}
+        <div className={s.labelRow}>
+          <Label.Root className={s.label} htmlFor={id}>
+            {label}
+            {required && <span className={s.required}>*</span>}
+          </Label.Root>
+        </div>
+      </div>
+
+      {(description || fieldNote) && (
+        <div className={s.description}>
+          {description && <p className={s.descriptionPart}>{description}</p>}
+          {fieldNote && <p className={s.fieldNote}>{fieldNote}</p>}
+        </div>
+      )}
+      {error && <div className={s.error}>{error}</div>}
+    </div>
+  )
+}

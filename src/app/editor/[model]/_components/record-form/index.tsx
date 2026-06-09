@@ -7,6 +7,7 @@ import {
   NumberField,
   MarkdownField,
   RichTextField,
+  SelectField,
   CheckboxField,
   JsonField,
   TagField,
@@ -235,6 +236,17 @@ export default function RecordForm({
           )
         }
 
+        if (field.field_type === "select") {
+          return (
+            <SelectField
+              key={field.field_name}
+              field={field}
+              value={(formData[field.field_name] as string) || ""}
+              onChange={(val) => handleChange(field.field_name, val)}
+            />
+          )
+        }
+
         if (field.field_type === "color") {
           return (
             <ColorField
@@ -326,13 +338,16 @@ export default function RecordForm({
         }
 
         if (field.field_type === "date_time") {
+          const settings = (field.settings || {}) as Record<string, unknown>
+          const showTime = settings.include_time !== false
+
           return (
             <DateField
               key={field.field_name}
               {...commonProps}
-              showTime
+              showTime={showTime}
               value={(formData[field.field_name] as string) || ""}
-              onChange={(e) => handleChange(field.field_name, e.target.value)}
+              onChange={(val) => handleChange(field.field_name, val)}
             />
           )
         }

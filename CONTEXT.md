@@ -35,6 +35,8 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - **Linked Records (Reference):** Pill-based selection UI with a Sanity-inspired browse modal.
   - **MediaField:** Visual grid for asset management (currently URL-based).
   - **TagField:** Pill-based management for keyword collections (JSONB arrays).
+  - **SelectField (Dropdown):** Support for predefined options with automatic slug generation for values.
+  - **DateField (Enhanced):** Supports date-only or datetime-local modes with integrated timezone selection and absolute UTC synchronization.
   - **Markdown:** Dual-tab Write/Preview interface using the `marked` library.
 
 ## Implementation Roadmap
@@ -52,7 +54,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [x] **Linked Records Stability:** Fixed RPC parameter naming (`t_name`) across List, Search, and Previews APIs.
+- [x] **Linked Records Stability:** Fixed RPC parameter naming (`t_name`) across List, Search, and Previews APIs. Enhanced label discovery logic to automatically resolve friendly names (name, title, label, etc.) instead of raw UUIDs in pills and browser modals.
 - [x] **Site Navigation Model:** Modern, hierarchical drag-and-drop navigation system with automatic path resolution and group management.
 - [x] **Unified Button Infrastructure:** Converted all frontend-facing `<button>` tags to a standardized `<Button />` component with consistent Primary/Secondary brand styling.
 - [x] **Singleton Model Workflow:** Implemented specialized handling for singleton models (Global Settings, etc.), including modal-based initialization, custom "Empty State" branded cards, and automatic redirect to the editor. Added strict safeguards to block duplicate record creation both in the UI and submission logic.
@@ -67,6 +69,8 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Enhanced **Media Asset** resolution, returning full asset metadata (URL, Name, Type) instead of raw JSON.
   - Established a secure **API Token System** (`CMS_API_TOKEN`) with a dual-authentication strategy for internal playground and external project use.
   - Created a comprehensive `CDA-GUIDE.md` for team onboarding and external implementation.
+- [x] **Field Type Expansion:** Implemented a new "Dropdown / Select" field type with support for custom choice management in the schema builder.
+- [x] **Timezone-Aware Date Handling:** Upgraded the `DateField` to handle timezone selection and prevent UI jitter, ensuring absolute UTC storage while maintaining naive local picker behavior.
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Model Reordering:** Apply DND logic to the top-level Models sidebar and dashboard.

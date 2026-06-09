@@ -1,109 +1,130 @@
+"use client"
+
 import React from "react"
 import * as Select from "@radix-ui/react-select"
 import { Check, ChevronDown, ChevronUp } from "lucide-react"
 import { clsx } from "clsx"
+
+import { CMSField, CMSFieldOption } from "@/types/fields"
 import FieldWrapper from "../field-wrapper"
+
 import s from "./style.module.css"
 
-interface SelectOption {
-  value: string
-  label: string
-}
-
 interface SelectFieldProps {
-  label: string
+  field?: CMSField
+  label?: string
   description?: string
   fieldNote?: string
-  error?: string
-  required?: boolean
-  id?: string
-  name?: string
-  value?: string
-  onChange?: (value: string) => void
-  options: SelectOption[]
-  placeholder?: string
+  options?: CMSFieldOption[]
+  value: string | null
+  onChange: (value: string) => void
   disabled?: boolean
+  placeholder?: string
+  required?: boolean
+  name?: string
+  error?: string
+  id?: string
   className?: string
 }
 
 /**
- * A styled dropdown select field using Radix UI primitives.
+ * A dropdown select field component using Radix UI.
+ * Supports predefined options configured in the field metadata or via props.
  */
 export default function SelectField({
+  field,
   label,
   description,
   fieldNote,
-  error,
-  required,
-  id,
-  name,
+  options: optionsProp,
   value,
   onChange,
-  options,
-  placeholder = "Select an option...",
-  disabled,
+  disabled = false,
+  placeholder,
+  required,
+  name,
+  error,
+  id,
   className,
 }: SelectFieldProps) {
-  const inputId = id || `select-field-${name}`
+  const displayLabel = label || field?.field_label || ""
+  const displayDescription = description || field?.field_description || ""
+  const displayFieldNote = fieldNote || field?.field_note || ""
+  const displayRequired = required || field?.is_required || false
+  const displayName = name || field?.field_name || ""
+  const displayOptions: CMSFieldOption[] =
+    optionsProp || (field?.settings?.choices as CMSFieldOption[]) || []
+  const displayPlaceholder =
+    placeholder || `Select ${displayLabel.toLowerCase()}...`
+  const inputId = id || `select-field-${displayName}`
 
   return (
     <FieldWrapper
       id={inputId}
-      label={label}
-      description={description}
-      fieldNote={fieldNote}
+      label={displayLabel}
+      description={displayDescription}
+      fieldNote={displayFieldNote}
       error={error}
-      required={required}
+      required={displayRequired}
       className={className}
     >
-      <Select.Root
-        value={value}
-        onValueChange={onChange}
-        disabled={disabled}
-        name={name}
-        required={required}
-      >
-        <Select.Trigger
-          className={clsx(s.trigger, error && s.error)}
-          id={inputId}
+      <div className={s.selectRoot}>
+        <Select.Root
+          value={value || ""}
+          onValueChange={onChange}
+          disabled={disabled}
+          required={displayRequired}
+          name={displayName}
         >
-          <Select.Value placeholder={placeholder} />
-          <Select.Icon className={s.triggerIcon}>
-            <ChevronDown size={16} />
-          </Select.Icon>
-        </Select.Trigger>
-
-        <Select.Portal>
-          <Select.Content
-            className={s.content}
-            position="popper"
-            sideOffset={4}
+          <Select.Trigger
+            className={clsx(s.trigger, error && s.error)}
+            aria-label={displayLabel}
+            id={inputId}
           >
-            <Select.ScrollUpButton className={s.scrollButton}>
-              <ChevronUp size={16} />
-            </Select.ScrollUpButton>
-
-            <Select.Viewport className={s.viewport}>
-              {options.map((option) => (
-                <Select.Item
-                  key={option.value}
-                  value={option.value}
-                  className={s.item}
-                >
-                  <Select.ItemText>{option.label}</Select.ItemText>
-                  <Select.ItemIndicator className={s.itemIndicator}>
-                    <Check size={14} />
-                  </Select.ItemIndicator>
-                </Select.Item>
-              ))}
-            </Select.Viewport>
-
-            <Select.ScrollDownButton className={s.scrollButton}>
+            <Select.Value placeholder={displayPlaceholder} />
+            <Select.Icon className={s.triggerIcon}>
               <ChevronDown size={16} />
-            </Select.ScrollDownButton>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
+            </Select.Icon>
+          </Select.Trigger>
+
+          <Select.Portal>
+            <Select.Content
+              className={s.content}
+              position="popper"
+              sideOffset={4}
+            >
+              <Select.ScrollUpButton className={s.scrollButton}>
+                <ChevronUp size={16} />
+              </Select.ScrollUpButton>
+
+              <Select.Viewport className={s.viewport}>
+                {displayOptions.map((option) => (
+                  <Select.Item
+                    key={option.value}
+                    value={option.value}
+                    className={s.item}
+                  >
+                    <Select.ItemText>{option.label}</Select.ItemText>
+                    <Select.ItemIndicator className={s.itemIndicator}>
+                      <Check size={14} />
+                    </Select.ItemIndicator>
+                  </Select.Item>
+                ))}
+
+                {displayOptions.length === 0 && (
+                  <div className={s.item} style={{ pointerEvents: "none" }}>
+                    <Select.ItemText>No options configured</Select.ItemText>
+                  </div>
+                )}
+              </Select.Viewport>
+
+              <Select.ScrollDownButton className={s.scrollButton}>
+                <ChevronDown size={16} />
+              </Select.ScrollDownButton>
+            </Select.Content>
+          </Select.Portal>
+        </Select.Root>
+      </div>
     </FieldWrapper>
   )
 }

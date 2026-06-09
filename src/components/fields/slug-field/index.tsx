@@ -13,6 +13,8 @@ interface SlugFieldProps {
   required?: boolean
   disabled?: boolean
   name?: string
+  /** The character used to separate words. Defaults to dash (-) for URLs. Use underscore (_) for technical/DB names. */
+  separator?: "-" | "_"
   /** Whether the field has been manually edited. If true, it stops syncing with sourceValue. */
   isTouched?: boolean
   onToggleTouched?: (touched: boolean) => void
@@ -32,6 +34,7 @@ export default function SlugField({
   required,
   disabled,
   name,
+  separator = "-",
   isTouched: controlledIsTouched,
   onToggleTouched,
 }: SlugFieldProps) {
@@ -41,11 +44,19 @@ export default function SlugField({
 
   // Helper to sanitize string into a slug
   const slugify = (text: string) => {
+    const escapedSeparator = separator === "-" ? "-" : "_"
+    const regex = new RegExp(`[^a-z0-9${escapedSeparator}]`, "g")
+    const repeatRegex = new RegExp(`[${escapedSeparator}]+`, "g")
+    const trimRegex = new RegExp(
+      `^[${escapedSeparator}]+|[${escapedSeparator}]+$`,
+      "g"
+    )
+
     return text
       .toLowerCase()
-      .replace(/[^a-z0-9]/g, "_") // Replace non-alphanumeric with underscore
-      .replace(/_+/g, "_") // Replace multiple underscores with single
-      .replace(/^_|_$/g, "") // Trim underscores from ends
+      .replace(/[^a-z0-9]/g, separator) // Replace non-alphanumeric with separator
+      .replace(repeatRegex, separator) // Replace multiple separators with single
+      .replace(trimRegex, "") // Trim separators from ends
   }
 
   // Sync with sourceValue if not touched
@@ -59,7 +70,9 @@ export default function SlugField({
   }, [sourceValue, isTouched, onChange, value])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_")
+    const escapedSeparator = separator === "-" ? "-" : "_"
+    const regex = new RegExp(`[^a-z0-9${escapedSeparator}]`, "g")
+    const val = e.target.value.toLowerCase().replace(regex, separator)
 
     if (!isTouched) {
       if (onToggleTouched) {

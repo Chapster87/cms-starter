@@ -19,6 +19,13 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     icon: "align-left",
   },
   {
+    type: "select",
+    label: "Dropdown / Select",
+    dbType: "text",
+    description: "Predefined list of options.",
+    icon: "list",
+  },
+  {
     type: "number",
     label: "Number",
     dbType: "numeric",

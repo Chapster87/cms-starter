@@ -58,8 +58,6 @@ export async function POST(req: NextRequest) {
         const friendlyName = model.friendly_name
         const modelId = model.id
 
-        // Resolve table structure
-        // NOTE: Fixed parameter name from 'p_table_name' to 't_name' to match DB RPC definition
         const { data: columns, error: colError } = await systemClient.rpc(
           "get_table_columns",
           { t_name: tableName }
@@ -70,16 +68,41 @@ export async function POST(req: NextRequest) {
           return []
         }
 
-        const typedColumns = (columns as Array<{ column_name: string }>) || []
+        const typedColumns =
+          (columns as Array<{ column_name: string; data_type: string }>) || []
         const columnNames = typedColumns.map((c) => c.column_name)
 
         // Choose best display field
-        let displayColumn = "id"
-        if (columnNames.includes("friendly_name"))
-          displayColumn = "friendly_name"
-        else if (columnNames.includes("title")) displayColumn = "title"
-        else if (columnNames.includes("name")) displayColumn = "name"
-        else if (columnNames.includes("label")) displayColumn = "label"
+        const displayCandidates = [
+          "name",
+          "title",
+          "label",
+          "friendly_name",
+          "display_name",
+          "full_name",
+          "heading",
+          "text",
+          "slug",
+          "year",
+          "season_name",
+          "team_name",
+        ]
+
+        let displayColumn = displayCandidates.find((c) =>
+          columnNames.includes(c)
+        )
+
+        // Fallback
+        if (!displayColumn) {
+          const firstTextColumn = typedColumns.find(
+            (c) =>
+              (c.data_type.includes("text") || c.data_type.includes("char")) &&
+              !["id", "slug", "created_at", "updated_at"].includes(
+                c.column_name
+              )
+          )
+          displayColumn = firstTextColumn?.column_name || "id"
+        }
 
         // Choose best subtitle field (slug or handle)
         let subtitleColumn: string | null = null
@@ -87,7 +110,8 @@ export async function POST(req: NextRequest) {
         else if (columnNames.includes("handle")) subtitleColumn = "handle"
 
         const selectFields = ["id", displayColumn]
-        if (subtitleColumn) selectFields.push(subtitleColumn)
+        if (subtitleColumn && subtitleColumn !== displayColumn)
+          selectFields.push(subtitleColumn)
 
         const { data, error } = await systemClient
           .from(tableName)
@@ -104,7 +128,7 @@ export async function POST(req: NextRequest) {
         return records.map((record) => ({
           id: record.id as string,
           display_name:
-            (record[displayColumn] as string) || (record.id as string),
+            (record[displayColumn!] as string) || (record.id as string),
           subtitle: subtitleColumn
             ? (record[subtitleColumn] as string)
             : undefined,

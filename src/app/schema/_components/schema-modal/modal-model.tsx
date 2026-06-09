@@ -204,7 +204,7 @@ export default function ModalModel({
         description="Lowercase, no spaces. This will be the physical table name."
       />
 
-      <div className={s.fieldSection}>
+      {/* <div className={s.fieldSection}>
         <label className={s.fieldLabel}>Group / Folder</label>
         <select
           className={s.selectField}
@@ -222,7 +222,7 @@ export default function ModalModel({
             ))}
         </select>
         <p className={s.fieldDescription}>Organize this model into a folder.</p>
-      </div>
+      </div> */}
 
       <CheckboxField
         label="Is Singleton"

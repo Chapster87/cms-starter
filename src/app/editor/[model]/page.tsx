@@ -78,7 +78,15 @@ export default function RecordListPage({ params }: RecordListPageProps) {
 
   const getDisplayName = (record: RecordBase) => {
     // Try to find a sensible display name from the record data
-    const nameFields = ["name", "title", "label", "heading", "friendly_name"]
+    const nameFields = [
+      "name",
+      "title",
+      "label",
+      "heading",
+      "display_name",
+      "friendly_name",
+      "event_name",
+    ]
     for (const field of nameFields) {
       if (record[field] && typeof record[field] === "string") {
         return record[field] as string

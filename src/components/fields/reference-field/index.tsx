@@ -83,7 +83,10 @@ export default function ReferenceField({
             "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
-          body: JSON.stringify({ ids: selectedIds }),
+          body: JSON.stringify({
+            ids: selectedIds,
+            allowedModels: allowedModels,
+          }),
         })
         if (response.ok) {
           const data = await response.json()

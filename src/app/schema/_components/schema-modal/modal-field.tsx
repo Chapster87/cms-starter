@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter } from "next/navigation"
+import { Plus, Trash2 } from "lucide-react"
 import {
   TextField,
   SelectField,
@@ -11,7 +12,7 @@ import {
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import Button from "@/components/button"
-import { CMSField } from "@/types/fields"
+import { CMSField, CMSFieldOption } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 import s from "./style.module.css"
 
@@ -58,6 +59,8 @@ export default function ModalField({
   // Reference field specific settings
   const [allowedModels, setAllowedModels] = useState<string[]>([])
   const [allowMultiple, setAllowMultiple] = useState(false)
+  const [choices, setChoices] = useState<CMSFieldOption[]>([])
+  const [includeTime, setIncludeTime] = useState(true)
 
   // Fetch field data
   useEffect(() => {
@@ -84,6 +87,7 @@ export default function ModalField({
 
         if (field) {
           const settings = (field.settings || {}) as Record<string, unknown>
+          const fieldChoices = (settings.choices as CMSFieldOption[]) || []
 
           if (mode === "edit") {
             setLabel(field.field_label)
@@ -93,6 +97,11 @@ export default function ModalField({
             setIsUnique(field.is_unique)
             setNote(field.field_note || "")
             setIsIdTouched(true)
+            setChoices(fieldChoices)
+            if (field.field_type === "date_time") {
+              setIncludeTime(settings.include_time !== false)
+            }
+
             if (
               field.field_type === "reference" ||
               field.field_type === "navigation" ||
@@ -116,6 +125,11 @@ export default function ModalField({
             setIsUnique(field.is_unique)
             setNote(field.field_note || "")
             setIsIdTouched(true)
+            setChoices(fieldChoices)
+            if (field.field_type === "date_time") {
+              setIncludeTime(settings.include_time !== false)
+            }
+
             if (
               field.field_type === "reference" ||
               field.field_type === "navigation" ||
@@ -159,6 +173,45 @@ export default function ModalField({
     setLabel(e.target.value)
   }
 
+  const handleAddChoice = () => {
+    setChoices([...choices, { label: "", value: "" }])
+  }
+
+  const handleRemoveChoice = (index: number) => {
+    const newChoices = [...choices]
+    newChoices.splice(index, 1)
+    setChoices(newChoices)
+  }
+
+  const handleUpdateChoice = (
+    index: number,
+    key: "label" | "value",
+    val: string
+  ) => {
+    const newChoices = [...choices]
+    const oldChoice = newChoices[index]
+
+    if (key === "label") {
+      const oldAutoValue = oldChoice.label
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-")
+
+      // Auto-fill value if it matches the previous auto-generated value or is empty
+      if (!oldChoice.value || oldChoice.value === oldAutoValue) {
+        newChoices[index] = {
+          ...oldChoice,
+          label: val,
+          value: val.toLowerCase().replace(/[^a-z0-9]/g, "-"),
+        }
+      } else {
+        newChoices[index] = { ...oldChoice, label: val }
+      }
+    } else {
+      newChoices[index] = { ...oldChoice, [key]: val }
+    }
+    setChoices(newChoices)
+  }
+
   const handleBack = useCallback(() => {
     const nextParams = new URLSearchParams(searchParams.toString())
     nextParams.delete("fieldType")
@@ -197,7 +250,15 @@ export default function ModalField({
               ? {
                   allowed_models: allowedModels,
                 }
-              : {}
+              : type === "select"
+                ? {
+                    choices,
+                  }
+                : type === "date_time"
+                  ? {
+                      include_time: includeTime,
+                    }
+                  : {}
 
       const body = isEdit
         ? {
@@ -297,6 +358,7 @@ export default function ModalField({
             value={name}
             sourceValue={label}
             onChange={setName}
+            separator="_"
             isTouched={isIdTouched}
             onToggleTouched={setIsIdTouched}
             description="The physical column name in your database."
@@ -341,6 +403,83 @@ export default function ModalField({
         description="Prevent duplicate values in this column."
         variant="switch"
       />
+
+      {type === "select" && (
+        <div className={s.referenceSettings}>
+          <hr className={s.separator} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <h4 className={s.settingsTitle}>Dropdown Options</h4>
+            <Button
+              type="button"
+              unstyled
+              onClick={handleAddChoice}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                fontSize: "12px",
+                color: "var(--color-primary)",
+              }}
+            >
+              <Plus size={14} /> Add Option
+            </Button>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "8px",
+              marginTop: "12px",
+            }}
+          >
+            {choices.map((choice, index) => (
+              <div key={index} style={{ display: "flex", gap: "8px" }}>
+                <input
+                  type="text"
+                  className={s.nameInput}
+                  placeholder="Label (e.g. Red)"
+                  value={choice.label}
+                  onChange={(e) =>
+                    handleUpdateChoice(index, "label", e.target.value)
+                  }
+                  style={{ flex: 1 }}
+                />
+                <input
+                  type="text"
+                  className={s.nameInput}
+                  placeholder="Value (e.g. red)"
+                  value={choice.value}
+                  onChange={(e) =>
+                    handleUpdateChoice(index, "value", e.target.value)
+                  }
+                  style={{ flex: 1 }}
+                />
+                <Button
+                  type="button"
+                  unstyled
+                  onClick={() => handleRemoveChoice(index)}
+                  style={{
+                    padding: "0 8px",
+                    color: "var(--color-grey-400)",
+                  }}
+                >
+                  <Trash2 size={16} />
+                </Button>
+              </div>
+            ))}
+            {choices.length === 0 && (
+              <p className={s.fieldDescription}>No options added yet.</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {type === "reference" && (
         <div className={s.referenceSettings}>
@@ -405,6 +544,20 @@ export default function ModalField({
               ))}
             </div>
           </div>
+        </div>
+      )}
+
+      {type === "date_time" && (
+        <div className={s.referenceSettings}>
+          <hr className={s.separator} />
+          <h4 className={s.settingsTitle}>Date Settings</h4>
+          <CheckboxField
+            label="Include Time"
+            checked={includeTime}
+            onChange={setIncludeTime}
+            description="Enable time selection alongside the date."
+            variant="switch"
+          />
         </div>
       )}
 
