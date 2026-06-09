@@ -6,6 +6,7 @@ import Link from "next/link"
 import { dataService, RecordBase } from "@/client/data-service"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
+import { useModels } from "@/hooks/use-models"
 import RecordForm from "@/app/editor/[model]/_components/record-form"
 import s from "./style.module.css"
 
@@ -24,6 +25,9 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
   const router = useRouter()
   const { model, id } = use(params)
   const { accessToken, loading: authLoading } = useAuth()
+  const { models } = useModels()
+
+  const modelData = models.find((m) => m.slug === model)
 
   const [record, setRecord] = useState<RecordBase | null>(null)
   const [loading, setLoading] = useState(true)
@@ -128,6 +132,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
           initialData={record}
           onSubmit={handleSubmit}
           isLoading={loading}
+          hasDraftMode={modelData?.has_draft_mode}
         />
       )}
     </div>

@@ -74,8 +74,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { name, friendly_name, is_singleton, emoji, group_id } =
-      await req.json()
+    const {
+      name,
+      friendly_name,
+      is_singleton,
+      has_draft_mode,
+      emoji,
+      group_id,
+    } = await req.json()
 
     if (!name || typeof name !== "string" || name.trim() === "") {
       return NextResponse.json(
@@ -93,9 +99,23 @@ export async function POST(req: NextRequest) {
       { table_name: sanitizedName }
     )
 
-    if (tableError) {
-      console.error(`Error creating table '${sanitizedName}':`, tableError)
-      return NextResponse.json({ error: tableError.message }, { status: 500 })
+    // If draft mode is enabled, add the status column immediately
+    if (has_draft_mode) {
+      const sql = `
+        ALTER TABLE public.${sanitizedName} 
+        ADD COLUMN status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published'));
+      `
+      const { error: statusError } = await authenticatedSupabase.rpc(
+        "exec_sql",
+        { sql }
+      )
+      if (statusError) {
+        console.error(
+          `Error adding status column to '${sanitizedName}':`,
+          statusError
+        )
+        // We don't fail the whole request here, but it's an inconsistent state
+      }
     }
 
     // 2. Get the current max display order to append to the end
@@ -120,6 +140,7 @@ export async function POST(req: NextRequest) {
           slug: sanitizedName,
           friendly_name: friendly_name, // Use original casing from request
           is_singleton: is_singleton || false,
+          has_draft_mode: has_draft_mode || false,
           display_order: nextOrder,
           emoji: emoji || null,
           group_id: group_id || null,
@@ -173,8 +194,14 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const { table_name, friendly_name, is_singleton, emoji, group_id } =
-      await req.json()
+    const {
+      table_name,
+      friendly_name,
+      is_singleton,
+      has_draft_mode,
+      emoji,
+      group_id,
+    } = await req.json()
 
     if (!table_name) {
       return NextResponse.json(
@@ -183,19 +210,67 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    const { error } = await authenticatedSupabase
+    // 1. Get existing model to check if draft mode changed
+    const { data: existingModel } = await authenticatedSupabase
+      .from("models")
+      .select("has_draft_mode")
+      .eq("table_name", table_name)
+      .single()
+
+    const wasDraftModeEnabled = existingModel?.has_draft_mode || false
+
+    // 2. Update metadata in registry
+    const { error: registryUpdateError } = await authenticatedSupabase
       .from("models")
       .update({
         friendly_name,
         is_singleton,
+        has_draft_mode,
         emoji: emoji || null,
         group_id: group_id || null,
       })
       .eq("table_name", table_name)
 
-    if (error) {
-      console.error(`Error updating model '${table_name}':`, error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (registryUpdateError) {
+      return NextResponse.json(
+        { error: registryUpdateError.message },
+        { status: 500 }
+      )
+    }
+
+    // 3. Handle physical column sync if draft mode was toggled
+    if (has_draft_mode !== wasDraftModeEnabled) {
+      const sanitizedTable = table_name.replace(/[^a-zA-Z0-9_]/g, "")
+      let sql = ""
+
+      if (has_draft_mode) {
+        // Enabling: Add column and safe-publish existing records
+        // We explicitly set the default to 'published' for the migration, then change it back to 'draft'
+        sql = `
+          ALTER TABLE public.${sanitizedTable} 
+          ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published'));
+          UPDATE public.${sanitizedTable} SET status = 'published' WHERE status IS NULL;
+          ALTER TABLE public.${sanitizedTable} ALTER COLUMN status SET DEFAULT 'draft';
+          NOTIFY pgrst, 'reload schema';
+        `
+      } else {
+        // Disabling: Drop column
+        sql = `
+          ALTER TABLE public.${sanitizedTable} DROP COLUMN IF EXISTS status;
+          NOTIFY pgrst, 'reload schema';
+        `
+      }
+
+      const { error: sqlError } = await authenticatedSupabase.rpc("exec_sql", {
+        sql,
+      })
+      if (sqlError) {
+        console.error(
+          `Error syncing status column for '${table_name}':`,
+          sqlError
+        )
+        // Even if SQL fails, registry is updated. This might need manual fix.
+      }
     }
 
     return NextResponse.json(

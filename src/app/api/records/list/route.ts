@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     // 1. Fetch model metadata
     const { data: allModels, error: modelsError } = await systemClient
       .from("models")
-      .select("id, table_name, friendly_name")
+      .select("id, table_name, friendly_name, has_draft_mode")
 
     if (modelsError || !allModels) {
       console.error("List API: Error fetching models registry:", modelsError)
@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
         const tableName = model.table_name
         const friendlyName = model.friendly_name
         const modelId = model.id
+        const hasDraftMode = model.has_draft_mode
 
         const { data: columns, error: colError } = await systemClient.rpc(
           "get_table_columns",
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest) {
         const selectFields = ["id", displayColumn]
         if (subtitleColumn && subtitleColumn !== displayColumn)
           selectFields.push(subtitleColumn)
+        if (hasDraftMode) selectFields.push("status")
 
         const { data, error } = await systemClient
           .from(tableName)
@@ -134,6 +136,7 @@ export async function POST(req: NextRequest) {
             : undefined,
           model_name: friendlyName,
           model_id: modelId,
+          status: hasDraftMode ? (record.status as string) : undefined,
         }))
       })
     )

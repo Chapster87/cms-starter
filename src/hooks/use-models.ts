@@ -19,6 +19,7 @@ export interface ModelRegistryEntry {
   group_id?: string | null
   emoji?: string | null
   is_singleton: boolean
+  has_draft_mode: boolean
   display_order: number
 }
 

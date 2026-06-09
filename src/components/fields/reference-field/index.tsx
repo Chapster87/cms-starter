@@ -30,6 +30,7 @@ interface RecordPreview {
   subtitle?: string
   model_name: string
   model_id?: string
+  status?: string
 }
 
 /**
@@ -258,6 +259,25 @@ export default function ReferenceField({
                         )}
                       </div>
                       <div className={s.recordType}>
+                        {record.status && (
+                          <div
+                            style={{
+                              width: "8px",
+                              height: "8px",
+                              borderRadius: "50%",
+                              backgroundColor:
+                                record.status === "published"
+                                  ? "var(--color-success)"
+                                  : "var(--color-warning)",
+                              marginRight: "8px",
+                            }}
+                            title={
+                              record.status === "published"
+                                ? "Published"
+                                : "Draft"
+                            }
+                          />
+                        )}
                         <span className={s.typeBadge}>{record.model_name}</span>
                         <div
                           className={`${s.statusDot} ${isSelected ? s.active : ""}`}

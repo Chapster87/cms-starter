@@ -37,6 +37,7 @@ interface RecordFormProps {
   initialData?: Record<string, unknown>
   onSubmit: (data: Record<string, unknown>) => Promise<void>
   isLoading: boolean
+  hasDraftMode?: boolean
 }
 
 /**
@@ -47,6 +48,7 @@ export default function RecordForm({
   initialData,
   onSubmit,
   isLoading,
+  hasDraftMode,
 }: RecordFormProps) {
   const { accessToken } = useAuth()
   const [schema, setSchema] = useState<CMSField[]>([])
@@ -157,6 +159,22 @@ export default function RecordForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
+    // validation
+    const isPublished = formData["status"] === "published"
+    if (hasDraftMode && isPublished) {
+      const missingRequired = schema.filter(
+        (f) => f.is_required && !formData[f.field_name]
+      )
+      if (missingRequired.length > 0) {
+        alert(
+          `Cannot publish: The following fields are required: ${missingRequired
+            .map((f) => f.field_label)
+            .join(", ")}`
+        )
+        return
+      }
+    }
+
     // Unwrap stringified media/json fields before submission to ensure they save as native JSON
     const cleanData = { ...formData }
     schema.forEach((field) => {
@@ -179,8 +197,25 @@ export default function RecordForm({
 
   if (fetchingSchema) return <p>Loading form fields...</p>
 
+  const isPublished = formData["status"] === "published"
+
   return (
     <form onSubmit={handleSubmit} className={s.form}>
+      {hasDraftMode && (
+        <div className={s.statusToggleSection}>
+          <CheckboxField
+            label={isPublished ? "Published" : "Draft"}
+            checked={isPublished}
+            onChange={(checked) =>
+              handleChange("status", checked ? "published" : "draft")
+            }
+            disabled={isLoading}
+            variant="switch"
+            description="Toggle between Draft and Published status."
+          />
+        </div>
+      )}
+
       {schema.map((field) => {
         const commonProps = {
           label: field.field_label,

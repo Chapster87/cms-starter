@@ -24,10 +24,13 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - **Intelligent ID Generation:** Technical IDs (tables/columns) are auto-derived from labels but "detach" once manually edited.
 - **DND Reordering:** Full drag-and-drop support for field ordering via `@dnd-kit`, persisted to `public.fields.ui_order`.
 - **Schema Synchronization:** Detection mechanism to import pre-existing database columns into the CMS management layer.
+- **Draft/Publish Workflow:** Per-model toggle to enable draft states. Synchronizes a `status` column across physical tables with robust 3-step migration logic (Add -> Backfill -> Default).
 
 ### 2. Content Editor & Field Suite
 
 - **Dynamic Form Engine:** Renders inputs based on model metadata, respecting `ui_order` and system field read-only constraints.
+- **"Lax Drafts" Validation:** Intelligent validation engine that allows records in `draft` state to bypass certain required field checks, ensuring content velocity while maintaining strict rules for `published` data.
+- **Status Visibility:** Global status indicators (Green for Published, Gold for Draft) integrated into record lists, context menus, and Reference browse modals.
 - **Advanced Field Suite:**
   - **SlugField:** Auto-generating sanitized technical names until manually overridden.
   - **RichTextField:** High-fidelity WYSIWYG using **Tiptap** with custom alignment and heading controls.
@@ -43,17 +46,14 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Draft/Publish Flow (Schema):**
-  - [ ] Add `has_draft_mode` (boolean) to the `models` registry table.
-  - [ ] Mechanism to add/sync `status` (Draft/Published) column to target model tables.
-- [ ] **Draft/Publish Flow (API):**
-  - [ ] Update record listing and retrieval to respect status filters.
-- [ ] **Draft/Publish Flow (UI):**
-  - [ ] Add status toggle/indicator to `RecordForm`.
-  - [ ] Update `ReferenceField` browse modal to show colored status dots: Green (Published), Gold/Yellow (Draft).
+- [ ] **Auto-save Draft, manual publish button:** Update draft/publish to be auto-save draft, save button becomes publish, status in the upper left.
+- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
+- [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
+- [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
 
 ### 2. Next Steps (In Progress/Upcoming)
 
+- [x] **Draft/Publish Implementation:** Full end-to-end status management. Added `has_draft_mode` to registry, automated SQL migrations for `status` columns, implemented schema cache refreshing (`NOTIFY pgrst`), and updated the GraphQL CDA to filter for `published` content by default.
 - [x] **Linked Records Stability:** Fixed RPC parameter naming (`t_name`) across List, Search, and Previews APIs. Enhanced label discovery logic to automatically resolve friendly names (name, title, label, etc.) instead of raw UUIDs in pills and browser modals.
 - [x] **Site Navigation Model:** Modern, hierarchical drag-and-drop navigation system with automatic path resolution and group management.
 - [x] **Unified Button Infrastructure:** Converted all frontend-facing `<button>` tags to a standardized `<Button />` component with consistent Primary/Secondary brand styling.
@@ -71,10 +71,6 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Created a comprehensive `CDA-GUIDE.md` for team onboarding and external implementation.
 - [x] **Field Type Expansion:** Implemented a new "Dropdown / Select" field type with support for custom choice management in the schema builder.
 - [x] **Timezone-Aware Date Handling:** Upgraded the `DateField` to handle timezone selection and prevent UI jitter, ensuring absolute UTC storage while maintaining naive local picker behavior.
-- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
-- [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
-- [ ] **Model Reordering:** Apply DND logic to the top-level Models sidebar and dashboard.
-- [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
 
 ### 3. Future Roadmap
 

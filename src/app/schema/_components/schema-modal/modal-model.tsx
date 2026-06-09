@@ -33,6 +33,7 @@ export default function ModalModel({
   const [emoji, setEmoji] = useState("")
   const [showPicker, setShowPicker] = useState(false)
   const [isSingleton, setIsSingleton] = useState(false)
+  const [hasDraftMode, setHasDraftMode] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isIdTouched, setIsIdTouched] = useState(false)
@@ -64,6 +65,7 @@ export default function ModalModel({
             setGroupId(existing.group_id || null)
             setEmoji(existing.emoji || "")
             setIsSingleton(existing.is_singleton)
+            setHasDraftMode(existing.has_draft_mode || false)
             setIsIdTouched(true)
           } else {
             // Duplicate mode
@@ -72,6 +74,7 @@ export default function ModalModel({
             setGroupId(existing.group_id || null)
             setEmoji(existing.emoji || "")
             setIsSingleton(existing.is_singleton)
+            setHasDraftMode(existing.has_draft_mode || false)
             setIsIdTouched(true)
           }
         }
@@ -79,6 +82,7 @@ export default function ModalModel({
         setModelName("")
         setFriendlyName("")
         setIsSingleton(false)
+        setHasDraftMode(true)
         setIsIdTouched(false)
       }
     }, 0)
@@ -111,6 +115,7 @@ export default function ModalModel({
             table_name: modelName,
             friendly_name: friendlyName || modelName,
             is_singleton: isSingleton,
+            has_draft_mode: hasDraftMode,
             emoji: emoji || null,
             group_id: groupId,
           }
@@ -118,6 +123,7 @@ export default function ModalModel({
             name: modelName,
             friendly_name: friendlyName || modelName,
             is_singleton: isSingleton,
+            has_draft_mode: hasDraftMode,
             emoji: emoji || null,
             group_id: groupId,
           }
@@ -230,6 +236,15 @@ export default function ModalModel({
         onChange={setIsSingleton}
         disabled={isSaving}
         description="Check this if the model should only ever have one record (e.g., Global Settings)."
+        variant="switch"
+      />
+
+      <CheckboxField
+        label="Enable Draft/Publish"
+        checked={hasDraftMode}
+        onChange={setHasDraftMode}
+        disabled={isSaving}
+        description="Check this if you want to manage record visibility with Draft and Published statuses."
         variant="switch"
       />
 

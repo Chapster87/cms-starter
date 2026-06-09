@@ -29,7 +29,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const modelData = models.find((m) => m.slug === modelSlug)
+  const modelData = models.find((m) => m.slug === modelSlug) || null
 
   const loadRecords = useCallback(async () => {
     if (!modelSlug) return
@@ -64,6 +64,10 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     }
   }, [modelData, records, loading, modelSlug, router])
 
+  /**
+   * Deletes a record after user confirmation.
+   * @param id The UUID of the record to delete.
+   */
   const handleDelete = async (id: string) => {
     if (!modelSlug) return
     if (!confirm("Are you sure you want to delete this record?")) return
@@ -106,19 +110,21 @@ export default function RecordListPage({ params }: RecordListPageProps) {
       : `Record ${record.id.substring(0, 8)}...`
   }
 
-  if (loading || authLoading)
+  if (loading || authLoading) {
     return (
       <div className={s.container}>
         <p>Loading records...</p>
       </div>
     )
+  }
 
-  if (!modelSlug)
+  if (!modelSlug) {
     return (
       <div className={s.container}>
         <p>Invalid model specified.</p>
       </div>
     )
+  }
 
   // Avoid flash of table for singletons that are about to redirect
   if (modelData?.is_singleton && records.length === 1 && !loading) {
@@ -234,6 +240,9 @@ export default function RecordListPage({ params }: RecordListPageProps) {
           <thead>
             <tr>
               <th>Name</th>
+              {modelData && modelData.has_draft_mode && (
+                <th style={{ width: "100px" }}>Status</th>
+              )}
               <th>Updated At</th>
               <th>Created At</th>
               <th className={s.actionsCell}></th>
@@ -243,6 +252,24 @@ export default function RecordListPage({ params }: RecordListPageProps) {
             {records.map((record) => (
               <tr key={record.id}>
                 <td>
+                  {modelData && modelData.has_draft_mode && (
+                    <span
+                      style={{
+                        display: "inline-block",
+                        width: "8px",
+                        height: "8px",
+                        borderRadius: "50%",
+                        backgroundColor:
+                          record.status === "published"
+                            ? "var(--color-success)"
+                            : "var(--color-warning)",
+                        marginRight: "8px",
+                      }}
+                      title={
+                        record.status === "published" ? "Published" : "Draft"
+                      }
+                    />
+                  )}
                   <Link
                     href={`/editor/${modelSlug}/${record.slug || record.id}`}
                     className={s.recordName}
@@ -250,6 +277,25 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                     {getDisplayName(record)}
                   </Link>
                 </td>
+                {modelData && modelData.has_draft_mode && (
+                  <td className={s.dateCell}>
+                    <span
+                      style={{
+                        textTransform: "capitalize",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                        color:
+                          record.status === "published"
+                            ? "var(--color-success)"
+                            : "var(--color-warning)",
+                      }}
+                    >
+                      {typeof record.status === "string"
+                        ? record.status
+                        : "draft"}
+                    </span>
+                  </td>
+                )}
                 <td className={s.dateCell}>
                   {record.updated_at
                     ? new Date(record.updated_at as string).toLocaleString()
@@ -262,10 +308,9 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                 </td>
                 <td className={s.actionsCell}>
                   <ContextMenu>
-                    <ContextMenu.Trigger className={s.actionsButton}>
-                      <Button
-                        variant="secondary"
-                        unstyled
+                    <ContextMenu.Trigger className={s.actionsButton} asChild>
+                      <button
+                        className={s.unstyledButton}
                         type="button"
                         aria-label="More options"
                       >
@@ -284,7 +329,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                             d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
                           />
                         </svg>
-                      </Button>
+                      </button>
                     </ContextMenu.Trigger>
                     <ContextMenu.Content>
                       <ContextMenu.Link

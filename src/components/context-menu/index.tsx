@@ -18,7 +18,7 @@ interface ContextMenuProps {
  * Root component for the context menu.
  * Wraps Radix UI DropdownMenu.Root.
  */
-function ContextMenu({ children, open, onOpenChange }: ContextMenuProps) {
+const ContextMenu = ({ children, open, onOpenChange }: ContextMenuProps) => {
   return (
     <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
       {children}

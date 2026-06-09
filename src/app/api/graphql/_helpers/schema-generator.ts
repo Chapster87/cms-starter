@@ -259,11 +259,13 @@ export const generateSchema = async () => {
           type: modelType,
           args: { id: { type: new GraphQLNonNull(GraphQLString) } },
           resolve: async (_source, { id }) => {
-            const { data } = await supabase
-              .from(model.table_name)
-              .select("*")
-              .eq("id", id)
-              .single()
+            let query = supabase.from(model.table_name).select("*").eq("id", id)
+
+            if (model.has_draft_mode) {
+              query = query.eq("status", "published")
+            }
+
+            const { data } = await query.single()
             return data
           },
         }
@@ -285,7 +287,13 @@ export const generateSchema = async () => {
             },
           }),
           resolve: async () => {
-            const { data } = await supabase.from(model.table_name).select("*")
+            let query = supabase.from(model.table_name).select("*")
+
+            if (model.has_draft_mode) {
+              query = query.eq("status", "published")
+            }
+
+            const { data } = await query
             return data
           },
         }
