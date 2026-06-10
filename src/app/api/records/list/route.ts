@@ -113,7 +113,10 @@ export async function POST(req: NextRequest) {
         const selectFields = ["id", displayColumn]
         if (subtitleColumn && subtitleColumn !== displayColumn)
           selectFields.push(subtitleColumn)
-        if (hasDraftMode) selectFields.push("status")
+        if (hasDraftMode) {
+          selectFields.push("status")
+          selectFields.push("_draft")
+        }
 
         const { data, error } = await systemClient
           .from(tableName)
@@ -137,6 +140,7 @@ export async function POST(req: NextRequest) {
           model_name: friendlyName,
           model_id: modelId,
           status: hasDraftMode ? (record.status as string) : undefined,
+          has_draft: hasDraftMode ? record._draft !== null : false,
         }))
       })
     )

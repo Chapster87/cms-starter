@@ -67,7 +67,11 @@ export default function FieldList({ modelId }: FieldListProps) {
       )
       if (!response.ok) throw new Error("Failed to fetch registered fields")
       const data = await response.json()
-      setFields(data)
+      // Filter out system-level fields from the management list
+      const filteredFields = (data || []).filter(
+        (f: CMSField) => !["status", "_draft"].includes(f.field_name)
+      )
+      setFields(filteredFields)
 
       // 2. Resolve table name to check for unregistered columns
       const supabase = createClient()
@@ -90,7 +94,13 @@ export default function FieldList({ modelId }: FieldListProps) {
           const registeredNames = new Set(
             data.map((f: CMSField) => f.field_name)
           )
-          const systemFields = ["id", "created_at", "updated_at"]
+          const systemFields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "status",
+            "_draft",
+          ]
           const missing = physicalCols.filter(
             (c) =>
               !registeredNames.has(c.column_name) &&

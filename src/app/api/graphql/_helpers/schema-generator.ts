@@ -209,14 +209,35 @@ export const generateSchema = async () => {
             } else if (field.field_type === "media") {
               fieldsConfig[field.field_name] = {
                 type: getGraphQLType(field),
-                resolve: (parent: Record<string, unknown>) =>
-                  parseJsonValue(parent[field.field_name]),
+                resolve: (
+                  parent: Record<string, unknown>,
+                  _args,
+                  _context,
+                  info
+                ) => {
+                  const draft = parent._draft as Record<string, unknown> | null
+                  const val =
+                    draft && draft[field.field_name] !== undefined
+                      ? draft[field.field_name]
+                      : parent[field.field_name]
+                  return parseJsonValue(val)
+                },
               }
             } else {
               fieldsConfig[field.field_name] = {
                 type: getGraphQLType(field),
-                resolve: (parent: Record<string, unknown>) => {
-                  const val = parent[field.field_name]
+                resolve: (
+                  parent: Record<string, unknown>,
+                  _args,
+                  _context,
+                  info
+                ) => {
+                  const draft = parent._draft as Record<string, unknown> | null
+                  const val =
+                    draft && draft[field.field_name] !== undefined
+                      ? draft[field.field_name]
+                      : parent[field.field_name]
+
                   return [
                     "tags",
                     "json",
@@ -257,15 +278,26 @@ export const generateSchema = async () => {
 
         queryFields[technicalName] = {
           type: modelType,
-          args: { id: { type: new GraphQLNonNull(GraphQLString) } },
-          resolve: async (_source, { id }) => {
+          args: {
+            id: { type: new GraphQLNonNull(GraphQLString) },
+            preview: { type: GraphQLBoolean, defaultValue: false },
+          },
+          resolve: async (_source, { id, preview }) => {
             let query = supabase.from(model.table_name).select("*").eq("id", id)
 
-            if (model.has_draft_mode) {
+            // If not in preview mode and draft mode is enabled, only show published
+            if (model.has_draft_mode && !preview) {
               query = query.eq("status", "published")
             }
 
             const { data } = await query.single()
+            if (!data) return null
+
+            // If preview is false, we should hide the draft data from the resolvers
+            if (!preview) {
+              return { ...data, _draft: null }
+            }
+
             return data
           },
         }
@@ -286,14 +318,30 @@ export const generateSchema = async () => {
               },
             },
           }),
-          resolve: async () => {
+          args: {
+            preview: { type: GraphQLBoolean, defaultValue: false },
+            includeDrafts: { type: GraphQLBoolean, defaultValue: false },
+          },
+          resolve: async (_source, { preview, includeDrafts }) => {
             let query = supabase.from(model.table_name).select("*")
 
-            if (model.has_draft_mode) {
+            // If not including drafts and not in preview, only show published
+            if (model.has_draft_mode && !includeDrafts && !preview) {
               query = query.eq("status", "published")
             }
 
             const { data } = await query
+
+            if (!data) return []
+
+            // If preview is false, clear _draft for all records to ensure live content is served
+            if (!preview) {
+              return data.map((item: Record<string, unknown>) => ({
+                ...item,
+                _draft: null,
+              }))
+            }
+
             return data
           },
         }

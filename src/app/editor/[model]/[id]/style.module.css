@@ -8,7 +8,77 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backButton {
+  padding: 4px;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.backButton:hover {
+  color: var(--color-primary);
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.titleSection h1 {
+  font-size: 20px;
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.splitButton {
+  display: flex;
+  align-items: stretch;
+}
+
+.mainAction {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.caretButton {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left: 1px solid rgba(255, 255, 255, 0.2) !important;
+  padding-left: 10px;
+  padding-right: 10px;
+  min-width: unset;
+}
+
+.caretButton:hover:not(:disabled) {
+  /* Provide a slight brightness boost on hover, independent of the main button */
+  filter: brightness(1.1) !important;
+  background-color: var(--color-primary) !important;
+}
+
+.caret {
+  font-size: 12px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .titleGroup h1 {

@@ -155,6 +155,118 @@ export const dataService = {
   },
 
   /**
+   * Auto-saves changes to the shadow _draft column.
+   * Does NOT affect the live content.
+   */
+  async autoSaveRecord(
+    model: string,
+    id: string,
+    data: Record<string, unknown>
+  ): Promise<void> {
+    const supabase = createClient()
+
+    // When auto-saving, we wrap the data into the _draft column
+    const { error } = await supabase
+      .from(model)
+      .update({ _draft: data })
+      .eq("id", id)
+
+    if (error) {
+      console.error(
+        `Error auto-saving record '${id}' in '${model}':`,
+        error.message
+      )
+      throw error
+    }
+  },
+
+  /**
+   * Discards any unpublished changes by clearing the _draft column.
+   */
+  async discardChanges(model: string, id: string): Promise<void> {
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from(model)
+      .update({ _draft: null })
+      .eq("id", id)
+
+    if (error) {
+      console.error(
+        `Error discarding changes for record '${id}' in '${model}':`,
+        error.message
+      )
+      throw error
+    }
+  },
+
+  /**
+   * Publishes a record by merging draft data into main columns and clearing _draft.
+   */
+  async publishRecord(
+    model: string,
+    id: string,
+    data: Record<string, unknown>
+  ): Promise<void> {
+    const supabase = createClient()
+
+    // 1. Prepare clean data for main columns
+    const cleanData = { ...data }
+    Object.keys(cleanData).forEach((key) => {
+      const val = cleanData[key]
+      if (
+        typeof val === "string" &&
+        (val.trim().startsWith("{") || val.trim().startsWith("["))
+      ) {
+        try {
+          cleanData[key] = JSON.parse(val)
+        } catch {
+          /* ignore */
+        }
+      }
+    })
+
+    // 2. Update record: spread data into columns, set status, clear _draft
+    const { error } = await supabase
+      .from(model)
+      .update({
+        ...cleanData,
+        status: "published",
+        _draft: null,
+      })
+      .eq("id", id)
+
+    if (error) {
+      console.error(
+        `Error publishing record '${id}' in '${model}':`,
+        error.message
+      )
+      throw error
+    }
+  },
+
+  /**
+   * Unpublishes a record by setting status to 'draft'.
+   * The live content remains in the columns but is no longer served as 'published'.
+   */
+  async unpublishRecord(model: string, id: string): Promise<void> {
+    const supabase = createClient()
+
+    const { error } = await supabase
+      .from(model)
+      .update({ status: "draft" })
+      .eq("id", id)
+
+    if (error) {
+      console.error(
+        `Error unpublishing record '${id}' from '${model}':`,
+        error.message
+      )
+      throw error
+    }
+  },
+
+  /**
    * Inserts a new record using upsert.
    * Automatically unwraps stringified JSON for clean storage.
    */

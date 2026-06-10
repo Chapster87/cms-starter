@@ -191,6 +191,40 @@
   gap: 12px;
 }
 
+.statusDots {
+  display: flex;
+  align-items: center;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-grey-300);
+  border: 1.5px solid var(--color-bg);
+  box-sizing: content-box;
+}
+
+.statusDot + .statusDot {
+  margin-left: 1px;
+}
+
+.statusDot.draft {
+  background-color: #f59e0b;
+}
+
+.statusDot.published {
+  background-color: #10b981;
+}
+
+.statusDot.changed {
+  background-color: #3b82f6;
+}
+
+.statusDot.active {
+  background: #10b981; /* Green */
+}
+
 .typeBadge {
   font-size: 11px;
   font-weight: 700;
@@ -200,17 +234,6 @@
   border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-}
-
-.statusDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-grey-300);
-}
-
-.statusDot.active {
-  background: #10b981; /* Green */
 }
 
 .checkIcon {

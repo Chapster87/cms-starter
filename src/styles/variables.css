@@ -36,7 +36,7 @@
   --background: var(--color-white);
   --foreground: var(--color-black);
 
-  --text-primary: #000;
+  --text-primary: var(--color-grey-900);
   --text-secondary: #666;
 
   --background-overlay: rgb(from var(--color-black) r g b / 0.2);

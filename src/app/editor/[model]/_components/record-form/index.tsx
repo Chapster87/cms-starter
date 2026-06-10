@@ -33,9 +33,11 @@ interface FieldSchema {
 }
 
 interface RecordFormProps {
+  id?: string
   model: string
   initialData?: Record<string, unknown>
   onSubmit: (data: Record<string, unknown>) => Promise<void>
+  onAutoSave?: (data: Record<string, unknown>) => void
   isLoading: boolean
   hasDraftMode?: boolean
 }
@@ -44,9 +46,11 @@ interface RecordFormProps {
  * A dynamic form component that generates inputs based on a table's schema.
  */
 export default function RecordForm({
+  id,
   model,
   initialData,
   onSubmit,
+  onAutoSave,
   isLoading,
   hasDraftMode,
 }: RecordFormProps) {
@@ -107,7 +111,11 @@ export default function RecordForm({
 
         if (data && data.length > 0) {
           if (!isMounted) return
-          setSchema(data)
+          // Ensure system fields like _draft and status are suppressed even if registered
+          const filteredData = data.filter(
+            (f: CMSField) => !["_draft", "status"].includes(f.field_name)
+          )
+          setSchema(filteredData)
         } else {
           // Fallback: If no registry entry found, try to fetch raw schema
           const response = await fetch(`/api/models/schema?table=${model}`, {
@@ -120,7 +128,13 @@ export default function RecordForm({
           const mappedFields = data
             .filter(
               (f: FieldSchema) =>
-                !["id", "created_at", "updated_at"].includes(f.column_name)
+                ![
+                  "id",
+                  "created_at",
+                  "updated_at",
+                  "status",
+                  "_draft",
+                ].includes(f.column_name)
             )
             .map((f: FieldSchema) => ({
               id: f.column_name,
@@ -153,7 +167,11 @@ export default function RecordForm({
   }, [model, accessToken])
 
   const handleChange = (columnName: string, value: unknown) => {
-    setFormData((prev) => ({ ...prev, [columnName]: value }))
+    const nextData = { ...formData, [columnName]: value }
+    setFormData(nextData)
+    if (onAutoSave) {
+      onAutoSave(nextData)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -197,25 +215,8 @@ export default function RecordForm({
 
   if (fetchingSchema) return <p>Loading form fields...</p>
 
-  const isPublished = formData["status"] === "published"
-
   return (
-    <form onSubmit={handleSubmit} className={s.form}>
-      {hasDraftMode && (
-        <div className={s.statusToggleSection}>
-          <CheckboxField
-            label={isPublished ? "Published" : "Draft"}
-            checked={isPublished}
-            onChange={(checked) =>
-              handleChange("status", checked ? "published" : "draft")
-            }
-            disabled={isLoading}
-            variant="switch"
-            description="Toggle between Draft and Published status."
-          />
-        </div>
-      )}
-
+    <form id={id} onSubmit={handleSubmit} className={s.form}>
       {schema.map((field) => {
         const commonProps = {
           label: field.field_label,
@@ -423,9 +424,6 @@ export default function RecordForm({
           />
         )
       })}
-      <Button type="submit" isLoading={isLoading} disabled={isLoading}>
-        Save Record
-      </Button>
     </form>
   )
 }

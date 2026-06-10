@@ -99,11 +99,12 @@ export async function POST(req: NextRequest) {
       { table_name: sanitizedName }
     )
 
-    // If draft mode is enabled, add the status column immediately
+    // If draft mode is enabled, add the status and _draft columns immediately
     if (has_draft_mode) {
       const sql = `
         ALTER TABLE public.${sanitizedName} 
-        ADD COLUMN status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published'));
+        ADD COLUMN status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+        ADD COLUMN _draft JSONB;
       `
       const { error: statusError } = await authenticatedSupabase.rpc(
         "exec_sql",
@@ -244,19 +245,21 @@ export async function PATCH(req: NextRequest) {
       let sql = ""
 
       if (has_draft_mode) {
-        // Enabling: Add column and safe-publish existing records
+        // Enabling: Add columns and safe-publish existing records
         // We explicitly set the default to 'published' for the migration, then change it back to 'draft'
         sql = `
           ALTER TABLE public.${sanitizedTable} 
-          ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published'));
+          ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'published' CHECK (status IN ('draft', 'published')),
+          ADD COLUMN IF NOT EXISTS _draft JSONB;
           UPDATE public.${sanitizedTable} SET status = 'published' WHERE status IS NULL;
           ALTER TABLE public.${sanitizedTable} ALTER COLUMN status SET DEFAULT 'draft';
           NOTIFY pgrst, 'reload schema';
         `
       } else {
-        // Disabling: Drop column
+        // Disabling: Drop columns
         sql = `
           ALTER TABLE public.${sanitizedTable} DROP COLUMN IF EXISTS status;
+          ALTER TABLE public.${sanitizedTable} DROP COLUMN IF EXISTS _draft;
           NOTIFY pgrst, 'reload schema';
         `
       }

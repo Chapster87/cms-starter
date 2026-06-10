@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     // Fetch models to check. Filter by allowedModels if provided to improve performance.
     let modelsQuery = systemClient
       .from("models")
-      .select("id, table_name, friendly_name")
+      .select("id, table_name, friendly_name, has_draft_mode")
 
     if (
       allowedModels &&
@@ -93,6 +93,10 @@ export async function POST(req: NextRequest) {
         const hasSlug = columnNames.includes("slug")
         const selectFields = [`id`, `${displayColumn}`]
         if (hasSlug && displayColumn !== "slug") selectFields.push("slug")
+        if (model.has_draft_mode) {
+          selectFields.push("status")
+          selectFields.push("_draft")
+        }
 
         const { data, error } = await systemClient
           .from(model.table_name)
@@ -112,6 +116,8 @@ export async function POST(req: NextRequest) {
           subtitle: record.slug as string | undefined,
           model_name: model.friendly_name,
           model_id: model.id,
+          status: model.has_draft_mode ? (record.status as string) : undefined,
+          has_draft: model.has_draft_mode ? record._draft !== null : false,
         }))
       })
     )

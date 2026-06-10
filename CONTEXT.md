@@ -46,13 +46,20 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Auto-save Draft, manual publish button:** Update draft/publish to be auto-save draft, save button becomes publish, status in the upper left.
+- [ ] **Toast messages for notifications** - Edit, New, Discard, etc - Use Radix Primitive
+- [ ] **Details Sidebar** - Publish status, created, published, ect - DatoCMS example
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
 
 ### 2. Next Steps (In Progress/Upcoming)
 
+- [x] **Advanced Draft Workflow (Auto-save/Publish/Changed)**:
+  - Implemented shadow JSON storage via `_draft` column for all models.
+  - Developed debounced auto-save engine with immediate "Changed" (Blue) status feedback.
+  - Created a professional Split-Action button UI for Publish/Unpublish/Delete.
+  - Implemented Sanity-style overlapping status dots in record lists and reference modals.
+  - Enhanced GraphQL CDA with `preview` and `includeDrafts` modes for staging environments.
 - [x] **Draft/Publish Implementation:** Full end-to-end status management. Added `has_draft_mode` to registry, automated SQL migrations for `status` columns, implemented schema cache refreshing (`NOTIFY pgrst`), and updated the GraphQL CDA to filter for `published` content by default.
 - [x] **Linked Records Stability:** Fixed RPC parameter naming (`t_name`) across List, Search, and Previews APIs. Enhanced label discovery logic to automatically resolve friendly names (name, title, label, etc.) instead of raw UUIDs in pills and browser modals.
 - [x] **Site Navigation Model:** Modern, hierarchical drag-and-drop navigation system with automatic path resolution and group management.

@@ -1,0 +1,74 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  transition: all 0.2s ease;
+  width: fit-content;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+}
+
+/* States */
+
+.draft {
+  color: #b45309; /* Amber 700 */
+  background: #fef3c7; /* Amber 100 */
+  border-color: #fcd34d; /* Amber 300 */
+}
+.draft .dot {
+  background: #f59e0b; /* Amber 500 */
+}
+
+.published {
+  color: #065f46; /* Emerald 800 */
+  background: #d1fae5; /* Emerald 100 */
+  border-color: #6ee7b7; /* Emerald 300 */
+}
+.published .dot {
+  background: #10b981; /* Emerald 500 */
+}
+
+.changed {
+  color: #1e40af; /* Blue 800 */
+  background: #dbeafe; /* Blue 100 */
+  border-color: #93c5fd; /* Blue 300 */
+}
+.changed .dot {
+  background: #3b82f6; /* Blue 500 */
+}
+
+.saving {
+  opacity: 0.7;
+}
+
+.saving .dot {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

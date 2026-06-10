@@ -29,6 +29,48 @@ To keep the schema professional and industry-standard, we use the following nami
 
 ## 2. Query Guide (The CDA Pattern)
 
+### Drafts & Preview Mode
+
+The CDA supports a robust draft/publish workflow. By default, queries only return **published** content and show the **live** version of that content. You can control this behavior using the `preview` and `includeDrafts` arguments.
+
+#### Arguments
+
+| Argument        | Type      | Location           | Description                                                                                                                                                                |
+| :-------------- | :-------- | :----------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `preview`       | `Boolean` | Query & Collection | When `true`, returns the latest saved draft content (staged) and bypasses the "published" filter. When `false` (default), returns the last published content.              |
+| `includeDrafts` | `Boolean` | Collection Only    | When `true`, includes records that are currently in `draft` or `changed` status in the collection. Useful for list views that need to show all items regardless of status. |
+
+#### Usage: Previewing Staged Content
+
+To see what a page will look like before it is published, set `preview: true`. This is ideal for staging environments or "Preview" buttons in your frontend.
+
+```graphql
+query {
+  # Returns the draft version of this specific record
+  teams(id: "uuid-123", preview: true) {
+    team_name
+    short_name
+  }
+}
+```
+
+#### Usage: Including All Records
+
+If you want to list all records but still show their live content, use `includeDrafts: true`.
+
+```graphql
+query {
+  teamsCollection(includeDrafts: true) {
+    edges {
+      node {
+        team_name
+        status # 'published', 'draft', or 'changed'
+      }
+    }
+  }
+}
+```
+
 ### The Relay Pattern (Edges & Nodes)
 
 We use the Relay specification for collections. This allows for scalable pagination and metadata handling.
@@ -157,6 +199,8 @@ export async function executeCMSQuery<
 
 ### C. Usage in Server Components (Next.js)
 
+#### Standard Live Content
+
 ```tsx
 import { executeCMSQuery } from "@/lib/cms"
 
@@ -182,6 +226,43 @@ export default async function Page() {
         </li>
       ))}
     </ul>
+  )
+}
+```
+
+#### Previewing Drafts (Staging/Preview Routes)
+
+For preview routes, you can pass variables to the query. Note that for preview content, you should usually disable the Next.js Data Cache (`cache: 'no-store'`).
+
+```tsx
+import { executeCMSQuery } from "@/lib/cms"
+
+export default async function PreviewPage({ params }) {
+  const data = await executeCMSQuery(
+    `
+    query GetTeam($id: String!, $preview: Boolean) {
+      teams(id: $id, preview: $preview) {
+        team_name
+        short_name
+      }
+    }
+  `,
+    {
+      variables: {
+        id: params.id,
+        preview: true,
+      },
+      cache: "no-store", // Don't cache preview content
+    }
+  )
+
+  const team = data.teams
+
+  return (
+    <div>
+      <h1>PREVIEW MODE: {team.team_name}</h1>
+      {/* ... */}
+    </div>
   )
 }
 ```

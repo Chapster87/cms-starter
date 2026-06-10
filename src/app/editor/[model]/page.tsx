@@ -249,107 +249,124 @@ export default function RecordListPage({ params }: RecordListPageProps) {
             </tr>
           </thead>
           <tbody>
-            {records.map((record) => (
-              <tr key={record.id}>
-                <td>
-                  {modelData && modelData.has_draft_mode && (
-                    <span
+            {records.map((record) => {
+              const isPublished = record.status === "published"
+              const hasDraft = !!record._draft
+              const isChanged = isPublished && hasDraft
+
+              return (
+                <tr key={record.id}>
+                  <td>
+                    <div
                       style={{
-                        display: "inline-block",
-                        width: "8px",
-                        height: "8px",
-                        borderRadius: "50%",
-                        backgroundColor:
-                          record.status === "published"
-                            ? "var(--color-success)"
-                            : "var(--color-warning)",
-                        marginRight: "8px",
-                      }}
-                      title={
-                        record.status === "published" ? "Published" : "Draft"
-                      }
-                    />
-                  )}
-                  <Link
-                    href={`/editor/${modelSlug}/${record.slug || record.id}`}
-                    className={s.recordName}
-                  >
-                    {getDisplayName(record)}
-                  </Link>
-                </td>
-                {modelData && modelData.has_draft_mode && (
-                  <td className={s.dateCell}>
-                    <span
-                      style={{
-                        textTransform: "capitalize",
-                        fontSize: "12px",
-                        fontWeight: 500,
-                        color:
-                          record.status === "published"
-                            ? "var(--color-success)"
-                            : "var(--color-warning)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
                       }}
                     >
-                      {typeof record.status === "string"
-                        ? record.status
-                        : "draft"}
-                    </span>
-                  </td>
-                )}
-                <td className={s.dateCell}>
-                  {record.updated_at
-                    ? new Date(record.updated_at as string).toLocaleString()
-                    : "N/A"}
-                </td>
-                <td className={s.dateCell}>
-                  {record.created_at
-                    ? new Date(record.created_at as string).toLocaleString()
-                    : "N/A"}
-                </td>
-                <td className={s.actionsCell}>
-                  <ContextMenu>
-                    <ContextMenu.Trigger className={s.actionsButton} asChild>
-                      <button
-                        className={s.unstyledButton}
-                        type="button"
-                        aria-label="More options"
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                          />
-                        </svg>
-                      </button>
-                    </ContextMenu.Trigger>
-                    <ContextMenu.Content>
-                      <ContextMenu.Link
+                      {modelData && modelData.has_draft_mode && (
+                        <div className={s.statusDots}>
+                          {isPublished ? (
+                            <span
+                              className={`${s.statusDot} ${s.published}`}
+                              title="Published"
+                            />
+                          ) : (
+                            <span
+                              className={`${s.statusDot} ${s.draft}`}
+                              title="Draft"
+                            />
+                          )}
+                          {isChanged && (
+                            <span
+                              className={`${s.statusDot} ${s.changed}`}
+                              title="Unpublished Changes"
+                            />
+                          )}
+                        </div>
+                      )}
+                      <Link
                         href={`/editor/${modelSlug}/${record.slug || record.id}`}
-                        icon={<Edit2 size={14} />}
+                        className={s.recordName}
                       >
-                        Edit
-                      </ContextMenu.Link>
-                      <ContextMenu.Item
-                        onSelect={() => handleDelete(record.id)}
-                        variant="danger"
-                        icon={<Trash2 size={14} />}
+                        {getDisplayName(record)}
+                      </Link>
+                    </div>
+                  </td>
+                  {modelData && modelData.has_draft_mode && (
+                    <td className={s.dateCell}>
+                      <span
+                        className={
+                          isChanged
+                            ? s.statusTextChanged
+                            : isPublished
+                              ? s.statusTextPublished
+                              : s.statusTextDraft
+                        }
                       >
-                        Delete
-                      </ContextMenu.Item>
-                    </ContextMenu.Content>
-                  </ContextMenu>
-                </td>
-              </tr>
-            ))}
+                        {isChanged
+                          ? "Changed"
+                          : typeof record.status === "string"
+                            ? record.status
+                            : "draft"}
+                      </span>
+                    </td>
+                  )}
+                  <td className={s.dateCell}>
+                    {record.updated_at
+                      ? new Date(record.updated_at as string).toLocaleString()
+                      : "N/A"}
+                  </td>
+                  <td className={s.dateCell}>
+                    {record.created_at
+                      ? new Date(record.created_at as string).toLocaleString()
+                      : "N/A"}
+                  </td>
+                  <td className={s.actionsCell}>
+                    <ContextMenu>
+                      <ContextMenu.Trigger className={s.actionsButton} asChild>
+                        <button
+                          className={s.unstyledButton}
+                          type="button"
+                          aria-label="More options"
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                            />
+                          </svg>
+                        </button>
+                      </ContextMenu.Trigger>
+                      <ContextMenu.Content>
+                        <ContextMenu.Link
+                          href={`/editor/${modelSlug}/${record.slug || record.id}`}
+                          icon={<Edit2 size={14} />}
+                        >
+                          Edit
+                        </ContextMenu.Link>
+                        <ContextMenu.Item
+                          onSelect={() => handleDelete(record.id)}
+                          variant="danger"
+                          icon={<Trash2 size={14} />}
+                        >
+                          Delete
+                        </ContextMenu.Item>
+                      </ContextMenu.Content>
+                    </ContextMenu>
+                  </td>
+                </tr>
+              )
+            })}
             {records.length === 0 && !loading && (
               <tr>
                 <td colSpan={4} className={s.empty}>
