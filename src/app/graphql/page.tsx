@@ -1,13 +1,24 @@
 "use client"
 
 import React, { useMemo } from "react"
+import dynamic from "next/dynamic"
 import { createGraphiQLFetcher } from "@graphiql/toolkit"
-import { GraphiQL } from "graphiql"
 import { createClient } from "@/utils/supabase"
 
 import s from "./style.module.css"
 
 import "graphiql/style.css"
+
+const GraphiQL = dynamic(() => import("graphiql").then((mod) => mod.GraphiQL), {
+  ssr: false,
+  loading: () => (
+    <div className={s.container}>
+      <div className={s.placeholder}>
+        <p>Loading GraphQL Playground...</p>
+      </div>
+    </div>
+  ),
+})
 
 /**
  * CDA (Content Delivery API) Playground.

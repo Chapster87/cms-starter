@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { Suspense } from "react"
 import { useParams, useSearchParams, useRouter } from "next/navigation"
 import { useModels } from "@/hooks/use-models"
 import ModelSidebar from "./_components/model-sidebar"
@@ -8,14 +8,9 @@ import ModalRecord from "./[model]/_components/modal-record"
 import s from "./style.module.css"
 
 /**
- * Layout for the editor section.
- * Provides the model list sidebar and main content area.
+ * Editor layout wrapper to handle suspense boundary for search params.
  */
-export default function EditorLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+function EditorLayoutContent({ children }: { children: React.ReactNode }) {
   const { models, groups, loading, error } = useModels()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -30,7 +25,7 @@ export default function EditorLayout({
     newParams.delete("action")
     const search = newParams.toString()
     const query = search ? `?${search}` : ""
-    router.push(`${window.location.pathname}${query}`)
+    router.push(query || "/")
   }
 
   if (loading)
@@ -70,5 +65,30 @@ export default function EditorLayout({
         />
       )}
     </div>
+  )
+}
+
+/**
+ * Layout for the editor section.
+ * Provides the model list sidebar and main content area.
+ * Wrapped in Suspense due to useSearchParams() usage in EditorLayoutContent.
+ */
+export default function EditorLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className={s.editorContent}>
+          <div className={s.placeholder}>
+            <p>Loading editor...</p>
+          </div>
+        </div>
+      }
+    >
+      <EditorLayoutContent>{children}</EditorLayoutContent>
+    </Suspense>
   )
 }

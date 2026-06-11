@@ -2,12 +2,12 @@ import { createServerClient } from "@supabase/ssr"
 import { type NextRequest, NextResponse } from "next/server"
 
 /**
- * Middleware to refresh the Supabase session on every request.
+ * Proxy to refresh the Supabase session on every request.
  * This is crucial for keeping the user's session active and synchronized between client and server.
  * @param {NextRequest} request - The incoming Next.js request.
  * @returns {Promise<NextResponse>} The Next.js response.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
