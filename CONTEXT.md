@@ -46,7 +46,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Toast messages for notifications** - Edit, New, Discard, etc - Use Radix Primitive
+- [x] **Toast messages for notifications** - Integrated Radix Toast with Jotai for global success/error/info alerts across Schema and Editor.
 - [ ] **Details Sidebar** - Publish status, created, published, ect - DatoCMS example
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.

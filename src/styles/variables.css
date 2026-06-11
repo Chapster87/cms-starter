@@ -31,6 +31,18 @@
 
   --color-border: var(--color-grey-200);
 
+  /* Toast variables */
+  --toast-bg: var(--color-white);
+  --toast-border: var(--color-grey-200);
+  --toast-success-bg: #e6f6ee;
+  --toast-success-text: var(--color-success);
+  --toast-error-bg: #fdf2f2;
+  --toast-error-text: var(--color-danger);
+  --toast-warning-bg: #fffcf0;
+  --toast-warning-text: var(--color-warning);
+  --toast-info-bg: #f0f7ff;
+  --toast-info-text: var(--color-info);
+
   --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 
   --background: var(--color-white);

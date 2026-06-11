@@ -9,6 +9,7 @@ import {
   CheckboxField,
   SlugField,
 } from "@/components/fields"
+import { toast } from "@/client/toast-store"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import Button from "@/components/button"
@@ -294,9 +295,15 @@ export default function ModalField({
         throw new Error(result.error || `Failed to ${mode} field`)
       }
 
+      toast.success(
+        `Field ${mode === "edit" ? "updated" : mode === "duplicate" ? "duplicated" : "created"}`,
+        `Field "${label}" has been saved.`
+      )
       onSuccess()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : `Failed to ${mode} field`)
+      const msg = err instanceof Error ? err.message : `Failed to ${mode} field`
+      setError(msg)
+      toast.error("Error saving field", msg)
     } finally {
       setIsSaving(false)
     }

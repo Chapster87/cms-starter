@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react"
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
 import Button from "@/components/button"
+import { toast } from "@/client/toast-store"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import s from "./style.module.css"
@@ -100,9 +101,15 @@ export default function ModalModelGroup({
       }
 
       await refresh()
+      toast.success(
+        `Group ${mode === "edit" ? "updated" : "created"}`,
+        `Group "${name}" is now available.`
+      )
       onSuccess()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save group")
+      const msg = err instanceof Error ? err.message : "Failed to save group"
+      setError(msg)
+      toast.error("Error saving group", msg)
     } finally {
       setIsLoading(false)
     }

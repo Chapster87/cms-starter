@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { toast } from "@/client/toast-store"
 import { dataService } from "@/client/data-service"
 import Modal from "@/components/modal"
 import RecordForm from "./record-form"
@@ -44,6 +45,11 @@ export default function ModalRecord({
       const result = await dataService.createRecord(model, formData)
       if (!result) throw new Error("Failed to create record: No data returned")
 
+      toast.success(
+        "Record created",
+        `New record in ${model} has been initialized.`
+      )
+
       if (onSuccess) {
         onOpenChange(false)
         onSuccess(result.id)
@@ -54,7 +60,9 @@ export default function ModalRecord({
         router.refresh()
       }
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to create record")
+      const msg = err instanceof Error ? err.message : "Failed to create record"
+      setError(msg)
+      toast.error("Error creating record", msg)
     } finally {
       setIsSaving(false)
     }

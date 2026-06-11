@@ -8,6 +8,7 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 
 import Button from "@/components/button"
 import { useModels, ModelRegistryEntry, ModelGroup } from "@/hooks/use-models"
+import { toast } from "@/client/toast-store"
 import { useAuth } from "@/hooks/use-auth"
 import { useTreeDnd } from "@/hooks/use-tree-dnd"
 import { INDENTATION_WIDTH, flattenTree } from "@/helpers/tree-helpers"
@@ -149,10 +150,12 @@ export default function ModelList({ models, groups }: ModelListProps) {
 
       try {
         await deleteModel(modelName)
+        toast.success("Model deleted")
       } catch (err: unknown) {
-        const errorMessage =
+        toast.error(
+          "Delete failed",
           err instanceof Error ? err.message : "Failed to delete model."
-        alert(`Error: ${errorMessage}`)
+        )
       }
     },
     [deleteModel]
@@ -172,8 +175,9 @@ export default function ModelList({ models, groups }: ModelListProps) {
           headers: { Authorization: `Bearer ${accessToken}` },
         })
         refresh()
+        toast.success("Group deleted")
       } catch (err) {
-        alert("Failed to delete group")
+        toast.error("Delete failed", "Failed to delete group")
       }
     },
     [accessToken, refresh]

@@ -22,6 +22,7 @@ import {
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import { CMSField } from "@/types/fields"
+import { toast } from "@/client/toast-store"
 import { NavigationData } from "@/types/navigation"
 import s from "./style.module.css"
 
@@ -184,10 +185,9 @@ export default function RecordForm({
         (f) => f.is_required && !formData[f.field_name]
       )
       if (missingRequired.length > 0) {
-        alert(
-          `Cannot publish: The following fields are required: ${missingRequired
-            .map((f) => f.field_label)
-            .join(", ")}`
+        toast.error(
+          "Validation Error",
+          `Required fields: ${missingRequired.map((f) => f.field_label).join(", ")}`
         )
         return
       }

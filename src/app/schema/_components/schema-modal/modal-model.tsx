@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
 import Button from "@/components/button"
 import { CheckboxField, SlugField } from "@/components/fields"
+import { toast } from "@/client/toast-store"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import s from "./style.module.css"
@@ -143,9 +144,15 @@ export default function ModalModel({
       }
 
       await refresh()
+      toast.success(
+        `Model ${mode === "edit" ? "updated" : mode === "duplicate" ? "duplicated" : "created"}`,
+        `Model "${friendlyName}" is now available.`
+      )
       onSuccess()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : `Failed to ${mode} model`)
+      const msg = err instanceof Error ? err.message : `Failed to ${mode} model`
+      setError(msg)
+      toast.error("Error saving model", msg)
     } finally {
       setIsSaving(false)
     }

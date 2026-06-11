@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, use, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { toast } from "@/client/toast-store"
 import { dataService, RecordBase } from "@/client/data-service"
 import Button from "@/components/button"
 import ContextMenu from "@/components/context-menu"
@@ -101,9 +102,17 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
       autoSaveTimerRef.current = setTimeout(async () => {
         setIsSaving(true)
         try {
+          const isFirstDraft = !record?._draft
           await dataService.autoSaveRecord(model, record.id, formData)
           // Optimistically update local record state to show "Changed" status immediately
           setRecord((prev) => (prev ? { ...prev, _draft: formData } : prev))
+
+          if (isFirstDraft) {
+            toast.info(
+              "Page updated.",
+              "Unsaved changes have been saved as a draft."
+            )
+          }
         } catch (err) {
           console.error("Auto-save failed:", err)
         } finally {
@@ -121,10 +130,13 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     setError(null)
     try {
       await dataService.publishRecord(model, record.id, formData)
-      setSuccess("Record published successfully!")
+      toast.success("Record published", "Your changes are now live.")
       await loadRecord()
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to publish record")
+      const msg =
+        err instanceof Error ? err.message : "Failed to publish record"
+      setError(msg)
+      toast.error("Publish failed", msg)
     } finally {
       setLoading(false)
     }
@@ -139,10 +151,12 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     try {
       await dataService.discardChanges(model, record.id)
       await loadRecord()
-      setSuccess("Changes discarded.")
-      setTimeout(() => setSuccess(null), 3000)
+      toast.success("Changes discarded", "Draft has been reset.")
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to discard changes")
+      const msg =
+        err instanceof Error ? err.message : "Failed to discard changes"
+      setError(msg)
+      toast.error("Discard failed", msg)
     } finally {
       setLoading(false)
     }
@@ -161,12 +175,15 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     try {
       await dataService.unpublishRecord(model, record.id)
       await loadRecord()
-      setSuccess("Record unpublished.")
-      setTimeout(() => setSuccess(null), 3000)
-    } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : "Failed to unpublish record"
+      toast.success(
+        "Record unpublished",
+        "The record has been set back to draft."
       )
+    } catch (err: unknown) {
+      const msg =
+        err instanceof Error ? err.message : "Failed to unpublish record"
+      setError(msg)
+      toast.error("Unpublish failed", msg)
     } finally {
       setLoading(false)
     }
@@ -184,9 +201,12 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     setLoading(true)
     try {
       await dataService.deleteRecord(model, record.id)
+      toast.success("Record deleted", "The record has been removed.")
       router.push(`/editor/${model}`)
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to delete record")
+      const msg = err instanceof Error ? err.message : "Failed to delete record"
+      setError(msg)
+      toast.error("Delete failed", msg)
     } finally {
       setLoading(false)
     }
@@ -279,7 +299,6 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
       </header>
 
       {error && <p className={s.error}>{error}</p>}
-      {success && <p className={s.success}>{success}</p>}
 
       {record && (
         <RecordForm

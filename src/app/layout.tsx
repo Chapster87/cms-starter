@@ -3,6 +3,8 @@ import { Inter, Merriweather_Sans } from "next/font/google"
 import Navigation from "@/components/navigation"
 import Header from "@/components/header"
 import BreakpointIndicator from "@components/breakpoint-indicator"
+import { ToastContainer } from "@/components/toast"
+
 import "@styles/globals.css"
 import s from "./styles.module.css"
 
@@ -41,6 +43,7 @@ export default function RootLayout({
             <Header />
             <main className={s.content}>{children}</main>
           </div>
+          <ToastContainer />
         </div>
       </body>
     </html>
