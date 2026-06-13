@@ -1,0 +1,152 @@
+.sidebar {
+  display: none;
+  width: 320px;
+  background-color: var(--color-white);
+  border-left: 1px solid var(--color-grey-200);
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+
+  @media (--viewport-medium-up) {
+    display: flex;
+  }
+}
+
+.header {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--color-grey-200);
+}
+
+.sidebarTitle {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-grey-600);
+  margin: 0;
+}
+
+.accordionRoot {
+  width: 100%;
+}
+
+.accordionItem {
+  border-bottom: 1px solid var(--color-grey-200);
+}
+
+.accordionTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 24px;
+  background-color: var(--color-grey-100);
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text-primary);
+}
+
+.accordionTrigger:hover {
+  background-color: var(--color-grey-200);
+}
+
+.chevron {
+  transition: transform 300ms cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+.accordionTrigger[data-state="open"] .chevron {
+  transform: rotate(180deg);
+}
+
+.accordionContent {
+  overflow: hidden;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.accordionContent[data-state="open"] {
+  animation: slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+.accordionContent[data-state="closed"] {
+  animation: slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+.contentInner {
+  padding: 16px 24px;
+}
+
+.infoList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-grey-500);
+  text-transform: uppercase;
+}
+
+.infoValue {
+  font-size: 13px;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.statusWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.statusDot.published {
+  background-color: var(--color-green);
+}
+
+.statusDot.draft {
+  background-color: var(--color-gold);
+}
+
+.statusDot.changed {
+  background-color: var(--color-blue);
+}
+
+.comingSoon {
+  font-style: italic;
+  color: var(--color-grey-500);
+}
+
+@keyframes slideDown {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}

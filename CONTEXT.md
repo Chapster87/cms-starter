@@ -47,7 +47,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 ### 1. Immediate Tasks (Current Focus)
 
 - [x] **Toast messages for notifications** - Integrated Radix Toast with Jotai for global success/error/info alerts across Schema and Editor.
-- [ ] **Details Sidebar** - Publish status, created, published, ect - DatoCMS example
+- [x] **Details Sidebar** - Integrated a metadata-driven right sidebar using Radix Accordion. Displays Record ID, Publish Status, and timestamps (Created/Updated/Published). Includes independent scrolling and on-brand typography.
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
@@ -81,6 +81,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 3. Future Roadmap
 
+- [ ] **User Roles & Permissions:**
 - [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
 - [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
 - [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup.

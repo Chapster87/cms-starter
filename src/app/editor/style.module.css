@@ -1,5 +1,12 @@
 .editorContent {
-  composes: global-left-column from global;
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  height: 100%;
+  overflow: hidden;
+}
+
+.editorContent.withRightSidebar {
+  grid-template-columns: 280px 1fr 320px !important;
 }
 
 .sidebar {
@@ -11,9 +18,7 @@
 
 .mainContent {
   padding: 16px 24px;
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  overflow-y: auto;
 }
 
 .placeholder {

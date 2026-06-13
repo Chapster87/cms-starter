@@ -1,14 +1,18 @@
 .site {
   position: relative;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
+  overflow: hidden;
 }
 
 .primary {
   display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 .content {
   flex-grow: 1;
+  overflow: hidden;
 }
