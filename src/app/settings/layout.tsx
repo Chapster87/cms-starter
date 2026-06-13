@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { Suspense } from "react"
 import { usePathname } from "next/navigation"
 import clsx from "clsx"
 import Link from "@/components/link"
@@ -76,7 +76,9 @@ export default function SettingsLayout({
       <aside className={s.sidebar}>
         <SettingsSidebar />
       </aside>
-      <main className={s.mainContent}>{children}</main>
+      <main className={s.mainContent}>
+        <Suspense fallback={null}>{children}</Suspense>
+      </main>
     </div>
   )
 }

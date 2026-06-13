@@ -72,7 +72,8 @@ export default function Breadcrumbs({
                   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                   .join(" ")
 
-        return { label, href }
+        const item: BreadcrumbItem = { label, href }
+        return item
       })
       .filter((crumb): crumb is BreadcrumbItem => crumb !== null)
 
