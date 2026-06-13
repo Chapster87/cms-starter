@@ -10,6 +10,7 @@ import ContextMenu from "@/components/context-menu"
 import SvgIcon from "@/components/svg-icon"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
+import { getRecordDisplayName } from "@/helpers/record-helpers"
 import RecordForm from "@/app/editor/[model]/_components/record-form"
 import StatusBadge, {
   RecordStatus,
@@ -237,7 +238,11 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
             </Button>
           </Link>
           <div className={s.titleSection}>
-            <h1>Edit {model}</h1>
+            <h1>
+              {modelData?.is_singleton
+                ? modelData.friendly_name
+                : `Edit ${getRecordDisplayName(record, modelData?.friendly_name)}`}
+            </h1>
             <StatusBadge status={currentStatus} isSaving={isSaving} />
           </div>
         </div>

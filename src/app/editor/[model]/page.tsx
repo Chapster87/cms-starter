@@ -7,6 +7,7 @@ import { dataService, RecordBase } from "@/client/data-service"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
+import { getRecordDisplayName } from "@/helpers/record-helpers"
 import ContextMenu from "@/components/context-menu"
 import { Edit2, Trash2 } from "lucide-react"
 import s from "./style.module.css"
@@ -81,33 +82,11 @@ export default function RecordListPage({ params }: RecordListPageProps) {
   }
 
   const getDisplayName = (record: RecordBase) => {
-    // Try to find a sensible display name from the record data
-    const nameFields = [
-      "name",
-      "title",
-      "label",
-      "heading",
-      "display_name",
-      "friendly_name",
-      "event_name",
-    ]
-    for (const field of nameFields) {
-      if (record[field] && typeof record[field] === "string") {
-        return record[field] as string
-      }
-    }
-
-    // Fallback: look for the first string field that isn't a system field
-    const systemFields = ["id", "created_at", "updated_at", "slug"]
-    for (const key in record) {
-      if (!systemFields.includes(key) && typeof record[key] === "string") {
-        return record[key] as string
-      }
-    }
-
-    return record.slug
-      ? (record.slug as string)
-      : `Record ${record.id.substring(0, 8)}...`
+    return getRecordDisplayName(
+      record,
+      modelData?.friendly_name,
+      modelData?.is_singleton
+    )
   }
 
   if (loading || authLoading) {

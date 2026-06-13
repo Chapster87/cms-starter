@@ -2,6 +2,7 @@
 
 import React, { useMemo } from "react"
 import { usePathname } from "next/navigation"
+import { useModels } from "@/hooks/use-models"
 import Link from "@components/link"
 import Text from "@components/typography/text"
 import s from "./style.module.css"
@@ -33,6 +34,7 @@ export default function Breadcrumbs({
   hideOnRoot = false,
 }: BreadcrumbsProps): React.ReactElement {
   const pathname = usePathname()
+  const { models } = useModels()
 
   const breadcrumbs: BreadcrumbItem[] = useMemo(() => {
     if (!pathname) {
@@ -42,22 +44,40 @@ export default function Breadcrumbs({
     const pathSegments = pathname.split("/").filter(Boolean)
     const homeBreadcrumb: BreadcrumbItem = { label: "Dashboard", href: "/" }
 
-    const dynamicBreadcrumbs = pathSegments.map((segment, index) => {
-      const href = "/" + pathSegments.slice(0, index + 1).join("/")
-      const label =
-        dynamicSegments && dynamicSegments[segment]
-          ? dynamicSegments[segment]
-          : segment
-              .replace(/-/g, " ")
-              .split(" ")
-              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-              .join(" ")
+    const dynamicBreadcrumbs = pathSegments
+      .map((segment, index) => {
+        const href = "/" + pathSegments.slice(0, index + 1).join("/")
 
-      return { label, href }
-    })
+        // Check if this segment is a model slug
+        const model = models.find((m) => m.slug === segment)
+
+        // If previous segment was a singleton model, we might want to skip this segment (the ID)
+        const prevSegment = index > 0 ? pathSegments[index - 1] : null
+        const prevModel = prevSegment
+          ? models.find((m) => m.slug === prevSegment)
+          : null
+
+        if (prevModel?.is_singleton) {
+          return null // Skip the ID segment for singletons
+        }
+
+        const label =
+          dynamicSegments && dynamicSegments[segment]
+            ? dynamicSegments[segment]
+            : model
+              ? model.friendly_name
+              : segment
+                  .replace(/-/g, " ")
+                  .split(" ")
+                  .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(" ")
+
+        return { label, href }
+      })
+      .filter((crumb): crumb is BreadcrumbItem => crumb !== null)
 
     return [homeBreadcrumb, ...dynamicBreadcrumbs]
-  }, [pathname, dynamicSegments])
+  }, [pathname, dynamicSegments, models])
 
   if (hideOnRoot && pathname === "/") {
     return <></>
