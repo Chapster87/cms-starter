@@ -23,9 +23,12 @@ import s from "./style.module.css"
 function RecordDetailsSidebarWrapper() {
   const params = useParams()
   const { accessToken } = useAuth()
+  const { models } = useModels()
   const [record, setRecord] = React.useState<RecordBase | null>(null)
   const model = params?.model as string
   const id = params?.id as string
+
+  const modelData = models.find((m) => m.slug === model)
 
   React.useEffect(() => {
     if (accessToken && model && id) {
@@ -52,14 +55,21 @@ function RecordDetailsSidebarWrapper() {
 
   if (!record) return null
 
-  const currentStatus: RecordStatus =
-    record.status === "published"
+  const currentStatus: RecordStatus = !modelData?.has_draft_mode
+    ? "published"
+    : record.status === "published"
       ? record._draft
         ? "changed"
         : "published"
       : "draft"
 
-  return <RecordDetailsSidebar record={record} status={currentStatus} />
+  return (
+    <RecordDetailsSidebar
+      record={record}
+      status={currentStatus}
+      hasDraftMode={modelData?.has_draft_mode}
+    />
+  )
 }
 
 /**

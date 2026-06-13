@@ -94,7 +94,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
 
   const handleAutoSave = useCallback(
     (formData: Record<string, unknown>) => {
-      if (!model || !record?.id) return
+      if (!model || !record?.id || !modelData?.has_draft_mode) return
 
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current)
@@ -130,7 +130,11 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     setLoading(true)
     setError(null)
     try {
-      await dataService.publishRecord(model, record.id, formData)
+      if (modelData?.has_draft_mode) {
+        await dataService.publishRecord(model, record.id, formData)
+      } else {
+        await dataService.updateRecord(model, record.id, formData)
+      }
       toast.success("Record published", "Your changes are now live.")
       await loadRecord()
     } catch (err: unknown) {
@@ -216,17 +220,19 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
   if (loading || authLoading) return <p>Loading record...</p>
   if (!model || !id) return <p>Invalid parameters.</p>
 
-  const currentStatus: RecordStatus =
-    record?.status === "published"
+  const currentStatus: RecordStatus = !modelData?.has_draft_mode
+    ? "published"
+    : record?.status === "published"
       ? record?._draft
         ? "changed"
         : "published"
       : "draft"
 
   // For the form, we want to show the draft data if it exists, otherwise the main record data
-  const workingData = record?._draft
-    ? { ...record, ...(record._draft as object) }
-    : record
+  const workingData =
+    modelData?.has_draft_mode && record?._draft
+      ? { ...record, ...(record._draft as object) }
+      : record
 
   return (
     <div className={s.container}>
@@ -266,7 +272,11 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
               disabled={loading}
               className={s.mainAction}
             >
-              {currentStatus === "draft" ? "Publish" : "Publish Changes"}
+              {!modelData?.has_draft_mode
+                ? "Save"
+                : currentStatus === "draft"
+                  ? "Publish"
+                  : "Publish Changes"}
             </Button>
 
             <ContextMenu>

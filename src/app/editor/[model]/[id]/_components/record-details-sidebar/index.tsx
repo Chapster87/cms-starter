@@ -9,6 +9,7 @@ import s from "./style.module.css"
 interface RecordDetailsSidebarProps {
   record: RecordBase | null
   status: RecordStatus
+  hasDraftMode?: boolean
 }
 
 /**
@@ -17,6 +18,7 @@ interface RecordDetailsSidebarProps {
 export default function RecordDetailsSidebar({
   record,
   status,
+  hasDraftMode = true,
 }: RecordDetailsSidebarProps) {
   if (!record) return null
 
@@ -59,15 +61,17 @@ export default function RecordDetailsSidebar({
                   <span className={s.infoLabel}>Record ID</span>
                   <span className={s.infoValue}>{record.id}</span>
                 </div>
-                <div className={s.infoItem}>
-                  <span className={s.infoLabel}>Publish Status</span>
-                  <div className={s.statusWrapper}>
-                    <div className={`${s.statusDot} ${s[status]}`} />
-                    <span className={s.infoValue}>
-                      {status.charAt(0).toUpperCase() + status.slice(1)}
-                    </span>
+                {hasDraftMode && (
+                  <div className={s.infoItem}>
+                    <span className={s.infoLabel}>Publish Status</span>
+                    <div className={s.statusWrapper}>
+                      <div className={`${s.statusDot} ${s[status]}`} />
+                      <span className={s.infoValue}>
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
                 <div className={s.infoItem}>
                   <span className={s.infoLabel}>Created at</span>
                   <span className={s.infoValue}>
@@ -85,28 +89,30 @@ export default function RecordDetailsSidebar({
           </Accordion.Content>
         </Accordion.Item>
 
-        <Accordion.Item value="published-version" className={s.accordionItem}>
-          <Accordion.Header>
-            <Accordion.Trigger className={s.accordionTrigger}>
-              Published version
-              <span className={s.chevron}>
-                <SvgIcon icon="chevron-down" size={16} />
-              </span>
-            </Accordion.Trigger>
-          </Accordion.Header>
-          <Accordion.Content className={s.accordionContent}>
-            <div className={s.contentInner}>
-              <div className={s.infoList}>
-                <div className={s.infoItem}>
-                  <span className={s.infoLabel}>Published at</span>
-                  <span className={s.infoValue}>
-                    {formatDate(record.published_at as string | undefined)}
-                  </span>
+        {hasDraftMode && (
+          <Accordion.Item value="published-version" className={s.accordionItem}>
+            <Accordion.Header>
+              <Accordion.Trigger className={s.accordionTrigger}>
+                Published version
+                <span className={s.chevron}>
+                  <SvgIcon icon="chevron-down" size={16} />
+                </span>
+              </Accordion.Trigger>
+            </Accordion.Header>
+            <Accordion.Content className={s.accordionContent}>
+              <div className={s.contentInner}>
+                <div className={s.infoList}>
+                  <div className={s.infoItem}>
+                    <span className={s.infoLabel}>Published at</span>
+                    <span className={s.infoValue}>
+                      {formatDate(record.published_at as string | undefined)}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Accordion.Content>
-        </Accordion.Item>
+            </Accordion.Content>
+          </Accordion.Item>
+        )}
 
         <Accordion.Item value="blocks" className={s.accordionItem}>
           <Accordion.Header>
