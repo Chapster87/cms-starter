@@ -8,6 +8,8 @@ import {
   usePathname,
 } from "next/navigation"
 import clsx from "clsx"
+import { useAtomValue } from "jotai"
+import { activeRecordAtom, editorVersionAtom } from "@/client/editor-store"
 import { dataService, RecordBase } from "@/client/data-service"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
@@ -24,13 +26,29 @@ function RecordDetailsSidebarWrapper() {
   const params = useParams()
   const { accessToken } = useAuth()
   const { models } = useModels()
-  const [record, setRecord] = React.useState<RecordBase | null>(null)
+  const activeRecord = useAtomValue(activeRecordAtom)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _version = useAtomValue(editorVersionAtom)
+  const [fetchedRecord, setFetchedRecord] = React.useState<RecordBase | null>(
+    null
+  )
+  const [loading, setLoading] = React.useState(false)
   const model = params?.model as string
   const id = params?.id as string
 
   const modelData = models.find((m) => m.slug === model)
 
+  const record =
+    activeRecord && (activeRecord.id === id || activeRecord.slug === id)
+      ? activeRecord
+      : fetchedRecord
+
   React.useEffect(() => {
+    // If we have an active record from the editor page, no need to fetch
+    if (activeRecord && (activeRecord.id === id || activeRecord.slug === id)) {
+      return
+    }
+
     if (accessToken && model && id) {
       const isUuid =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -38,15 +56,20 @@ function RecordDetailsSidebarWrapper() {
         )
 
       const fetchRecord = async () => {
+        setLoading(true)
         let data = null
-        if (isUuid) {
-          data = await dataService.getRecordById(model, id)
-          if (!data) data = await dataService.getRecordBySlug(model, id)
-        } else {
-          data = await dataService.getRecordBySlug(model, id)
-          if (!data) data = await dataService.getRecordById(model, id)
+        try {
+          if (isUuid) {
+            data = await dataService.getRecordById(model, id)
+            if (!data) data = await dataService.getRecordBySlug(model, id)
+          } else {
+            data = await dataService.getRecordBySlug(model, id)
+            if (!data) data = await dataService.getRecordById(model, id)
+          }
+          if (data) setFetchedRecord(data)
+        } finally {
+          setLoading(false)
         }
-        if (data) setRecord(data)
       }
 
       fetchRecord()

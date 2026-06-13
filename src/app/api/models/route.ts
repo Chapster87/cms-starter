@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+import { hasPermission } from "@/utils/permissions"
 import { createClient } from "@/utils/supabase-server"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -71,6 +72,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: "Unauthorized: User not authenticated." },
         { status: 401 }
+      )
+    }
+
+    // Check Role-Based Permissions
+    const { data: userData } = await authenticatedSupabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single()
+
+    if (!hasPermission(userData?.role, "canEditSchema")) {
+      return NextResponse.json(
+        { error: "Forbidden: You do not have permission to edit the schema." },
+        { status: 403 }
       )
     }
 

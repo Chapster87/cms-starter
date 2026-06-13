@@ -41,3 +41,13 @@ svg[class*="feather-icon"] {
   stroke-linejoin: round;
   fill: none;
 }
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  background-color: var(--color-grey-50) !important;
+  color: var(--color-grey-400) !important;
+  border-color: var(--color-grey-200) !important;
+  opacity: 0.8;
+}

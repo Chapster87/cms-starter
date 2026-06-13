@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import { getRecordDisplayName } from "@/helpers/record-helpers"
 import ContextMenu from "@/components/context-menu"
+import { useUsers } from "@/hooks/use-users"
 import { Edit2, Trash2 } from "lucide-react"
 import s from "./style.module.css"
 
@@ -26,6 +27,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
   const router = useRouter()
   const { accessToken, loading: authLoading } = useAuth()
   const { models } = useModels()
+  const { users } = useUsers()
   const [records, setRecords] = useState<RecordBase[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -223,7 +225,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                 <th style={{ width: "100px" }}>Status</th>
               )}
               <th>Updated At</th>
-              <th>Created At</th>
+              <th>Created By</th>
               <th className={s.actionsCell}></th>
             </tr>
           </thead>
@@ -297,9 +299,10 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                       : "N/A"}
                   </td>
                   <td className={s.dateCell}>
-                    {record.created_at
-                      ? new Date(record.created_at as string).toLocaleString()
-                      : "N/A"}
+                    {users.find(
+                      (u) =>
+                        u.id === (record as { created_by?: string }).created_by
+                    )?.email || "System"}
                   </td>
                   <td className={s.actionsCell}>
                     <ContextMenu>

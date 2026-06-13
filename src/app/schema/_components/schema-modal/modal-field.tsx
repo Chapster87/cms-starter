@@ -36,7 +36,17 @@ export default function ModalField({
   onCancel,
 }: ModalFieldProps) {
   const { accessToken } = useAuth()
-  const { models } = useModels()
+  const { models: registeredModels } = useModels()
+
+  const models = [
+    ...registeredModels,
+    {
+      id: "users",
+      table_name: "users",
+      friendly_name: "CMS Users",
+      slug: "users",
+    },
+  ]
   const router = useRouter()
   const searchParams = useSearchParams()
 

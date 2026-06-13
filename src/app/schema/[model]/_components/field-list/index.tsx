@@ -67,9 +67,13 @@ export default function FieldList({ modelId }: FieldListProps) {
       )
       if (!response.ok) throw new Error("Failed to fetch registered fields")
       const data = await response.json()
+
       // Filter out system-level fields from the management list
       const filteredFields = (data || []).filter(
-        (f: CMSField) => !["status", "_draft"].includes(f.field_name)
+        (f: CMSField) =>
+          !["status", "_draft", "created_by", "updated_by"].includes(
+            f.field_name
+          )
       )
       setFields(filteredFields)
 
@@ -100,6 +104,8 @@ export default function FieldList({ modelId }: FieldListProps) {
             "updated_at",
             "status",
             "_draft",
+            "created_by",
+            "updated_by",
           ]
           const missing = physicalCols.filter(
             (c) =>

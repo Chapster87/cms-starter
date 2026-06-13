@@ -46,21 +46,35 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [x] **Toast messages for notifications** - Integrated Radix Toast with Jotai for global success/error/info alerts across Schema and Editor.
-- [x] **Details Sidebar** - Integrated a metadata-driven right sidebar using Radix Accordion. Displays Record ID, Publish Status, and timestamps (Created/Updated/Published). Includes independent scrolling and on-brand typography.
+- [ ] **Author Profile Sync:** Complete the UI for syncing Google profile data (name, avatar) to the `Author` record to complement the user sync.
+
+### 2. Next Steps (In Progress/Upcoming)
+
+- [ ] **Row-Level Security (RLS) policies:** Implement strict role isolation at the database level for the `author` role.
+- [ ] **Audit Log UI:** Track all record changes via the `updated_by` metadata.
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
 
-### 2. Next Steps (In Progress/Upcoming)
+### 3. Future Roadmap
+
+- [ ] **Dynamic Permission Management:** CMS UI for editing what Roles can do.
+- [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
+- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
+- [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
+- [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup. Make note of tables that should exist by default(models, authors, fields, model_groups, users, etc) and what columns they should start with (perhaps using our existing database to populate this list). Need to create a admin account by default during init.
+- [ ] **Environment Tooling:** Tooling for migrating model definitions between development and production environments.
+- [ ] **Implement "View-As" Control** Allow Admin user roles to view CMS as other roles to assist in debugging/permission audits.
+
+### 4. Completed Items
 
 - [x] **Advanced Draft Workflow (Auto-save/Publish/Changed)**:
-  - Implemented shadow JSON storage via `_draft` column for all models.
-  - Developed debounced auto-save engine with immediate "Changed" (Blue) status feedback.
+  - Implemented shadow JSON storage via `_draft` column for draft-enabled models.
+  - Developed debounced auto-save engine with immediate "Changed" (Blue) status feedback, with automatic bypass for models without draft mode.
   - Created a professional Split-Action button UI for Publish/Unpublish/Delete.
   - Implemented Sanity-style overlapping status dots in record lists and reference modals.
   - Enhanced GraphQL CDA with `preview` and `includeDrafts` modes for staging environments.
-- [x] **Draft/Publish Implementation:** Full end-to-end status management. Added `has_draft_mode` to registry, automated SQL migrations for `status` columns, implemented schema cache refreshing (`NOTIFY pgrst`), and updated the GraphQL CDA to filter for `published` content by default.
+- [x] **Draft/Publish Implementation:** Full end-to-end status management. Added `has_draft_mode` to registry, automated SQL migrations for `status` columns, implemented schema cache refreshing (`NOTIFY pgrst`), and updated the GraphQL CDA to filter for `published` content by default. Enhanced editor UI to gracefully handle models with draft mode disabled (direct saves, hidden status metadata).
 - [x] **Linked Records Stability:** Fixed RPC parameter naming (`t_name`) across List, Search, and Previews APIs. Enhanced label discovery logic to automatically resolve friendly names (name, title, label, etc.) instead of raw UUIDs in pills and browser modals.
 - [x] **Site Navigation Model:** Modern, hierarchical drag-and-drop navigation system with automatic path resolution and group management.
 - [x] **Unified Button Infrastructure:** Converted all frontend-facing `<button>` tags to a standardized `<Button />` component with consistent Primary/Secondary brand styling.
@@ -78,14 +92,20 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Created a comprehensive `CDA-GUIDE.md` for team onboarding and external implementation.
 - [x] **Field Type Expansion:** Implemented a new "Dropdown / Select" field type with support for custom choice management in the schema builder.
 - [x] **Timezone-Aware Date Handling:** Upgraded the `DateField` to handle timezone selection and prevent UI jitter, ensuring absolute UTC storage while maintaining naive local picker behavior.
-
-### 3. Future Roadmap
-
-- [ ] **User Roles & Permissions:**
-- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
-- [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
-- [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup.
-- [ ] **Environment Tooling:** Tooling for migrating model definitions between development and production environments.
+- [x] **Toast messages for notifications** - Integrated Radix Toast with Jotai for global success/error/info alerts across Schema and Editor.
+- [x] **Details Sidebar** - Integrated a metadata-driven right sidebar using Radix Accordion. Displays Record ID, Publish Status, and timestamps (Created/Updated/Published). Respects `has_draft_mode` by suppressing draft-specific metadata for standard models. Includes independent scrolling and on-brand typography.
+- [x] **User Management & RBAC**:
+  - Established a comprehensive **Role-Based Access Control (RBAC)** system with `admin`, `editor`, and `author` roles.
+  - Implemented a dedicated `/settings/users` module with a URL-driven management interface.
+  - Integrated **Supabase Admin API** to allow administrators to create and manage users directly within the CMS.
+  - Developed a specialized **Google Metadata Sync** engine that automatically pulls profile names and avatars from Google Auth into the CMS user record.
+  - Created a reusable **Radix Avatar** component with intelligent fallbacks and consistent design language.
+- [x] **Content Attribution**: Updated the database and UI to track `created_by` and `updated_by` metadata for every record. Enhanced record lists and sidebars to display this attribution. System fields are strictly hidden from editors and schema builders to ensure data integrity.
+- [x] **Identity Integration & Author Sync**:
+  - Implemented seamless linking between content records (Authors) and CMS User profiles via a "Virtual Model" system.
+  - Developed an **Instant Profile Sync** engine that automatically populates Author Name and Avatar from their linked Google identity upon selection.
+  - Customized the **Reference Field UI** with specialized cards for Users, including dedicated icons and email-based identifiers.
+  - Integrated a manual "Sync from User Profile" action for on-demand identity updates.
 
 ## Glossary
 

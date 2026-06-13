@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback, use, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { useAtom } from "jotai"
+import { activeRecordAtom, editorStore } from "@/client/editor-store"
 import { toast } from "@/client/toast-store"
 import { dataService, RecordBase } from "@/client/data-service"
 import Button from "@/components/button"
@@ -36,7 +38,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
 
   const modelData = models.find((m) => m.slug === model)
 
-  const [record, setRecord] = useState<RecordBase | null>(null)
+  const [record, setRecord] = useAtom(activeRecordAtom)
   const [loading, setLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -74,7 +76,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
       if (!data) {
         setError("Record not found.")
       } else {
-        setRecord(data)
+        editorStore.setRecord(data)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error loading record")
@@ -88,9 +90,18 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
       const timer = setTimeout(() => {
         loadRecord()
       }, 0)
-      return () => clearTimeout(timer)
+      return () => {
+        clearTimeout(timer)
+      }
     }
   }, [loadRecord, authLoading, accessToken])
+
+  // Clear active record only when the component unmounts OR when switching to a completely different record/model
+  useEffect(() => {
+    return () => {
+      editorStore.setRecord(null)
+    }
+  }, [model, id])
 
   const handleAutoSave = useCallback(
     (formData: Record<string, unknown>) => {
@@ -106,7 +117,9 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
           const isFirstDraft = !record?._draft
           await dataService.autoSaveRecord(model, record.id, formData)
           // Optimistically update local record state to show "Changed" status immediately
-          setRecord((prev) => (prev ? { ...prev, _draft: formData } : prev))
+          editorStore.setRecord(
+            record ? { ...record, _draft: formData } : record
+          )
 
           if (isFirstDraft) {
             toast.info(

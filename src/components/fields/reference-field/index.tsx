@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { Search, ChevronDown, FileText, Check } from "lucide-react"
+import { Search, ChevronDown, FileText, Check, User } from "lucide-react"
 
 import Button from "@/components/button"
 import Modal from "@/components/modal"
@@ -247,7 +247,11 @@ export default function ReferenceField({
                       onClick={() => handleSelect(record)}
                     >
                       <div className={s.recordIcon}>
-                        <FileText size={20} />
+                        {record.model_id === "users" ? (
+                          <User size={20} />
+                        ) : (
+                          <FileText size={20} />
+                        )}
                       </div>
                       <div className={s.recordMeta}>
                         <div className={s.recordTitle}>
@@ -255,32 +259,36 @@ export default function ReferenceField({
                         </div>
                         {record.subtitle && (
                           <div className={s.recordSubtitle}>
-                            Slug: /{record.subtitle}
+                            {record.model_id === "users"
+                              ? record.subtitle
+                              : `Slug: /${record.subtitle}`}
                           </div>
                         )}
                       </div>
                       <div className={s.recordType}>
                         <span className={s.typeBadge}>{record.model_name}</span>
-                        <div className={s.statusDots}>
-                          {record.status === "published" ? (
-                            <span
-                              className={`${s.statusDot} ${s.published}`}
-                              title="Published"
-                            />
-                          ) : (
-                            <span
-                              className={`${s.statusDot} ${s.draft}`}
-                              title="Draft"
-                            />
-                          )}
-                          {record.status === "published" &&
-                            record.has_draft && (
+                        {record.model_id !== "users" && (
+                          <div className={s.statusDots}>
+                            {record.status === "published" ? (
                               <span
-                                className={`${s.statusDot} ${s.changed}`}
-                                title="Unpublished Changes"
+                                className={`${s.statusDot} ${s.published}`}
+                                title="Published"
+                              />
+                            ) : (
+                              <span
+                                className={`${s.statusDot} ${s.draft}`}
+                                title="Draft"
                               />
                             )}
-                        </div>
+                            {record.status === "published" &&
+                              record.has_draft && (
+                                <span
+                                  className={`${s.statusDot} ${s.changed}`}
+                                  title="Unpublished Changes"
+                                />
+                              )}
+                          </div>
+                        )}
                       </div>
                       {allowMultiple && isSelected && (
                         <div className={s.checkIcon}>

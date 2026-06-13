@@ -24,75 +24,114 @@ export async function POST(req: NextRequest) {
 
     const systemClient = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Fetch models to check. Filter by allowedModels if provided to improve performance.
-    let modelsQuery = systemClient
-      .from("models")
-      .select("id, table_name, friendly_name, has_draft_mode")
+    // 1. Separate registered models from virtual/system models
+    const requestedModelIds = Array.isArray(allowedModels) ? allowedModels : []
+    const isUsersRequested =
+      requestedModelIds.includes("users") ||
+      requestedModelIds.includes("public.users")
 
-    if (
-      allowedModels &&
-      Array.isArray(allowedModels) &&
-      allowedModels.length > 0
-    ) {
-      modelsQuery = modelsQuery.in("id", allowedModels)
+    // 2. Fetch metadata for registered models only
+    const registeredModelIds = requestedModelIds.filter((id) => id !== "users")
+
+    interface ModelMetadata {
+      id: string
+      table_name: string
+      friendly_name: string
+      has_draft_mode: boolean
+    }
+    let modelsData: ModelMetadata[] = []
+
+    if (registeredModelIds.length > 0 || requestedModelIds.length === 0) {
+      let modelsQuery = systemClient
+        .from("models")
+        .select("id, table_name, friendly_name, has_draft_mode")
+
+      if (registeredModelIds.length > 0) {
+        modelsQuery = modelsQuery.in("id", registeredModelIds)
+      }
+
+      const { data: fetchedModels, error: modelsError } = await modelsQuery
+      if (modelsError) {
+        console.error("Previews API: Error fetching models:", modelsError)
+      } else if (fetchedModels) {
+        modelsData = fetchedModels
+      }
     }
 
-    const { data: modelsData, error: modelsError } = await modelsQuery
+    // 3. Inject virtual "users" model if requested
+    if (isUsersRequested) {
+      modelsData.push({
+        id: "users",
+        table_name: "users",
+        friendly_name: "CMS User",
+        has_draft_mode: false,
+      })
+    }
 
-    if (modelsError || !modelsData) {
-      return NextResponse.json(
-        { error: "Failed to fetch model metadata" },
-        { status: 500 }
-      )
+    if (modelsData.length === 0) {
+      return NextResponse.json([])
     }
 
     // Iterate through models to find the records
     const previewResults = await Promise.all(
       modelsData.map(async (model) => {
-        // Find suitable columns
-        const { data: columns } = await systemClient.rpc("get_table_columns", {
-          t_name: model.table_name,
-        })
+        let displayColumn = "id"
+        let hasSlug = false
+        const selectFields = ["id"]
 
-        const columnList =
-          (columns as Array<{ column_name: string; data_type: string }>) || []
-        const columnNames = columnList.map((c) => c.column_name)
-
-        // Choose best display field
-        const displayCandidates = [
-          "name",
-          "title",
-          "label",
-          "friendly_name",
-          "display_name",
-          "full_name",
-          "heading",
-          "text",
-          "slug",
-          "year",
-          "season_name",
-          "team_name",
-        ]
-
-        let displayColumn = displayCandidates.find((c) =>
-          columnNames.includes(c)
-        )
-
-        // Fallback: If no candidate found, pick the first text/varchar column that isn't id/slug
-        if (!displayColumn) {
-          const firstTextColumn = columnList.find(
-            (c) =>
-              (c.data_type.includes("text") || c.data_type.includes("char")) &&
-              !["id", "slug", "created_at", "updated_at"].includes(
-                c.column_name
-              )
+        if (model.table_name === "users") {
+          displayColumn = "display_name"
+          selectFields.push("display_name", "email")
+        } else {
+          // Find suitable columns
+          const { data: columns } = await systemClient.rpc(
+            "get_table_columns",
+            {
+              t_name: model.table_name,
+            }
           )
-          displayColumn = firstTextColumn?.column_name || "id"
+
+          const columnList =
+            (columns as Array<{ column_name: string; data_type: string }>) || []
+          const columnNames = columnList.map((c) => c.column_name)
+
+          // Choose best display field
+          const displayCandidates = [
+            "name",
+            "title",
+            "label",
+            "friendly_name",
+            "display_name",
+            "full_name",
+            "heading",
+            "text",
+            "slug",
+            "year",
+            "season_name",
+            "team_name",
+          ]
+
+          displayColumn =
+            displayCandidates.find((c) => columnNames.includes(c)) || "id"
+
+          // Fallback
+          if (displayColumn === "id") {
+            const firstTextColumn = columnList.find(
+              (c) =>
+                (c.data_type.includes("text") ||
+                  c.data_type.includes("char")) &&
+                !["id", "slug", "created_at", "updated_at"].includes(
+                  c.column_name
+                )
+            )
+            displayColumn = firstTextColumn?.column_name || "id"
+          }
+
+          hasSlug = columnNames.includes("slug")
+          selectFields.push(displayColumn)
+          if (hasSlug && displayColumn !== "slug") selectFields.push("slug")
         }
 
-        const hasSlug = columnNames.includes("slug")
-        const selectFields = [`id`, `${displayColumn}`]
-        if (hasSlug && displayColumn !== "slug") selectFields.push("slug")
         if (model.has_draft_mode) {
           selectFields.push("status")
           selectFields.push("_draft")
@@ -113,7 +152,10 @@ export async function POST(req: NextRequest) {
           id: record.id as string,
           display_name:
             (record[displayColumn!] as string) || (record.id as string),
-          subtitle: record.slug as string | undefined,
+          subtitle:
+            model.table_name === "users"
+              ? (record.email as string)
+              : (record.slug as string | undefined),
           model_name: model.friendly_name,
           model_id: model.id,
           status: model.has_draft_mode ? (record.status as string) : undefined,

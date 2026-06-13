@@ -292,9 +292,13 @@ export const dataService = {
       }
     })
 
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
     const { data, error } = await supabase
       .from(model)
-      .upsert([cleanData])
+      .upsert([{ ...cleanData, created_by: user?.id, updated_by: user?.id }])
       .select()
       .single()
 

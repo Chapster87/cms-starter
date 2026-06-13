@@ -47,6 +47,19 @@ export async function POST(req: NextRequest) {
         allowedModelIds.includes(m.id) || allowedModelIds.includes(m.table_name)
     )
 
+    // Handle "users" as a virtual model if requested
+    if (
+      allowedModelIds.includes("users") &&
+      !modelsData.find((m) => m.table_name === "users")
+    ) {
+      modelsData.push({
+        id: "users",
+        table_name: "users",
+        friendly_name: "CMS User",
+        has_draft_mode: false,
+      })
+    }
+
     if (modelsData.length === 0) {
       return NextResponse.json([], { status: 200 })
     }
@@ -59,60 +72,71 @@ export async function POST(req: NextRequest) {
         const modelId = model.id
         const hasDraftMode = model.has_draft_mode
 
-        const { data: columns, error: colError } = await systemClient.rpc(
-          "get_table_columns",
-          { t_name: tableName }
-        )
-
-        if (colError) {
-          console.error(`Error fetching columns for ${tableName}:`, colError)
-          return []
-        }
-
-        const typedColumns =
-          (columns as Array<{ column_name: string; data_type: string }>) || []
-        const columnNames = typedColumns.map((c) => c.column_name)
-
-        // Choose best display field
-        const displayCandidates = [
-          "name",
-          "title",
-          "label",
-          "friendly_name",
-          "display_name",
-          "full_name",
-          "heading",
-          "text",
-          "slug",
-          "year",
-          "season_name",
-          "team_name",
-        ]
-
-        let displayColumn = displayCandidates.find((c) =>
-          columnNames.includes(c)
-        )
-
-        // Fallback
-        if (!displayColumn) {
-          const firstTextColumn = typedColumns.find(
-            (c) =>
-              (c.data_type.includes("text") || c.data_type.includes("char")) &&
-              !["id", "slug", "created_at", "updated_at"].includes(
-                c.column_name
-              )
-          )
-          displayColumn = firstTextColumn?.column_name || "id"
-        }
-
-        // Choose best subtitle field (slug or handle)
+        let displayColumn = "id"
         let subtitleColumn: string | null = null
-        if (columnNames.includes("slug")) subtitleColumn = "slug"
-        else if (columnNames.includes("handle")) subtitleColumn = "handle"
+        const selectFields = ["id"]
 
-        const selectFields = ["id", displayColumn]
-        if (subtitleColumn && subtitleColumn !== displayColumn)
-          selectFields.push(subtitleColumn)
+        if (tableName === "users") {
+          displayColumn = "display_name"
+          subtitleColumn = "email"
+          selectFields.push("display_name", "email")
+        } else {
+          const { data: columns, error: colError } = await systemClient.rpc(
+            "get_table_columns",
+            { t_name: tableName }
+          )
+
+          if (colError) {
+            console.error(`Error fetching columns for ${tableName}:`, colError)
+            return []
+          }
+
+          const typedColumns =
+            (columns as Array<{ column_name: string; data_type: string }>) || []
+          const columnNames = typedColumns.map((c) => c.column_name)
+
+          // Choose best display field
+          const displayCandidates = [
+            "name",
+            "title",
+            "label",
+            "friendly_name",
+            "display_name",
+            "full_name",
+            "heading",
+            "text",
+            "slug",
+            "year",
+            "season_name",
+            "team_name",
+          ]
+
+          displayColumn =
+            displayCandidates.find((c) => columnNames.includes(c)) || "id"
+
+          // Fallback
+          if (displayColumn === "id") {
+            const firstTextColumn = typedColumns.find(
+              (c) =>
+                (c.data_type.includes("text") ||
+                  c.data_type.includes("char")) &&
+                !["id", "slug", "created_at", "updated_at"].includes(
+                  c.column_name
+                )
+            )
+            displayColumn = firstTextColumn?.column_name || "id"
+          }
+
+          // Choose best subtitle field (slug or handle)
+          if (columnNames.includes("slug")) subtitleColumn = "slug"
+          else if (columnNames.includes("handle")) subtitleColumn = "handle"
+
+          selectFields.push(displayColumn)
+
+          if (subtitleColumn && subtitleColumn !== displayColumn) {
+            selectFields.push(subtitleColumn)
+          }
+        }
         if (hasDraftMode) {
           selectFields.push("status")
           selectFields.push("_draft")

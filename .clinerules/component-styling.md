@@ -77,3 +77,13 @@ These are as follows:
 - Set margin to 0 on elements that have default margin
 - Apply padding that follows the 8px grid system
 - For container elements, use consistent padding values (e.g., padding: 24px)
+
+## Form and Modal Standards
+
+- Use the global `Modal` component for all overlays and dialogs.
+- Form fields should use established components from `src/components/fields` (e.g., `CheckboxField`, `SlugField`).
+- Modals should follow the `schema-modal` pattern:
+  - Container class `.modalForm` with `flex-direction: column` and `gap: 16px`.
+  - Actions container `.modalActions` with `justify-content: flex-end` and `gap: 12px`.
+  - Use `Button` component for all actions.
+- Input fields should have a consistent height (40px) and follow the 8px grid for padding and border radius (4px).

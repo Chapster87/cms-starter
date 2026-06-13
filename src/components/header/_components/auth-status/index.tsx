@@ -3,7 +3,7 @@
 import { useAuth } from "@/hooks/use-auth"
 import { createClient } from "@/utils/supabase"
 import { useRouter } from "next/navigation"
-import * as Avatar from "@radix-ui/react-avatar"
+import Avatar from "@/components/avatar"
 import Text from "@components/typography/text"
 import ContextMenu from "@/components/context-menu"
 import s from "./style.module.css"
@@ -34,34 +34,22 @@ export default function AuthStatus() {
       <ContextMenu>
         <ContextMenu.Trigger className={s.menuTrigger}>
           <div className={s.avatarContainer}>
-            <Avatar.Root className={s.avatarRoot}>
-              {user ? (
-                <>
-                  <Avatar.Image
-                    className={s.avatarImage}
-                    src={user.user_metadata.avatar_url}
-                    alt={user.email || "User"}
-                  />
-                  <Avatar.Fallback className={s.avatarFallback} delayMs={600}>
-                    {(
-                      user.user_metadata.full_name ||
-                      user.user_metadata.name ||
-                      user.email
-                    )
-                      ?.charAt(0)
-                      .toUpperCase() || "U"}
-                  </Avatar.Fallback>
-                  <div className={`${s.statusDot} ${s.online}`} />
-                </>
-              ) : (
-                <Avatar.Fallback
-                  className={`${s.avatarFallback} ${s.loggedOut}`}
-                >
-                  ?
-                  <div className={`${s.statusDot} ${s.offline}`} />
-                </Avatar.Fallback>
-              )}
-            </Avatar.Root>
+            <div style={{ position: "relative" }}>
+              <Avatar
+                src={user?.user_metadata.avatar_url}
+                alt={user?.email || "User"}
+                fallback={
+                  user?.user_metadata.full_name ||
+                  user?.user_metadata.name ||
+                  user?.email ||
+                  "?"
+                }
+                bordered
+              />
+              <div
+                className={`${s.statusDot} ${user ? s.online : s.offline}`}
+              />
+            </div>
 
             <div className={s.userInfo}>
               <Text className={s.userName}>

@@ -35,6 +35,15 @@ const NAV_TOP: NavItem[] = [
 
 const NAV_BOTTOM: NavItem[] = [
   {
+    title: "Site Settings",
+    url: "/settings",
+    icon: (
+      <svg className={`feather-icon ${s.navIcon}`} width="24" height="24">
+        <use href="/feather-sprite.svg#settings" />
+      </svg>
+    ),
+  },
+  {
     title: "GraphQL Playground",
     url: "/graphql",
     icon: (
