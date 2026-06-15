@@ -7,6 +7,7 @@ import { RecordStatus } from "@/app/editor/[model]/_components/status-badge"
 import { useAuthors } from "@/hooks/use-authors"
 import { useUsers } from "@/hooks/use-users"
 import { toast } from "@/client/toast-store"
+import AuditLog from "../audit-log"
 import s from "./style.module.css"
 
 interface RecordDetailsSidebarProps {
@@ -66,7 +67,7 @@ export default function RecordDetailsSidebar({
       <Accordion.Root
         type="multiple"
         className={s.accordionRoot}
-        defaultValue={["record-info", "published-version"]}
+        defaultValue={["record-info", "published-version", "history"]}
       >
         <Accordion.Item value="record-info" className={s.accordionItem}>
           <Accordion.Header>
@@ -193,6 +194,22 @@ export default function RecordDetailsSidebar({
           <Accordion.Content className={s.accordionContent}>
             <div className={s.contentInner}>
               <span className={s.comingSoon}>Coming soon</span>
+            </div>
+          </Accordion.Content>
+        </Accordion.Item>
+
+        <Accordion.Item value="history" className={s.accordionItem}>
+          <Accordion.Header>
+            <Accordion.Trigger className={s.accordionTrigger}>
+              History
+              <span className={s.chevron}>
+                <SvgIcon icon="chevron-down" size={16} />
+              </span>
+            </Accordion.Trigger>
+          </Accordion.Header>
+          <Accordion.Content className={s.accordionContent}>
+            <div className={s.contentInner}>
+              <AuditLog recordId={record.id} />
             </div>
           </Accordion.Content>
         </Accordion.Item>

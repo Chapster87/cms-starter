@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "@/client/toast-store"
 import { dataService } from "@/client/data-service"
+import { useModels } from "@/hooks/use-models"
 import Modal from "@/components/modal"
 import RecordForm from "./record-form"
 
@@ -26,6 +27,7 @@ export default function ModalRecord({
   onSuccess,
 }: ModalRecordProps) {
   const router = useRouter()
+  const { models } = useModels()
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -42,7 +44,12 @@ export default function ModalRecord({
         }
       }
 
-      const result = await dataService.createRecord(model, formData)
+      const modelData = models.find((m) => m.slug === model)
+      const result = await dataService.createRecord(
+        model,
+        formData,
+        modelData?.id
+      )
       if (!result) throw new Error("Failed to create record: No data returned")
 
       toast.success(

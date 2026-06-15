@@ -1,0 +1,113 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 12px 0;
+}
+
+.refreshHeader {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: -8px;
+}
+
+.refreshButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-size: 11px;
+  color: var(--color-grey-500);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.refreshButton:hover:not(:disabled) {
+  background-color: var(--color-grey-100);
+  color: var(--color-primary);
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.logItem {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.avatarWrapper {
+  flex-shrink: 0;
+  padding-top: 2px;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header {
+  font-weight: 500;
+  color: var(--gray-900);
+}
+
+.action {
+  color: var(--gray-600);
+}
+
+.time {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+.deltaDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.deltaKey {
+  background-color: var(--color-grey-100);
+  color: var(--color-grey-600);
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  border: 1px solid var(--color-grey-200);
+}
+
+.changes {
+  margin-top: 4px;
+  padding: 8px;
+  background: var(--gray-50);
+  border-radius: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--gray-700);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.empty {
+  font-size: 13px;
+  color: var(--gray-400);
+  text-align: center;
+  padding: 24px 0;
+}

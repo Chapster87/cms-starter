@@ -115,7 +115,8 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
         setIsSaving(true)
         try {
           const isFirstDraft = !record?._draft
-          await dataService.autoSaveRecord(model, record.id, formData)
+          const modelId = modelData?.id
+          await dataService.autoSaveRecord(model, record.id, formData, modelId)
           // Optimistically update local record state to show "Changed" status immediately
           editorStore.setRecord(
             record ? { ...record, _draft: formData } : record
@@ -143,10 +144,11 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     setLoading(true)
     setError(null)
     try {
+      const modelId = modelData?.id
       if (modelData?.has_draft_mode) {
-        await dataService.publishRecord(model, record.id, formData)
+        await dataService.publishRecord(model, record.id, formData, modelId)
       } else {
-        await dataService.updateRecord(model, record.id, formData)
+        await dataService.updateRecord(model, record.id, formData, modelId)
       }
       toast.success("Record published", "Your changes are now live.")
       await loadRecord()
@@ -191,7 +193,8 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
 
     setLoading(true)
     try {
-      await dataService.unpublishRecord(model, record.id)
+      const modelId = modelData?.id
+      await dataService.unpublishRecord(model, record.id, modelId)
       await loadRecord()
       toast.success(
         "Record unpublished",

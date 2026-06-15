@@ -46,23 +46,21 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Author Profile Sync:** Complete the UI for syncing Google profile data (name, avatar) to the `Author` record to complement the user sync.
+- [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [ ] **Row-Level Security (RLS) policies:** Implement strict role isolation at the database level for the `author` role.
-- [ ] **Audit Log UI:** Track all record changes via the `updated_by` metadata.
-- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
 - [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
 
 ### 3. Future Roadmap
 
+- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Dynamic Permission Management:** CMS UI for editing what Roles can do.
 - [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
 - [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
 - [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
-- [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup. Make note of tables that should exist by default(models, authors, fields, model_groups, users, etc) and what columns they should start with (perhaps using our existing database to populate this list). Need to create a admin account by default during init.
+- [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup. Make note of tables that should exist by default(models, authors, fields, model_groups, users, audit_logs, etc) and what columns they should start with (perhaps using our existing database to populate this list). Need to create a admin account by default during init.
 - [ ] **Environment Tooling:** Tooling for migrating model definitions between development and production environments.
 - [ ] **Implement "View-As" Control** Allow Admin user roles to view CMS as other roles to assist in debugging/permission audits.
 
@@ -106,6 +104,12 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Developed an **Instant Profile Sync** engine that automatically populates Author Name and Avatar from their linked Google identity upon selection.
   - Customized the **Reference Field UI** with specialized cards for Users, including dedicated icons and email-based identifiers.
   - Integrated a manual "Sync from User Profile" action for on-demand identity updates.
+- [x] **Optimized Audit Log System**:
+  - Developed a high-fidelity **History Sidebar** integrated into the Record Details panel.
+  - Implemented **Deep Diffing** logic to store only field-level deltas instead of full record snapshots, drastically reducing database storage requirements.
+  - Engineered an **Auto-save Consolidation** engine that merges frequent debounced saves (within 5-minute windows) into single log entries.
+  - Integrated automatic **Retention Pruning** that maintains the last 50 entries per record.
+  - Enhanced UI with **Delta Pills** that provide immediate visibility into exactly which fields were modified during any historical event (Create, Update, Publish, Draft Update).
 
 ## Glossary
 
