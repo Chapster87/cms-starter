@@ -61,10 +61,16 @@ const GraphQLJSON = new GraphQLScalarType({
 const MediaType = new GraphQLObjectType({
   name: "Media",
   fields: {
+    id: { type: GraphQLString },
     url: { type: GraphQLString },
     name: { type: GraphQLString },
     type: { type: GraphQLString },
     size: { type: GraphQLInt },
+    width: { type: GraphQLInt },
+    height: { type: GraphQLInt },
+    alt_text: { type: GraphQLString },
+    folder: { type: GraphQLString },
+    tags: { type: new GraphQLList(GraphQLString) },
   },
 })
 
@@ -209,7 +215,7 @@ export const generateSchema = async () => {
             } else if (field.field_type === "media") {
               fieldsConfig[field.field_name] = {
                 type: getGraphQLType(field),
-                resolve: (
+                resolve: async (
                   parent: Record<string, unknown>,
                   _args,
                   _context,
@@ -220,7 +226,37 @@ export const generateSchema = async () => {
                     draft && draft[field.field_name] !== undefined
                       ? draft[field.field_name]
                       : parent[field.field_name]
-                  return parseJsonValue(val)
+
+                  const parsedValue = parseJsonValue(val)
+                  if (!parsedValue) return null
+
+                  const isMultiple = field.settings?.allow_multiple === true
+                  const assets = Array.isArray(parsedValue)
+                    ? parsedValue
+                    : [parsedValue]
+
+                  // If we have an ID (string), fetch from media_assets table.
+                  const assetIds = assets
+                    .map((a) => (typeof a === "string" ? a : a.id))
+                    .filter(Boolean) as string[]
+
+                  if (assetIds.length > 0) {
+                    const { data: mediaData } = await supabase
+                      .from("media_assets")
+                      .select("*")
+                      .in("id", assetIds)
+
+                    if (mediaData && mediaData.length > 0) {
+                      const dataMap = new Map(mediaData.map((m) => [m.id, m]))
+                      const results = assetIds
+                        .map((id) => dataMap.get(id))
+                        .filter(Boolean)
+                      return isMultiple ? results : results[0] || null
+                    }
+                  }
+
+                  // Fallback to raw value (e.g. legacy data)
+                  return isMultiple ? assets : assets[0] || null
                 },
               }
             } else {

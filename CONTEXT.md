@@ -36,7 +36,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - **RichTextField:** High-fidelity WYSIWYG using **Tiptap** with custom alignment and heading controls.
   - **SeoField:** Specialized composite field with collapsible Radix Accordion for Meta/OG data.
   - **Linked Records (Reference):** Pill-based selection UI with a Sanity-inspired browse modal.
-  - **MediaField:** Visual grid for asset management (currently URL-based).
+  - **MediaField:** Visual grid for asset management, now integrated with a centralized Media Library and Cloudinary.
   - **TagField:** Pill-based management for keyword collections (JSONB arrays).
   - **SelectField (Dropdown):** Support for predefined options with automatic slug generation for values.
   - **DateField (Enhanced):** Supports date-only or datetime-local modes with integrated timezone selection and absolute UTC synchronization.
@@ -46,12 +46,11 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
+- [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [ ] **Media Library:** Transition from external URLs to full Supabase Storage integration with a centralized media browser.
-- [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
+- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 
 ### 3. Future Roadmap
 
@@ -60,7 +59,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
 - [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
 - [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
-- [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup. Make note of tables that should exist by default(models, authors, fields, model_groups, users, audit_logs, etc) and what columns they should start with (perhaps using our existing database to populate this list). Need to create a admin account by default during init.
+- [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup. Make note of tables that should exist by default(models, authors, fields, model_groups, users, audit_logs, media_assets, etc) and what columns they should start with (perhaps using our existing database to populate this list). Need to create a admin account by default during init.
 - [ ] **Environment Tooling:** Tooling for migrating model definitions between development and production environments.
 - [ ] **Implement "View-As" Control** Allow Admin user roles to view CMS as other roles to assist in debugging/permission audits.
 
@@ -110,23 +109,31 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Engineered an **Auto-save Consolidation** engine that merges frequent debounced saves (within 5-minute windows) into single log entries.
   - Integrated automatic **Retention Pruning** that maintains the last 50 entries per record.
   - Enhanced UI with **Delta Pills** that provide immediate visibility into exactly which fields were modified during any historical event (Create, Update, Publish, Draft Update).
+- [x] **Media Library Implementation**:
+  - Implemented storage-agnostic registry with Cloudinary provider.
+  - Created standalone `/media` gallery with Folder Sidebar and Tagging.
+  - Integrated Cloudinary Media Library Widget for account-wide asset browsing.
+  - Developed Registry Sync tool for Cloudinary alignment.
+  - Updated GraphQL CDA to resolve media IDs into full metadata objects.
 
 ## Glossary
 
 - **CMS:** Custom management interface for digital assets and database schema.
 - **Page Model:** Database schema and Next.js component for content display/editing.
 - **Edge Functions:** Serverless logic for SSR, data validation, and scheduled tasks.
-- **Registry:** Centralized configuration tables (`models`, `fields`) defining CMS behavior.
+- **Registry:** Centralized configuration tables (`models`, `fields`, `media_assets`) defining CMS behavior.
 
 ## Relevant Files
 
 - `src/components/fields/`: Directory containing all global form components.
+- `src/app/media/`: Standalone Media Library and gallery components.
+- `src/client/media-service.ts`: Registry management for assets.
 - `src/app/schema/`: Schema Builder and model management logic.
 - `src/app/editor/`: Content Management and dynamic form engine.
 - `src/utils/supabase.ts` & `src/utils/supabase-server.ts`: Standardized SSR-friendly Supabase clients.
 - `src/middleware.ts`: Global session refreshing and cookie synchronization.
-- `src/app/graphql/`: High-fidelity GraphQL playground implementation.
 - `src/app/api/graphql/`: The production Content Delivery API (CDA) endpoint and schema generator.
 - `src/utils/field-types.ts`: Source of truth for field and Postgres type mapping.
 - `src/client/data-service.ts`: Centralized service for CRUD operations using native Supabase patterns.
 - `docs/CDA-GUIDE.md`: Comprehensive documentation for the GraphQL CDA.
+- `docs/MEDIA-LIBRARY.md`: Documentation for the asset management system.

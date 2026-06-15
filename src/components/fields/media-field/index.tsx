@@ -3,16 +3,11 @@
 import React, { useState } from "react"
 
 import Button from "@/components/button"
+import { MediaAsset } from "@/types/media"
 import FieldWrapper from "../field-wrapper"
+import MediaBrowser from "./media-browser"
 
 import s from "./style.module.css"
-
-export interface MediaAsset {
-  url: string
-  name: string
-  type: string
-  size?: number
-}
 
 interface MediaFieldProps {
   label: string
@@ -42,7 +37,7 @@ export default function MediaField({
   multiple = false,
 }: MediaFieldProps) {
   const id = React.useId()
-  const [urlInput, setUrlInput] = useState("")
+  const [isBrowserOpen, setIsBrowserOpen] = useState(false)
 
   const assets: MediaAsset[] = React.useMemo(() => {
     if (!value) return []
@@ -56,42 +51,12 @@ export default function MediaField({
     }
   }, [value])
 
-  const handleAddUrl = () => {
-    if (!urlInput) return
-
-    let finalUrl = urlInput.trim()
-    let finalName = ""
-
-    // Robust check: Did the user paste a JSON snippet?
-    // e.g. "team_logo": "[{\"url\": \"...\"}]" or just {"url": "..."}
-    if (finalUrl.includes('{"') || finalUrl.includes('["')) {
-      try {
-        // Try to strip potential key prefix like "field_name":
-        const cleanJson = finalUrl.replace(/^[^{[]+:\s*/, "")
-        const parsed = JSON.parse(cleanJson)
-        const extracted = Array.isArray(parsed) ? parsed[0] : parsed
-
-        if (extracted && typeof extracted === "object" && extracted.url) {
-          finalUrl = extracted.url
-          finalName = extracted.name || ""
-        }
-      } catch (e) {
-        // Not valid JSON, treat as raw URL
-      }
-    }
-
-    const newAsset: MediaAsset = {
-      url: finalUrl,
-      name: finalName || finalUrl.split("/").pop() || "Asset",
-      type: "image/unknown",
-    }
-
+  const handleSelect = (selectedAssets: MediaAsset[]) => {
     if (multiple) {
-      onChange([...assets, newAsset])
+      onChange([...assets, ...selectedAssets])
     } else {
-      onChange(newAsset)
+      onChange(selectedAssets[0])
     }
-    setUrlInput("")
   }
 
   const handleRemove = (index: number) => {
@@ -116,7 +81,8 @@ export default function MediaField({
           {assets.map((asset, index) => (
             <div key={index} className={s.assetCard}>
               <div className={s.preview}>
-                {asset.url.match(/\.(jpeg|jpg|gif|png|webp)$/) ? (
+                {asset.url &&
+                asset.url.match(/\.(jpeg|jpg|gif|png|webp|avif|svg)/i) ? (
                   <img src={asset.url} alt={asset.name} />
                 ) : (
                   <div className={s.fileIcon}>📄</div>
@@ -138,32 +104,23 @@ export default function MediaField({
             </div>
           ))}
           {(multiple || assets.length === 0) && (
-            <div className={s.addPlaceholder}>
-              <div className={s.urlInputRow}>
-                <input
-                  type="text"
-                  placeholder="Paste image URL..."
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  className={s.urlInput}
-                  disabled={disabled}
-                />
-                <Button
-                  type="button"
-                  onClick={handleAddUrl}
-                  className={s.addButton}
-                  disabled={disabled || !urlInput}
-                >
-                  Add
-                </Button>
-              </div>
-              <p className={s.hint}>
-                @TODO: Implement Supabase Storage Uploader
-              </p>
+            <div
+              className={s.addPlaceholder}
+              onClick={() => setIsBrowserOpen(true)}
+            >
+              <div className={s.plusIcon}>+</div>
+              <p className={s.hint}>Select from Media Library</p>
             </div>
           )}
         </div>
       </div>
+
+      <MediaBrowser
+        isOpen={isBrowserOpen}
+        onClose={() => setIsBrowserOpen(false)}
+        onSelect={handleSelect}
+        multiple={multiple}
+      />
     </FieldWrapper>
   )
 }

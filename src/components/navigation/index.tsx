@@ -31,6 +31,15 @@ const NAV_TOP: NavItem[] = [
       </svg>
     ),
   },
+  {
+    title: "Media Library",
+    url: "/media",
+    icon: (
+      <svg className={`feather-icon ${s.navIcon}`} width="24" height="24">
+        <use href="/feather-sprite.svg#image" />
+      </svg>
+    ),
+  },
 ]
 
 const NAV_BOTTOM: NavItem[] = [

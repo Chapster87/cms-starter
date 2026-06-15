@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { RefreshCw } from "lucide-react"
-import { MediaAsset } from "@/components/fields/media-field"
+import { MediaAsset } from "@/types/media"
 import {
   TextField,
   NumberField,
