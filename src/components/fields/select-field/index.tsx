@@ -87,42 +87,40 @@ export default function SelectField({
             </Select.Icon>
           </Select.Trigger>
 
-          <Select.Portal>
-            <Select.Content
-              className={s.content}
-              position="popper"
-              sideOffset={4}
-            >
-              <Select.ScrollUpButton className={s.scrollButton}>
-                <ChevronUp size={16} />
-              </Select.ScrollUpButton>
+          <Select.Content
+            className={s.content}
+            position="popper"
+            sideOffset={4}
+          >
+            <Select.ScrollUpButton className={s.scrollButton}>
+              <ChevronUp size={16} />
+            </Select.ScrollUpButton>
 
-              <Select.Viewport className={s.viewport}>
-                {displayOptions.map((option) => (
-                  <Select.Item
-                    key={option.value}
-                    value={option.value}
-                    className={s.item}
-                  >
-                    <Select.ItemText>{option.label}</Select.ItemText>
-                    <Select.ItemIndicator className={s.itemIndicator}>
-                      <Check size={14} />
-                    </Select.ItemIndicator>
-                  </Select.Item>
-                ))}
+            <Select.Viewport className={s.viewport}>
+              {displayOptions.map((option) => (
+                <Select.Item
+                  key={option.value}
+                  value={option.value}
+                  className={s.item}
+                >
+                  <Select.ItemText>{option.label}</Select.ItemText>
+                  <Select.ItemIndicator className={s.itemIndicator}>
+                    <Check size={14} />
+                  </Select.ItemIndicator>
+                </Select.Item>
+              ))}
 
-                {displayOptions.length === 0 && (
-                  <div className={s.item} style={{ pointerEvents: "none" }}>
-                    <Select.ItemText>No options configured</Select.ItemText>
-                  </div>
-                )}
-              </Select.Viewport>
+              {displayOptions.length === 0 && (
+                <div className={s.item} style={{ pointerEvents: "none" }}>
+                  <Select.ItemText>No options configured</Select.ItemText>
+                </div>
+              )}
+            </Select.Viewport>
 
-              <Select.ScrollDownButton className={s.scrollButton}>
-                <ChevronDown size={16} />
-              </Select.ScrollDownButton>
-            </Select.Content>
-          </Select.Portal>
+            <Select.ScrollDownButton className={s.scrollButton}>
+              <ChevronDown size={16} />
+            </Select.ScrollDownButton>
+          </Select.Content>
         </Select.Root>
       </div>
     </FieldWrapper>

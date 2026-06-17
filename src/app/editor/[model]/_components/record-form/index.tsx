@@ -348,8 +348,12 @@ export default function RecordForm({
             <NumberField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || ""}
+              value={(formData[field.field_name] as number) ?? ""}
               onChange={(val) => handleChange(field.field_name, val)}
+              min={field.settings?.min}
+              max={field.settings?.max}
+              step={field.settings?.step}
+              placeholder={field.settings?.placeholder}
             />
           )
         }
@@ -362,6 +366,7 @@ export default function RecordForm({
               value={(formData[field.field_name] as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
               rows={6}
+              placeholder={field.settings?.placeholder}
             />
           )
         }
@@ -373,6 +378,7 @@ export default function RecordForm({
               {...commonProps}
               value={(formData[field.field_name] as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
+              enabledTools={field.settings?.enabled_tools}
             />
           )
         }
@@ -526,6 +532,10 @@ export default function RecordForm({
             {...commonProps}
             value={(formData[field.field_name] as string) || ""}
             onChange={(e) => handleChange(field.field_name, e.target.value)}
+            placeholder={field.settings?.placeholder}
+            minLength={field.settings?.min_length}
+            maxLength={field.settings?.max_length}
+            pattern={field.settings?.regex_pattern}
           />
         )
       })}

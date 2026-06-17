@@ -273,3 +273,68 @@
   border-radius: 6px;
   border: 1px solid var(--color-border);
 }
+
+/* Tabs */
+.tabsRoot {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 450px;
+}
+
+.tabsList {
+  flex-shrink: 0;
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: 24px;
+}
+
+.tabsTrigger {
+  background-color: transparent;
+  padding: 0 16px 12px 16px;
+  height: 40px;
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-text-secondary);
+  user-select: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--color-text-primary);
+  }
+
+  &[data-state="active"] {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+  }
+}
+
+.tabsContent {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  outline: none;
+
+  &[data-state="inactive"] {
+    display: none;
+  }
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}

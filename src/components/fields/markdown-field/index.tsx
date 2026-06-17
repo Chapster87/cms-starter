@@ -17,6 +17,7 @@ interface MarkdownFieldProps {
   disabled?: boolean
   name?: string
   rows?: number
+  placeholder?: string
 }
 
 /**
@@ -33,6 +34,7 @@ export default function MarkdownField({
   disabled,
   name,
   rows = 10,
+  placeholder,
 }: MarkdownFieldProps) {
   const id = React.useId()
   const [activeTab, setActiveTab] = useState("write")
@@ -83,7 +85,7 @@ export default function MarkdownField({
             disabled={disabled}
             rows={rows}
             className={s.textarea}
-            placeholder="Write markdown here..."
+            placeholder={placeholder || "Write markdown here..."}
           />
         </Tabs.Content>
 

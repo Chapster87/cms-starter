@@ -27,6 +27,45 @@ export type CMSFieldType =
 /**
  * Represents a field configuration in the registry.
  */
+export interface CMSFieldSettings {
+  // General / Appearance
+  placeholder?: string
+  help_text?: string
+
+  // Number settings
+  min?: number
+  max?: number
+  step?: number
+
+  // Text settings
+  min_length?: number
+  max_length?: number
+  regex_pattern?: string
+  regex_flags?: string
+
+  // Select / Dropdown
+  choices?: CMSFieldOption[]
+
+  // Date/Time
+  include_time?: boolean
+
+  // Media / Reference
+  allow_multiple?: boolean
+  allowed_models?: string[]
+
+  // Rich Text
+  enabled_tools?: string[]
+
+  // Slug
+  source_field?: string
+
+  // Fallback for custom settings
+  [key: string]: unknown
+}
+
+/**
+ * Represents a field configuration in the registry.
+ */
 export interface CMSField {
   id: string
   model_id: string
@@ -38,7 +77,7 @@ export interface CMSField {
   is_unique: boolean
   is_system: boolean
   ui_order: number
-  settings: Record<string, unknown>
+  settings: CMSFieldSettings
   field_note?: string | null
   created_at: string
   updated_at: string

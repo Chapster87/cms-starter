@@ -48,9 +48,16 @@ interface RichTextFieldProps {
   required?: boolean
   disabled?: boolean
   name?: string
+  enabledTools?: string[]
 }
 
-const MenuBar = ({ editor }: { editor: Editor | null }) => {
+const MenuBar = ({
+  editor,
+  enabledTools,
+}: {
+  editor: Editor | null
+  enabledTools?: string[]
+}) => {
   const [currentHeading, setCurrentHeading] = React.useState("p")
 
   React.useEffect(() => {
@@ -117,256 +124,318 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
     (opt) => opt.value === currentHeading
   )
 
+  const isEnabled = (toolId: string) =>
+    !enabledTools || enabledTools.includes(toolId)
+
   return (
     <div className={s.menuBar}>
-      <Select.Root value={currentHeading} onValueChange={setHeading}>
-        <Select.Trigger className={s.selectTrigger}>
-          <Select.Value>
-            <span className={activeOption?.className}>
-              {activeOption?.label}
-            </span>
-          </Select.Value>
-          <Select.Icon className={s.selectIcon}>
-            <ChevronDown size={14} />
-          </Select.Icon>
-        </Select.Trigger>
+      {isEnabled("headings") && (
+        <>
+          <Select.Root value={currentHeading} onValueChange={setHeading}>
+            <Select.Trigger className={s.selectTrigger}>
+              <Select.Value>
+                <span className={activeOption?.className}>
+                  {activeOption?.label}
+                </span>
+              </Select.Value>
+              <Select.Icon className={s.selectIcon}>
+                <ChevronDown size={14} />
+              </Select.Icon>
+            </Select.Trigger>
 
-        <Select.Portal>
-          <Select.Content
-            className={s.selectContent}
-            position="popper"
-            sideOffset={4}
+            <Select.Portal>
+              <Select.Content
+                className={s.selectContent}
+                position="popper"
+                sideOffset={4}
+              >
+                <Select.Viewport className={s.selectViewport}>
+                  {headingOptions.map((opt) => (
+                    <Select.Item
+                      key={opt.value}
+                      value={opt.value}
+                      className={s.selectItem}
+                    >
+                      <Select.ItemText>
+                        <span className={opt.className}>{opt.label}</span>
+                      </Select.ItemText>
+                      <Select.ItemIndicator className={s.selectItemIndicator}>
+                        <Check size={14} />
+                      </Select.ItemIndicator>
+                    </Select.Item>
+                  ))}
+                </Select.Viewport>
+              </Select.Content>
+            </Select.Portal>
+          </Select.Root>
+          <div className={s.divider} />
+        </>
+      )}
+
+      {(isEnabled("bold") ||
+        isEnabled("italic") ||
+        isEnabled("underline") ||
+        isEnabled("strike") ||
+        isEnabled("highlight")) && (
+        <>
+          {isEnabled("bold") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              className={editor.isActive("bold") ? s.isActive : ""}
+              title="Bold"
+            >
+              <Bold size={16} />
+            </Button>
+          )}
+          {isEnabled("italic") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              className={editor.isActive("italic") ? s.isActive : ""}
+              title="Italic"
+            >
+              <Italic size={16} />
+            </Button>
+          )}
+          {isEnabled("underline") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              className={editor.isActive("underline") ? s.isActive : ""}
+              title="Underline"
+            >
+              <UnderlineIcon size={16} />
+            </Button>
+          )}
+          {isEnabled("strike") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().toggleStrike().run()}
+              className={editor.isActive("strike") ? s.isActive : ""}
+              title="Strikethrough"
+            >
+              <Strikethrough size={16} />
+            </Button>
+          )}
+          {isEnabled("highlight") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().toggleHighlight().run()}
+              className={editor.isActive("highlight") ? s.isActive : ""}
+              title="Highlight"
+            >
+              <Highlighter size={16} />
+            </Button>
+          )}
+          <div className={s.divider} />
+        </>
+      )}
+
+      {isEnabled("align") && (
+        <>
+          <Button
+            variant="secondary"
+            unstyled
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign("left").run()}
+            className={editor.isActive({ textAlign: "left" }) ? s.isActive : ""}
+            title="Align Left"
           >
-            <Select.Viewport className={s.selectViewport}>
-              {headingOptions.map((opt) => (
-                <Select.Item
-                  key={opt.value}
-                  value={opt.value}
-                  className={s.selectItem}
-                >
-                  <Select.ItemText>
-                    <span className={opt.className}>{opt.label}</span>
-                  </Select.ItemText>
-                  <Select.ItemIndicator className={s.selectItemIndicator}>
-                    <Check size={14} />
-                  </Select.ItemIndicator>
-                </Select.Item>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
-      </Select.Root>
+            <AlignLeft size={16} />
+          </Button>
+          <Button
+            variant="secondary"
+            unstyled
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign("center").run()}
+            className={
+              editor.isActive({ textAlign: "center" }) ? s.isActive : ""
+            }
+            title="Align Center"
+          >
+            <AlignCenter size={16} />
+          </Button>
+          <Button
+            variant="secondary"
+            unstyled
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign("right").run()}
+            className={
+              editor.isActive({ textAlign: "right" }) ? s.isActive : ""
+            }
+            title="Align Right"
+          >
+            <AlignRight size={16} />
+          </Button>
+          <Button
+            variant="secondary"
+            unstyled
+            type="button"
+            onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+            className={
+              editor.isActive({ textAlign: "justify" }) ? s.isActive : ""
+            }
+            title="Align Justify"
+          >
+            <AlignJustify size={16} />
+          </Button>
+          <div className={s.divider} />
+        </>
+      )}
 
-      <div className={s.divider} />
+      {(isEnabled("list_bullet") ||
+        isEnabled("list_ordered") ||
+        isEnabled("blockquote") ||
+        isEnabled("hr")) && (
+        <>
+          {isEnabled("list_bullet") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              className={editor.isActive("bulletList") ? s.isActive : ""}
+              title="Bullet List"
+            >
+              <List size={16} />
+            </Button>
+          )}
+          {isEnabled("list_ordered") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              className={editor.isActive("orderedList") ? s.isActive : ""}
+              title="Ordered List"
+            >
+              <ListOrdered size={16} />
+            </Button>
+          )}
+          {isEnabled("blockquote") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().toggleBlockquote().run()}
+              className={editor.isActive("blockquote") ? s.isActive : ""}
+              title="Blockquote"
+            >
+              <Quote size={16} />
+            </Button>
+          )}
+          {isEnabled("hr") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={() => editor.chain().focus().setHorizontalRule().run()}
+              title="Horizontal Rule"
+            >
+              <Minus size={16} />
+            </Button>
+          )}
+          <div className={s.divider} />
+        </>
+      )}
 
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().toggleBold().run()}
-        className={editor.isActive("bold") ? s.isActive : ""}
-        title="Bold"
-      >
-        <Bold size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-        className={editor.isActive("italic") ? s.isActive : ""}
-        title="Italic"
-      >
-        <Italic size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().toggleUnderline().run()}
-        className={editor.isActive("underline") ? s.isActive : ""}
-        title="Underline"
-      >
-        <UnderlineIcon size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().toggleStrike().run()}
-        className={editor.isActive("strike") ? s.isActive : ""}
-        title="Strikethrough"
-      >
-        <Strikethrough size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().toggleHighlight().run()}
-        className={editor.isActive("highlight") ? s.isActive : ""}
-        title="Highlight"
-      >
-        <Highlighter size={16} />
-      </Button>
+      {(isEnabled("link") || isEnabled("image")) && (
+        <>
+          {isEnabled("link") && (
+            <>
+              <Button
+                variant="secondary"
+                unstyled
+                type="button"
+                onClick={addLink}
+                className={editor.isActive("link") ? s.isActive : ""}
+                title="Add Link"
+              >
+                <LinkIcon size={16} />
+              </Button>
+              <Button
+                variant="secondary"
+                unstyled
+                type="button"
+                onClick={() => editor.chain().focus().unsetLink().run()}
+                disabled={!editor.isActive("link")}
+                title="Remove Link"
+              >
+                <Link2Off size={16} />
+              </Button>
+            </>
+          )}
+          {isEnabled("image") && (
+            <Button
+              variant="secondary"
+              unstyled
+              type="button"
+              onClick={addImage}
+              title="Add Image"
+            >
+              <ImageIcon size={16} />
+            </Button>
+          )}
+          <div className={s.divider} />
+        </>
+      )}
 
-      <div className={s.divider} />
+      {isEnabled("color") && (
+        <>
+          <div className={s.colorPickerWrapper}>
+            <input
+              type="color"
+              onInput={(event) =>
+                editor
+                  .chain()
+                  .focus()
+                  .setColor((event.target as HTMLInputElement).value)
+                  .run()
+              }
+              value={editor.getAttributes("textStyle").color || "#000000"}
+              className={s.colorPicker}
+              title="Text Color"
+            />
+          </div>
+          <div className={s.divider} />
+        </>
+      )}
 
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().setTextAlign("left").run()}
-        className={editor.isActive({ textAlign: "left" }) ? s.isActive : ""}
-        title="Align Left"
-      >
-        <AlignLeft size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().setTextAlign("center").run()}
-        className={editor.isActive({ textAlign: "center" }) ? s.isActive : ""}
-        title="Align Center"
-      >
-        <AlignCenter size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().setTextAlign("right").run()}
-        className={editor.isActive({ textAlign: "right" }) ? s.isActive : ""}
-        title="Align Right"
-      >
-        <AlignRight size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().setTextAlign("justify").run()}
-        className={editor.isActive({ textAlign: "justify" }) ? s.isActive : ""}
-        title="Align Justify"
-      >
-        <AlignJustify size={16} />
-      </Button>
-
-      <div className={s.divider} />
-
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-        className={editor.isActive("bulletList") ? s.isActive : ""}
-        title="Bullet List"
-      >
-        <List size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-        className={editor.isActive("orderedList") ? s.isActive : ""}
-        title="Ordered List"
-      >
-        <ListOrdered size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().toggleBlockquote().run()}
-        className={editor.isActive("blockquote") ? s.isActive : ""}
-        title="Blockquote"
-      >
-        <Quote size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().setHorizontalRule().run()}
-        title="Horizontal Rule"
-      >
-        <Minus size={16} />
-      </Button>
-
-      <div className={s.divider} />
-
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={addLink}
-        className={editor.isActive("link") ? s.isActive : ""}
-        title="Add Link"
-      >
-        <LinkIcon size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().unsetLink().run()}
-        disabled={!editor.isActive("link")}
-        title="Remove Link"
-      >
-        <Link2Off size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={addImage}
-        title="Add Image"
-      >
-        <ImageIcon size={16} />
-      </Button>
-
-      <div className={s.divider} />
-
-      <div className={s.colorPickerWrapper}>
-        <input
-          type="color"
-          onInput={(event) =>
-            editor
-              .chain()
-              .focus()
-              .setColor((event.target as HTMLInputElement).value)
-              .run()
-          }
-          value={editor.getAttributes("textStyle").color || "#000000"}
-          className={s.colorPicker}
-          title="Text Color"
-        />
-      </div>
-
-      <div className={s.divider} />
-
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().chain().focus().undo().run()}
-        title="Undo"
-      >
-        <Undo size={16} />
-      </Button>
-      <Button
-        variant="secondary"
-        unstyled
-        type="button"
-        onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().chain().focus().redo().run()}
-        title="Redo"
-      >
-        <Redo size={16} />
-      </Button>
+      {isEnabled("history") && (
+        <>
+          <Button
+            variant="secondary"
+            unstyled
+            type="button"
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().chain().focus().undo().run()}
+            title="Undo"
+          >
+            <Undo size={16} />
+          </Button>
+          <Button
+            variant="secondary"
+            unstyled
+            type="button"
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().chain().focus().redo().run()}
+            title="Redo"
+          >
+            <Redo size={16} />
+          </Button>
+        </>
+      )}
     </div>
   )
 }
@@ -382,6 +451,7 @@ export default function RichTextField({
   fieldNote,
   required,
   disabled,
+  enabledTools,
 }: RichTextFieldProps) {
   const id = React.useId()
   // Trigger re-renders on selection changes to update the toolbar state
@@ -438,7 +508,7 @@ export default function RichTextField({
       required={required}
     >
       <div className={s.editorContainer}>
-        <MenuBar editor={editor} />
+        <MenuBar editor={editor} enabledTools={enabledTools} />
         <EditorContent editor={editor} className={s.editorContent} />
       </div>
     </FieldWrapper>

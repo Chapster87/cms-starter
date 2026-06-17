@@ -46,17 +46,15 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Field-Specific Settings:** Add advanced configuration for types (e.g., number ranges, regex validation).
+- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
+- [ ] **Dynamic Permission Management:** CMS UI for editing what Roles can do.
+- [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
 
 ### 3. Future Roadmap
 
-- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
-- [ ] **Dynamic Permission Management:** CMS UI for editing what Roles can do.
-- [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
 - [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
 - [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
 - [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup. Make note of tables that should exist by default(models, authors, fields, model_groups, users, audit_logs, media_assets, etc) and what columns they should start with (perhaps using our existing database to populate this list). Need to create a admin account by default during init.
@@ -65,6 +63,13 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 4. Completed Items
 
+- [x] **Field-Specific Settings:**
+  - Implemented a Radix Tabs interface (Basic, Validation, Appearance) in the Field Modal.
+  - Added advanced numeric settings: Min, Max, Step.
+  - Added text validation: Min/Max length and a Regex Preset system (Email, URL, etc.) with custom pattern support.
+  - Implemented Appearance settings: Custom placeholders and help text.
+  - Added granular tool configuration for the Rich Text Field (Tiptap), allowing per-field control over available toolbar buttons.
+  - Integrated settings into the `RecordForm` engine for client-side validation and component-level customization.
 - [x] **Advanced Draft Workflow (Auto-save/Publish/Changed)**:
   - Implemented shadow JSON storage via `_draft` column for draft-enabled models.
   - Developed debounced auto-save engine with immediate "Changed" (Blue) status feedback, with automatic bypass for models without draft mode.
