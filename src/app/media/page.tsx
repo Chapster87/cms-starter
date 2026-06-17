@@ -1,7 +1,13 @@
 "use client"
 
 import React, { useCallback, useEffect, useState } from "react"
-import { Image as ImageIcon, Loader2, Search, Upload } from "lucide-react"
+import {
+  Image as ImageIcon,
+  Loader2,
+  Search,
+  Trash2,
+  Upload,
+} from "lucide-react"
 
 import Button from "@/components/button"
 import { mediaService } from "@/client/media-service"
@@ -30,6 +36,11 @@ export default function MediaGalleryPage() {
   const [uploadFolder, setUploadFolder] = useState("uploads")
   const [uploadTags, setUploadTags] = useState("")
   const [editingAsset, setEditingAsset] = useState<MediaAsset | null>(null)
+
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkFolder, setBulkFolder] = useState("")
+  const [bulkTags, setBulkTags] = useState("")
+  const [isBulkActionLoading, setIsBulkActionLoading] = useState(false)
 
   const fetchAssets = useCallback(async () => {
     try {
@@ -120,12 +131,71 @@ export default function MediaGalleryPage() {
     }
   }
 
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds)
+    if (newSelected.has(id)) {
+      newSelected.delete(id)
+    } else {
+      newSelected.add(id)
+    }
+    setSelectedIds(newSelected)
+  }
+
+  const handleBulkDelete = async () => {
+    if (
+      !confirm(
+        `Are you sure you want to delete ${selectedIds.size} selected assets?`
+      )
+    )
+      return
+
+    setIsBulkActionLoading(true)
+    try {
+      await mediaService.deleteAssets(Array.from(selectedIds))
+      setSelectedIds(new Set())
+      await fetchAssets()
+    } catch (error) {
+      console.error("Bulk delete failed", error)
+    } finally {
+      setIsBulkActionLoading(false)
+    }
+  }
+
+  const handleBulkUpdate = async () => {
+    if (selectedIds.size === 0) return
+    if (!bulkFolder && !bulkTags) return
+
+    setIsBulkActionLoading(true)
+    try {
+      const updates: Partial<MediaAsset> = {}
+      if (bulkFolder) updates.folder = bulkFolder
+      if (bulkTags) {
+        updates.tags = bulkTags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean)
+      }
+
+      await mediaService.updateAssets(Array.from(selectedIds), updates)
+      setSelectedIds(new Set())
+      setBulkFolder("")
+      setBulkTags("")
+      await fetchAssets()
+    } catch (error) {
+      console.error("Bulk update failed", error)
+    } finally {
+      setIsBulkActionLoading(false)
+    }
+  }
+
   const filteredAssets = assets.filter((a) =>
     a.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
-    <main className={s.container}>
+    <main
+      className={`${s.container} ${selectedIds.size > 0 ? s.hasSelection : ""}`}
+    >
       <FolderSidebar
         folders={folders}
         activeFolder={activeFolder}
@@ -310,38 +380,61 @@ export default function MediaGalleryPage() {
           ) : (
             <div className={s.grid}>
               {filteredAssets.map((asset) => (
-                <div
-                  key={asset.id}
-                  className={s.card}
-                  onClick={() => setEditingAsset(asset)}
-                >
-                  <div className={s.preview}>
-                    <img src={asset.url} alt={asset.name} />
-                  </div>
-                  <div className={s.info}>
-                    <div className={s.meta}>
-                      <span className={s.name}>{asset.name}</span>
-                      <span className={s.size}>
-                        {asset.width && asset.height
-                          ? `${asset.width} × ${asset.height} • `
-                          : ""}
-                        {(asset.size / 1024).toFixed(1)} KB
-                      </span>
-                      <span className={s.provider}>
-                        {asset.storage_provider}
-                      </span>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      size="small"
-                      className={s.deleteButton}
-                      onClick={(e) => {
+                <div key={asset.id} className={s.cardWrapper}>
+                  <div className={s.checkboxWrapper}>
+                    <input
+                      type="checkbox"
+                      className={s.checkbox}
+                      checked={selectedIds.has(asset.id)}
+                      onChange={(e) => {
                         e.stopPropagation()
-                        handleDelete(asset.id)
+                        toggleSelect(asset.id)
                       }}
-                    >
-                      Delete
-                    </Button>
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  <div
+                    className={`${s.card} ${selectedIds.has(asset.id) ? s.selected : ""}`}
+                    onClick={() => setEditingAsset(asset)}
+                  >
+                    <div className={s.preview}>
+                      <img src={asset.url} alt={asset.name} />
+                    </div>
+                    <div className={s.info}>
+                      <div className={s.meta}>
+                        <span className={s.name}>{asset.name}</span>
+                        <span className={s.size}>
+                          {asset.width && asset.height
+                            ? `${asset.width} × ${asset.height} • `
+                            : ""}
+                          {(asset.size / 1024).toFixed(1)} KB
+                        </span>
+                        <div className={s.folder}>{asset.folder}</div>
+                        {asset.tags && asset.tags.length > 0 && (
+                          <div className={s.tags}>
+                            {asset.tags.map((tag) => (
+                              <span key={tag} className={s.tag}>
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <span className={s.provider}>
+                          {asset.storage_provider}
+                        </span>
+                      </div>
+                      <Button
+                        variant="secondary"
+                        size="small"
+                        className={s.deleteButton}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDelete(asset.id)
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -349,6 +442,59 @@ export default function MediaGalleryPage() {
           )}
         </div>
       </div>
+
+      {selectedIds.size > 0 && (
+        <div className={s.bulkToolbar}>
+          <div className={s.bulkInfo}>
+            <span className={s.bulkCount}>{selectedIds.size} selected</span>
+            <Button
+              variant="secondary"
+              size="small"
+              onClick={() => setSelectedIds(new Set())}
+            >
+              Clear
+            </Button>
+          </div>
+
+          <div className={s.bulkActions}>
+            <div className={s.bulkInputGroup}>
+              <input
+                type="text"
+                placeholder="New Folder..."
+                className={s.bulkInput}
+                value={bulkFolder}
+                onChange={(e) => setBulkFolder(e.target.value)}
+              />
+              <input
+                type="text"
+                placeholder="New Tags (csv)..."
+                className={s.bulkInput}
+                value={bulkTags}
+                onChange={(e) => setBulkTags(e.target.value)}
+              />
+              <Button
+                variant="primary"
+                size="small"
+                disabled={isBulkActionLoading || (!bulkFolder && !bulkTags)}
+                onClick={handleBulkUpdate}
+              >
+                Apply Changes
+              </Button>
+            </div>
+
+            <Button
+              variant="secondary"
+              size="small"
+              className={s.deleteButton}
+              disabled={isBulkActionLoading}
+              onClick={handleBulkDelete}
+            >
+              <Trash2 size={16} />
+              Delete Selected
+            </Button>
+          </div>
+        </div>
+      )}
 
       <MediaDetailsModal
         isOpen={!!editingAsset}

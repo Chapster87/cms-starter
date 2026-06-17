@@ -9,6 +9,10 @@
   flex-direction: column;
 }
 
+.mainContent {
+  overflow: auto;
+}
+
 .schemaTabs {
   height: 100%;
 }

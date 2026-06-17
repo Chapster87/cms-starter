@@ -73,6 +73,38 @@ export const mediaService = {
   },
 
   /**
+   * Deletes multiple asset records from the database.
+   */
+  async deleteAssets(ids: string[]): Promise<void> {
+    const supabase = createClient()
+    const { error } = await supabase.from("media_assets").delete().in("id", ids)
+
+    if (error) {
+      console.error("Error deleting media assets:", error.message)
+      throw error
+    }
+  },
+
+  /**
+   * Updates multiple asset records in the database.
+   */
+  async updateAssets(
+    ids: string[],
+    updates: Partial<MediaAsset>
+  ): Promise<void> {
+    const supabase = createClient()
+    const { error } = await supabase
+      .from("media_assets")
+      .update(updates)
+      .in("id", ids)
+
+    if (error) {
+      console.error("Error updating media assets:", error.message)
+      throw error
+    }
+  },
+
+  /**
    * Fetches a single asset by its ID.
    */
   async getAssetById(id: string): Promise<MediaAsset | null> {

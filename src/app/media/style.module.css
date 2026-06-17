@@ -6,7 +6,7 @@
 .mainContent {
   flex: 1;
   padding: 40px;
-  max-width: 1400px;
+  overflow: auto;
 }
 
 .header {
@@ -154,9 +154,46 @@
 }
 
 .card:hover {
-  transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
   border-color: var(--color-primary);
+}
+
+.card.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-faded);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+.cardWrapper {
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.cardWrapper:hover {
+  transform: translateY(-4px);
+}
+
+.checkboxWrapper {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+/* Show checkbox on hover of the wrapper, if selected, or if the container has a selection active */
+.cardWrapper:hover .checkboxWrapper,
+.card.selected .checkboxWrapper,
+.container.hasSelection .checkboxWrapper {
+  opacity: 1;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--color-primary);
 }
 
 .preview {
@@ -200,6 +237,33 @@
 .size {
   font-size: 12px;
   color: var(--color-text-muted);
+}
+
+.folder {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.tag {
+  font-size: 10px;
+  background: var(--color-primary-faded);
+  color: var(--color-primary);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-weight: 600;
 }
 
 .provider {
@@ -250,4 +314,75 @@
 
 .emptyState p {
   margin: 0;
+}
+
+.bulkToolbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(
+    --color-bg
+  ); /* Ensure this is not transparent in global styles */
+  background-color: #ffffff; /* Fallback to solid white if var is problematic */
+  border: 1px solid var(--color-border);
+  padding: 12px 24px;
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  z-index: 9999; /* Boost z-index to stay above everything */
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Ensure background is solid white for theme compatibility if variables are semi-transparent */
+:global(.dark-theme) .bulkToolbar {
+  background-color: #1a1a1a;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.bulkInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-right: 1px solid var(--color-border);
+  padding-right: 24px;
+}
+
+.bulkCount {
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.bulkActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulkInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bulkInput {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 12px;
+  width: 120px;
 }
