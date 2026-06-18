@@ -1,0 +1,187 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  background-color: #f9fafb;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.table th.groupHeader {
+  border-bottom: 2px solid #e5e7eb;
+  background-color: #f3f4f6;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+}
+
+.table th:first-child {
+  text-align: left;
+  padding-left: 16px;
+}
+
+.table td {
+  padding: 8px;
+  border-bottom: 1px solid #f3f4f6;
+  border-right: 1px solid transparent;
+  vertical-align: middle;
+}
+
+.groupDivider {
+  border-right: 1px solid #e5e7eb !important;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.teamCell {
+  min-width: 200px;
+  padding-left: 16px !important;
+}
+
+.teamInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 40px;
+}
+
+.teamName {
+  font-weight: 600;
+  color: #111;
+}
+
+.teamModel {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.inputCell {
+  width: 72px;
+}
+
+.statInput {
+  width: 100%;
+  height: 40px;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.statInput::-webkit-outer-spin-button,
+.statInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.statInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.calcCell {
+  font-weight: 700;
+  color: #111;
+  text-align: center;
+  background-color: #f9fafb;
+}
+
+.actionsCell {
+  text-align: center;
+  padding: 0 4px !important;
+}
+
+.focusBtn {
+  color: #6b7280 !important;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.focusBtn:hover {
+  opacity: 1;
+  color: #f59e0b !important;
+}
+
+.focusBtn.isFocused {
+  opacity: 1;
+  color: #f59e0b !important;
+}
+
+.removeBtn {
+  color: #ef4444 !important;
+  opacity: 0.4;
+  transition: all 0.2s ease;
+}
+
+.removeBtn:hover {
+  opacity: 1;
+}
+
+.emptyState {
+  padding: 32px;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: 12px;
+}
+
+.addTeamButton {
+  width: 100%;
+  justify-content: center;
+  border-style: dashed !important;
+  background-color: var(--color-white) !important;
+  color: var(--color-grey-600) !important;
+  border-color: var(--color-grey-200) !important;
+  height: 40px !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+}
+
+.addTeamButton:hover:not(:disabled) {
+  border-color: var(--color-grey-400) !important;
+  color: var(--color-black) !important;
+  background-color: var(--color-grey-50) !important;
+}
+
+.hiddenPicker {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+}

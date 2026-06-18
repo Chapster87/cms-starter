@@ -1,11 +1,23 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { TextField, SelectField, CheckboxField } from "@/components/fields"
+import { useState, useEffect, useMemo } from "react"
+import clsx from "clsx"
+import {
+  FileText,
+  Type,
+  Layers,
+  Database,
+  ExternalLink,
+  Plus,
+} from "lucide-react"
+
 import Button from "@/components/button"
+import { TextField, SelectField, CheckboxField } from "@/components/fields"
 import Modal from "@/components/modal"
+import Tabs from "@/components/tabs"
 import { CMSField } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
+
 import s from "./style.module.css"
 
 interface FieldModalProps {
@@ -174,15 +186,62 @@ export default function FieldModal({
               description="The physical column name in your database."
             />
 
-            <SelectField
-              label="Field Type"
-              value={type}
-              onChange={(val) => setType(val as CMSField["field_type"])}
-              options={FIELD_DEFINITIONS.map((def) => ({
-                value: def.type,
-                label: `${def.label} - ${def.description}`,
-              }))}
-            />
+            <div className={s.typeSelection}>
+              <label className={s.fieldLabel}>Field Type</label>
+              <Tabs defaultValue="basic" className={s.typeTabs}>
+                <Tabs.List className={s.tabsList}>
+                  <Tabs.Trigger value="basic" className={s.tabTrigger}>
+                    <Type size={14} /> Basic
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value="content" className={s.tabTrigger}>
+                    <Layers size={14} /> Content
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value="relational" className={s.tabTrigger}>
+                    <ExternalLink size={14} /> Relational
+                  </Tabs.Trigger>
+                  <Tabs.Trigger value="advanced" className={s.tabTrigger}>
+                    <Database size={14} /> Advanced
+                  </Tabs.Trigger>
+                </Tabs.List>
+
+                {(["basic", "content", "relational", "advanced"] as const).map(
+                  (cat) => (
+                    <Tabs.Content
+                      key={cat}
+                      value={cat}
+                      className={s.tabsContent}
+                    >
+                      <div className={s.typeGrid}>
+                        {FIELD_DEFINITIONS.filter(
+                          (def) => def.category === cat
+                        ).map((def) => (
+                          <button
+                            key={def.type}
+                            type="button"
+                            className={clsx(
+                              s.typeCard,
+                              type === def.type && s.active
+                            )}
+                            onClick={() => setType(def.type)}
+                          >
+                            <div className={s.typeCardIcon}>
+                              {/* In a real app we'd map def.icon to a Lucide component */}
+                              <FileText size={20} />
+                            </div>
+                            <div className={s.typeCardInfo}>
+                              <div className={s.typeCardLabel}>{def.label}</div>
+                              <div className={s.typeCardDesc}>
+                                {def.description}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </Tabs.Content>
+                  )
+                )}
+              </Tabs>
+            </div>
           </>
         )}
 

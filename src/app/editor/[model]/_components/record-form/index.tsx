@@ -19,6 +19,7 @@ import {
   DateField,
   ReferenceField,
   NavigationField,
+  StandingsField,
 } from "@/components/fields"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
@@ -522,6 +523,17 @@ export default function RecordForm({
               value={(formData[field.field_name] as NavigationData) || null}
               onChange={(val) => handleChange(field.field_name, val)}
               settings={settings}
+            />
+          )
+        }
+
+        if (field.field_type === "standings_table") {
+          return (
+            <StandingsField
+              key={field.field_name}
+              {...commonProps}
+              value={(formData[field.field_name] as string) || []}
+              onChange={(val: unknown) => handleChange(field.field_name, val)}
             />
           )
         }

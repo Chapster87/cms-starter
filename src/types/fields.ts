@@ -23,6 +23,7 @@ export type CMSFieldType =
   | "seo_metadata" // jsonb (Grouped SEO metadata)
   | "reference" // jsonb (Link to other records)
   | "navigation" // jsonb (Site navigation tree)
+  | "standings_table" // jsonb (Rugby standings table)
 
 /**
  * Represents a field configuration in the registry.
@@ -92,4 +93,5 @@ export interface CMSFieldDefinition {
   dbType: "text" | "numeric" | "boolean" | "timestamptz" | "jsonb"
   description: string
   icon: string
+  category: "basic" | "content" | "relational" | "advanced"
 }

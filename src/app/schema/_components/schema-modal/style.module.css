@@ -6,6 +6,13 @@
 }
 
 /* Field Type Grid (Stage 1) */
+.typeTabs {
+  width: 100%;
+  min-height: 500px;
+  display: flex;
+  flex-direction: column;
+}
+
 .typeGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -15,6 +22,39 @@
   @media (--viewport-xs-up) {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+.tabTrigger {
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.tabTrigger:hover {
+  color: var(--color-text-primary);
+}
+
+.tabTrigger[data-state="active"] {
+  color: var(--color-primary);
+}
+
+.tabTrigger[data-state="active"]::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-primary);
 }
 
 .typeCard {

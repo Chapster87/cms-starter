@@ -4,26 +4,14 @@ import { CMSFieldDefinition } from "@/types/fields"
  * Centralized mapping of CMS field types to database types and UI labels.
  */
 export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
+  // Basic
   {
     type: "text_single",
     label: "Single-line Text",
     dbType: "text",
     description: "Ideal for titles, names, or short strings.",
     icon: "type",
-  },
-  {
-    type: "text_multi",
-    label: "Multi-line Text",
-    dbType: "text",
-    description: "For longer content like descriptions or markdown.",
-    icon: "align-left",
-  },
-  {
-    type: "select",
-    label: "Dropdown / Select",
-    dbType: "text",
-    description: "Predefined list of options.",
-    icon: "list",
+    category: "basic",
   },
   {
     type: "number",
@@ -31,6 +19,7 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "numeric",
     description: "Integers or decimals.",
     icon: "hash",
+    category: "basic",
   },
   {
     type: "boolean",
@@ -38,6 +27,7 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "boolean",
     description: "Simple true/false toggle.",
     icon: "check-square",
+    category: "basic",
   },
   {
     type: "date_time",
@@ -45,6 +35,15 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "timestamptz",
     description: "Date picker with time support.",
     icon: "calendar",
+    category: "basic",
+  },
+  {
+    type: "select",
+    label: "Dropdown / Select",
+    dbType: "text",
+    description: "Predefined list of options.",
+    icon: "list",
+    category: "basic",
   },
   {
     type: "color",
@@ -52,6 +51,7 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "text",
     description: "Hex or RGBA color strings.",
     icon: "droplet",
+    category: "basic",
   },
   {
     type: "seo_slug",
@@ -59,6 +59,25 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "text",
     description: "URL-friendly string with unique constraint.",
     icon: "link",
+    category: "basic",
+  },
+
+  // Content
+  {
+    type: "rich_text",
+    label: "Rich Text",
+    dbType: "text",
+    description: "Visual editor for formatted content.",
+    icon: "edit-3",
+    category: "content",
+  },
+  {
+    type: "text_multi",
+    label: "Multi-line Text",
+    dbType: "text",
+    description: "For longer content like descriptions or markdown.",
+    icon: "align-left",
+    category: "content",
   },
   {
     type: "media",
@@ -66,27 +85,7 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "jsonb",
     description: "References to uploaded images or files.",
     icon: "image",
-  },
-  {
-    type: "rich_text",
-    label: "Rich Text",
-    dbType: "text",
-    description: "Visual editor for formatted content.",
-    icon: "edit-3",
-  },
-  {
-    type: "json",
-    label: "JSON",
-    dbType: "jsonb",
-    description: "Structured data payload for advanced use cases.",
-    icon: "code",
-  },
-  {
-    type: "tags",
-    label: "Tags / List",
-    dbType: "jsonb",
-    description: "Collection of strings or keywords.",
-    icon: "tag",
+    category: "content",
   },
   {
     type: "modular_content",
@@ -94,20 +93,25 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "jsonb",
     description: "Dynamic blocks and component layouts.",
     icon: "layers",
+    category: "content",
   },
   {
-    type: "seo_metadata",
-    label: "SEO Metadata",
+    type: "tags",
+    label: "Tags / List",
     dbType: "jsonb",
-    description: "Grouped SEO fields (Title, OG, Keywords, etc.)",
-    icon: "search",
+    description: "Collection of strings or keywords.",
+    icon: "tag",
+    category: "content",
   },
+
+  // Relational
   {
     type: "reference",
     label: "Linked Record",
     dbType: "jsonb",
     description: "Reference to other records in the CMS.",
     icon: "external-link",
+    category: "relational",
   },
   {
     type: "navigation",
@@ -115,6 +119,33 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     dbType: "jsonb",
     description: "Hierarchical menu with internal/external links.",
     icon: "menu",
+    category: "relational",
+  },
+
+  // Advanced
+  {
+    type: "standings_table",
+    label: "Rugby Standings",
+    dbType: "jsonb",
+    description: "Rugby League standings table with team stats.",
+    icon: "award",
+    category: "advanced",
+  },
+  {
+    type: "seo_metadata",
+    label: "SEO Metadata",
+    dbType: "jsonb",
+    description: "Grouped SEO fields (Title, OG, Keywords, etc.)",
+    icon: "search",
+    category: "advanced",
+  },
+  {
+    type: "json",
+    label: "JSON",
+    dbType: "jsonb",
+    description: "Structured data payload for advanced use cases.",
+    icon: "code",
+    category: "advanced",
   },
 ]
 
