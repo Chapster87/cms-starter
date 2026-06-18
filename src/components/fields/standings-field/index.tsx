@@ -49,6 +49,8 @@ interface StandingsFieldProps {
   fieldNote?: string
   required?: boolean
   disabled?: boolean
+  leagueId?: string
+  divisionId?: string
 }
 
 /**
@@ -62,8 +64,11 @@ export default function StandingsField({
   fieldNote,
   required,
   disabled,
+  leagueId,
+  divisionId,
 }: StandingsFieldProps) {
   const id = React.useId()
+  const pickerRef = React.useRef<HTMLDivElement>(null)
   const rows = useMemo(() => {
     if (!value) return []
     if (Array.isArray(value)) return value
@@ -116,6 +121,23 @@ export default function StandingsField({
   // Wrappers for helpers to keep template clean
   const getPts = (row: StandingRow) => calculateRugbyPoints(row)
   const getLPPG = (row: StandingRow) => calculateLPPG(getPts(row), row.gp)
+
+  const isFilterReady = !!leagueId && !!divisionId
+
+  // Calculate filters and exclusions for ReferenceField
+  const filters = useMemo(() => {
+    if (!isFilterReady) return undefined
+    return {
+      teams: {
+        league: leagueId,
+        divison: divisionId,
+      },
+    }
+  }, [leagueId, divisionId, isFilterReady])
+
+  const excludeIds = useMemo(() => {
+    return rows.map((r) => r.team_id).filter(Boolean)
+  }, [rows])
 
   return (
     <FieldWrapper
@@ -350,13 +372,25 @@ export default function StandingsField({
             variant="secondary"
             className={s.addTeamButton}
             onClick={() => {
-              const element = document.getElementById(`${id}-picker`)
-              if (element) element.click()
+              // Trigger the ReferenceField inside the container
+              const selectionArea = pickerRef.current?.querySelector(
+                'div[class*="selectionArea"]'
+              ) as HTMLElement
+              if (selectionArea) {
+                selectionArea.click()
+              }
             }}
-            disabled={disabled}
+            disabled={disabled || !isFilterReady}
             beforeText={<Plus size={16} />}
+            title={
+              !isFilterReady
+                ? "Please select a League and Division first"
+                : "Add team to standings"
+            }
           >
-            Add Team
+            {!isFilterReady
+              ? "Select League & Division to Add Teams"
+              : "Add Team"}
           </Button>
 
           <div className={s.hiddenPicker}>
@@ -368,6 +402,9 @@ export default function StandingsField({
               allowedModels={["teams"]}
               placeholder="Add Team to Table..."
               disabled={disabled}
+              filters={filters}
+              excludeIds={excludeIds}
+              triggerRef={pickerRef}
             />
           </div>
         </div>

@@ -22,6 +22,9 @@ interface ReferenceFieldProps {
   required?: boolean
   disabled?: boolean
   placeholder?: string
+  filters?: Record<string, Record<string, unknown>>
+  excludeIds?: string[]
+  triggerRef?: React.RefObject<HTMLDivElement | null>
 }
 
 interface RecordPreview {
@@ -49,6 +52,9 @@ export default function ReferenceField({
   required,
   disabled,
   placeholder = "Select records...",
+  filters,
+  excludeIds,
+  triggerRef,
 }: ReferenceFieldProps) {
   const { accessToken } = useAuth()
   const id = React.useId()
@@ -116,7 +122,7 @@ export default function ReferenceField({
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ models: allowedModels }),
+        body: JSON.stringify({ models: allowedModels, filters, excludeIds }),
       })
       if (response.ok) {
         const data = await response.json()
@@ -177,7 +183,7 @@ export default function ReferenceField({
       fieldNote={fieldNote}
       required={required}
     >
-      <div className={s.referenceContainer}>
+      <div className={s.referenceContainer} ref={triggerRef}>
         <div
           className={`${s.selectionArea} ${disabled ? s.disabled : ""}`}
           onClick={() => !disabled && setIsModalOpen(true)}

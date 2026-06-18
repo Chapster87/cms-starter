@@ -46,12 +46,11 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
+- [ ] **Dynamic Record Table Columns:** Allow other columns form the table to be selected for display on the Record List page.
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [ ] **Dynamic Permission Management:** CMS UI for editing what Roles can do.
-- [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
+- [ ] **Choose What Colums to show in Linked Record Selector**
 
 ### 3. Future Roadmap
 
@@ -60,6 +59,9 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup. Make note of tables that should exist by default(models, authors, fields, model_groups, users, audit_logs, media_assets, etc) and what columns they should start with (perhaps using our existing database to populate this list). Need to create a admin account by default during init.
 - [ ] **Environment Tooling:** Tooling for migrating model definitions between development and production environments.
 - [ ] **Implement "View-As" Control** Allow Admin user roles to view CMS as other roles to assist in debugging/permission audits.
+- [ ] **Dynamic Permission Management:** CMS UI for editing what Roles can do.
+- [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
+- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 
 ### 4. Completed Items
 

@@ -17,7 +17,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { models: allowedModelIds } = body
+    const { models: allowedModelIds, filters, excludeIds } = body
+
+    console.log("List API Request:", { allowedModelIds, filters, excludeIds })
 
     if (
       !allowedModelIds ||
@@ -75,6 +77,7 @@ export async function POST(req: NextRequest) {
         let displayColumn = "id"
         let subtitleColumn: string | null = null
         const selectFields = ["id"]
+        let typedColumns: Array<{ column_name: string; data_type: string }> = []
 
         if (tableName === "users") {
           displayColumn = "display_name"
@@ -91,7 +94,7 @@ export async function POST(req: NextRequest) {
             return []
           }
 
-          const typedColumns =
+          typedColumns =
             (columns as Array<{ column_name: string; data_type: string }>) || []
           const columnNames = typedColumns.map((c) => c.column_name)
 
@@ -142,10 +145,57 @@ export async function POST(req: NextRequest) {
           selectFields.push("_draft")
         }
 
-        const { data, error } = await systemClient
-          .from(tableName)
-          .select(selectFields.join(","))
-          .limit(100)
+        let query = systemClient.from(tableName).select(selectFields.join(","))
+
+        if (excludeIds && Array.isArray(excludeIds) && excludeIds.length > 0) {
+          query = query.not("id", "in", `(${excludeIds.join(",")})`)
+        }
+
+        if (filters) {
+          // Check for filters keyed by model UUID, physical table name, or friendly name
+          const modelFilters =
+            filters[modelId] || filters[tableName] || filters[friendlyName]
+          if (modelFilters) {
+            Object.entries(modelFilters).forEach(([col, val]) => {
+              if (val !== undefined && val !== null && val !== "") {
+                const colInfo = typedColumns?.find((c) => c.column_name === col)
+                const isJson = colInfo?.data_type === "jsonb"
+
+                // Handle various array scenarios (e.g. [uuid], or just uuid)
+                const rawVal = Array.isArray(val) ? val.flat() : [val]
+                const cleanVals = rawVal.filter(
+                  (v) => v !== null && v !== "" && v !== undefined
+                )
+
+                if (cleanVals.length > 0) {
+                  const isUuid = colInfo?.data_type === "uuid"
+                  const isText =
+                    colInfo?.data_type?.includes("text") ||
+                    colInfo?.data_type?.includes("char")
+
+                  if (isJson || col === "league" || col === "divison") {
+                    // We need to use PostgREST .cs. syntax directly in an .or() or similar
+                    // if .contains() is still causing JSON syntax errors due to how
+                    // Supabase JS maps arrays to JSONB for non-explicitly-jsonb columns.
+                    // Let's try the direct OR filter with JSON strings.
+                    const orParts = cleanVals.map((v) => {
+                      const jsonV = JSON.stringify(v)
+                      // This matches the ["uuid"] structure normalized in the DB
+                      return `${col}.cs.[${jsonV}]`
+                    })
+                    query = query.or(orParts.join(","))
+                  } else if (isUuid || isText) {
+                    query = query.in(col, cleanVals)
+                  } else {
+                    query = query.in(col, cleanVals)
+                  }
+                }
+              }
+            })
+          }
+        }
+
+        const { data, error } = await query.limit(100)
 
         if (error) {
           console.error(`Error listing table ${tableName}:`, error)

@@ -228,6 +228,16 @@ export default function RecordForm({
     schema.forEach((field) => {
       const val = cleanData[field.field_name]
 
+      // Force relationship fields on 'teams' model to stay as arrays for jsonb compatibility
+      if (
+        model === "teams" &&
+        (field.field_name === "league" || field.field_name === "divison")
+      ) {
+        if (val && !Array.isArray(val)) {
+          cleanData[field.field_name] = [val]
+        }
+      }
+
       // 1. Unwrap stringified media/json fields
       if (
         (field.field_type === "media" || field.field_type === "json") &&
@@ -528,12 +538,24 @@ export default function RecordForm({
         }
 
         if (field.field_type === "standings_table") {
+          // Resolve dependency values. We look for 'league' and 'division' columns.
+          // In ReferenceField, the value is often an array (e.g., [uuid]).
+          const leagueId = formData["league"] as string | string[] | undefined
+          const divisionId = formData["division"] as
+            | string
+            | string[]
+            | undefined
+
           return (
             <StandingsField
               key={field.field_name}
               {...commonProps}
               value={(formData[field.field_name] as string) || []}
               onChange={(val: unknown) => handleChange(field.field_name, val)}
+              leagueId={Array.isArray(leagueId) ? leagueId[0] : leagueId}
+              divisionId={
+                Array.isArray(divisionId) ? divisionId[0] : divisionId
+              }
             />
           )
         }
@@ -560,7 +582,7 @@ export default function RecordForm({
         }}
       >
         <Button type="submit" isLoading={isLoading} disabled={isLoading}>
-          {id ? "Save Changes" : `Create Author`}
+          {id ? "Save Changes" : "Create Record"}
         </Button>
       </div>
     </form>
