@@ -1,0 +1,119 @@
+/* Popover Content Styles */
+.popoverContent {
+  background-color: var(--color-white);
+  border: 1px solid var(--color-grey-200);
+  border-radius: 8px;
+  box-shadow:
+    0 10px 38px -10px rgba(22, 23, 24, 0.35),
+    0 10px 20px -15px rgba(22, 23, 24, 0.2);
+  width: 240px;
+  z-index: 100;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.popoverHeader {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--color-grey-100);
+}
+
+.popoverHeader h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-grey-700);
+}
+
+.fieldList {
+  padding: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.fieldItemWrapper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.fieldItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 4px;
+  border: none;
+  background: none;
+  flex: 1;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.fieldItem:hover {
+  background-color: var(--color-grey-100);
+}
+
+.fieldCheck {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+}
+
+.fieldName {
+  font-size: 13px;
+  color: var(--color-grey-700);
+}
+
+.popoverArrow {
+  fill: var(--color-white);
+}
+
+.orderActions {
+  display: flex;
+  gap: 2px;
+  padding-right: 4px;
+}
+
+.orderButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid var(--color-grey-200);
+  background: var(--color-white);
+  color: var(--color-grey-500);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.orderButton:hover:not(:disabled) {
+  background-color: var(--color-grey-50);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.orderButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.separator {
+  height: 1px;
+  background-color: var(--color-grey-100);
+  margin: 4px 0;
+}
+
+.triggerButton {
+  margin-right: 4px;
+}

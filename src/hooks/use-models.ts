@@ -21,6 +21,7 @@ export interface ModelRegistryEntry {
   is_singleton: boolean
   has_draft_mode: boolean
   display_order: number
+  list_columns?: string[] | null
 }
 
 interface GlobalModelState {

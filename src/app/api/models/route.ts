@@ -217,6 +217,7 @@ export async function PATCH(req: NextRequest) {
       has_draft_mode,
       emoji,
       group_id,
+      list_columns,
     } = await req.json()
 
     if (!table_name) {
@@ -236,15 +237,18 @@ export async function PATCH(req: NextRequest) {
     const wasDraftModeEnabled = existingModel?.has_draft_mode || false
 
     // 2. Update metadata in registry
+    const updatePayload: Record<string, unknown> = {}
+    if (friendly_name !== undefined) updatePayload.friendly_name = friendly_name
+    if (is_singleton !== undefined) updatePayload.is_singleton = is_singleton
+    if (has_draft_mode !== undefined)
+      updatePayload.has_draft_mode = has_draft_mode
+    if (emoji !== undefined) updatePayload.emoji = emoji
+    if (group_id !== undefined) updatePayload.group_id = group_id
+    if (list_columns !== undefined) updatePayload.list_columns = list_columns
+
     const { error: registryUpdateError } = await authenticatedSupabase
       .from("models")
-      .update({
-        friendly_name,
-        is_singleton,
-        has_draft_mode,
-        emoji: emoji || null,
-        group_id: group_id || null,
-      })
+      .update(updatePayload)
       .eq("table_name", table_name)
 
     if (registryUpdateError) {

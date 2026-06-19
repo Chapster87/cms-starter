@@ -25,23 +25,32 @@ export const NAME_DISCOVERY_FIELDS = [
 export function getRecordDisplayName(
   record: RecordBase | null | undefined,
   modelFriendlyName?: string,
-  isSingleton?: boolean
+  isSingleton?: boolean,
+  listColumns?: string[] | null
 ): string {
   if (!record) return modelFriendlyName || "Record"
 
-  // 1. Try common name fields
+  // 1. Try explicit list columns first (the first one)
+  if (listColumns && listColumns.length > 0) {
+    const firstCol = listColumns[0]
+    if (record[firstCol] != null) {
+      return String(record[firstCol])
+    }
+  }
+
+  // 2. Try common name fields
   for (const field of NAME_DISCOVERY_FIELDS) {
     if (record[field] && typeof record[field] === "string") {
       return record[field] as string
     }
   }
 
-  // 2. If it's a singleton and we have a model friendly name, use it as the definitive title
+  // 3. If it's a singleton and we have a model friendly name, use it as the definitive title
   if (isSingleton && modelFriendlyName) {
     return modelFriendlyName
   }
 
-  // 3. Fallback: look for the first string field that isn't a system field
+  // 4. Fallback: look for the first string field that isn't a system field
   const systemFields = [
     "id",
     "created_at",
@@ -60,7 +69,7 @@ export function getRecordDisplayName(
     }
   }
 
-  // 4. Final fallback to slug or truncated ID
+  // 5. Final fallback to slug or truncated ID
   if (record.slug && typeof record.slug === "string") {
     return record.slug
   }

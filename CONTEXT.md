@@ -7,7 +7,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 ## Architectural Principles
 
 - **Separation of Concerns:** Routes are split into `/editor` (Content Management/Record editing) and `/schema` (Model & Table Definitions).
-- **Metadata-Driven Architecture:** Field types, labels, validation, and UI ordering are stored in a `fields` registry and utilized by a dynamic form engine (`RecordForm`).
+- **Metadata-Driven Architecture:** Field types, labels, validation, and UI ordering are stored in a `fields` registry and utilized by a dynamic form engine (`RecordForm`). See [SCHEMA.md](./SCHEMA.md) for detailed database registry structure.
 - **Native Supabase Integration:** Uses the native Supabase client (PostgREST via `dataService`) for reliable data operations and `SECURITY DEFINER` RPCs for schema-modifying operations.
 - **SQL Execution:** A specialized `exec_sql(sql text)` RPC is available for advanced schema migrations and direct table manipulation when standard PostgREST or specific RPCs are insufficient. Direct SQL access (e.g., `psql`) is generally avoided in favor of this RPC to maintain consistency with the application's security model.
 - **Supabase SSR & Middleware:** Implements `@supabase/ssr` for robust authentication. Uses Next.js Middleware to automatically refresh sessions and synchronize tokens with cookies, preventing "Refresh Token Not Found" errors.
@@ -46,7 +46,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Dynamic Record Table Columns:** Allow other columns form the table to be selected for display on the Record List page.
+- [ ] **Choose What Colums to show in Linked Record Selector**
 
 ### 2. Next Steps (In Progress/Upcoming)
 
@@ -65,6 +65,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 4. Completed Items
 
+- [x] **Dynamic Record Table Columns:** Empowered users to configure which fields from a model appear as columns in the record list view. Features include bulk reference resolution, borderless media previews with `next/image`, and interactive reordering via a Gear utility in the header.
 - [x] **Field-Specific Settings:**
   - Implemented a Radix Tabs interface (Basic, Validation, Appearance) in the Field Modal.
   - Added advanced numeric settings: Min, Max, Step.

@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback, use } from "react"
+import { useState, useEffect, useCallback, use, useMemo } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { dataService, RecordBase } from "@/client/data-service"
 import Button from "@/components/button"
@@ -11,6 +12,9 @@ import { getRecordDisplayName } from "@/helpers/record-helpers"
 import ContextMenu from "@/components/context-menu"
 import { useUsers } from "@/hooks/use-users"
 import { Edit2, Trash2 } from "lucide-react"
+import ColumnSettings from "./_components/column-settings"
+import { CMSField } from "@/types/fields"
+import { MediaAsset } from "@/types/media"
 import s from "./style.module.css"
 
 interface RecordListPageProps {
@@ -26,34 +30,110 @@ export default function RecordListPage({ params }: RecordListPageProps) {
   const { model: modelSlug } = use(params)
   const router = useRouter()
   const { accessToken, loading: authLoading } = useAuth()
-  const { models } = useModels()
+  const { models, refresh: refreshModels } = useModels()
   const { users } = useUsers()
   const [records, setRecords] = useState<RecordBase[]>([])
+  const [fields, setFields] = useState<CMSField[]>([])
+  const [resolvedReferences, setResolvedReferences] = useState<
+    Record<string, string>
+  >({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const modelData = models.find((m) => m.slug === modelSlug) || null
 
   const loadRecords = useCallback(async () => {
-    if (!modelSlug) return
+    if (!modelSlug || !accessToken) return
 
     setLoading(true)
     setError(null)
     try {
-      const fetchedRecords = await dataService.getRecords(modelSlug)
+      const [fetchedRecords, fieldsRes] = await Promise.all([
+        dataService.getRecords(modelSlug),
+        fetch(`/api/models/schema/fields?table=${modelSlug}`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }),
+      ])
+
       setRecords(fetchedRecords)
+
+      if (fieldsRes.ok) {
+        const fieldsData: CMSField[] = await fieldsRes.json()
+        setFields(fieldsData)
+
+        // Bulk resolve references
+        const referenceFields = fieldsData.filter(
+          (f) => f.field_type === "reference"
+        )
+        if (referenceFields.length > 0) {
+          const refsToFetch: Record<string, string[]> = {}
+
+          fetchedRecords.forEach((rec) => {
+            referenceFields.forEach((f) => {
+              const val = rec[f.field_name]
+              if (val) {
+                // If it's a string, use it directly as the ID
+                // If it's an object with id (rare for this CMS but good for safety), use .id
+                const ids = Array.isArray(val)
+                  ? (val as string[])
+                  : [val as string]
+
+                // Use the configured allowed_models from field settings
+                const allowedModels = f.settings.allowed_models || []
+                allowedModels.forEach((targetModel) => {
+                  if (!refsToFetch[targetModel]) refsToFetch[targetModel] = []
+                  ids.forEach((id) => {
+                    if (
+                      typeof id === "string" &&
+                      !refsToFetch[targetModel].includes(id)
+                    ) {
+                      refsToFetch[targetModel].push(id)
+                    }
+                  })
+                })
+              }
+            })
+          })
+
+          const allRefPromises = Object.entries(refsToFetch).map(
+            async ([mSlug, ids]) => {
+              const res = await fetch(`/api/records/list`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
+                body: JSON.stringify({ models: [mSlug], filters: { id: ids } }),
+              })
+              if (res.ok) {
+                const data: Array<{ id: string; display_name: string }> =
+                  await res.json()
+                return data
+              }
+              return []
+            }
+          )
+
+          const resolvedResults = await Promise.all(allRefPromises)
+          const newResolved: Record<string, string> = {}
+          resolvedResults.flat().forEach((item) => {
+            newResolved[item.id] = item.display_name
+          })
+          setResolvedReferences((prev) => ({ ...prev, ...newResolved }))
+        }
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error loading records"
       setError(msg)
     } finally {
       setLoading(false)
     }
-  }, [modelSlug])
+  }, [modelSlug, accessToken])
 
   useEffect(() => {
     if (!authLoading && accessToken) {
       const timer = setTimeout(() => {
-        loadRecords()
+        void loadRecords()
       }, 0)
       return () => clearTimeout(timer)
     }
@@ -87,9 +167,64 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     return getRecordDisplayName(
       record,
       modelData?.friendly_name,
-      modelData?.is_singleton
+      modelData?.is_singleton,
+      modelData?.list_columns
     )
   }
+
+  const handleUpdateColumns = async (newColumns: string[]) => {
+    if (!modelData || !accessToken) return
+
+    try {
+      const res = await fetch("/api/models", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          table_name: modelData.table_name,
+          list_columns: newColumns,
+        }),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || "Failed to update columns")
+      }
+
+      await refreshModels()
+    } catch (err: unknown) {
+      alert(err instanceof Error ? err.message : "Failed to update columns")
+    }
+  }
+
+  // Determine which columns to show
+  const activeColumns = useMemo(() => {
+    const listColumns = modelData?.list_columns
+    if (listColumns && listColumns.length > 0) {
+      return listColumns.map((colName) => {
+        const field = fields.find((f) => f.field_name === colName)
+        return {
+          name: colName,
+          label: field?.field_label || colName,
+          isReference: field?.field_type === "reference",
+        }
+      })
+    }
+
+    // Default columns
+    const firstField = fields.find((f) => !f.is_system)
+    const cols = []
+    if (firstField) {
+      cols.push({
+        name: firstField.field_name,
+        label: firstField.field_label,
+        isReference: firstField.field_type === "reference",
+      })
+    }
+    return cols
+  }, [modelData, fields])
 
   if (loading || authLoading) {
     return (
@@ -180,6 +315,14 @@ export default function RecordListPage({ params }: RecordListPageProps) {
           </h1>
         </div>
         <div className={s.actions}>
+          {modelData && (
+            <ColumnSettings
+              model={modelData}
+              fields={fields}
+              onUpdate={handleUpdateColumns}
+            />
+          )}
+
           {(!modelData?.is_singleton || records.length === 0) && (
             <Link
               href={
@@ -220,7 +363,9 @@ export default function RecordListPage({ params }: RecordListPageProps) {
         <table className={s.table}>
           <thead>
             <tr>
-              <th>Name</th>
+              {activeColumns.map((col) => (
+                <th key={col.name}>{col.label}</th>
+              ))}
               {modelData && modelData.has_draft_mode && (
                 <th style={{ width: "100px" }}>Status</th>
               )}
@@ -237,43 +382,112 @@ export default function RecordListPage({ params }: RecordListPageProps) {
 
               return (
                 <tr key={record.id}>
-                  <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      {modelData && modelData.has_draft_mode && (
-                        <div className={s.statusDots}>
-                          {isPublished ? (
-                            <span
-                              className={`${s.statusDot} ${s.published}`}
-                              title="Published"
-                            />
+                  {activeColumns.map((col, idx: number) => {
+                    const val = record[col.name]
+                    const field = fields.find((f) => f.field_name === col.name)
+                    const isMedia = field?.field_type === "media"
+
+                    const cellContent = (
+                      <>
+                        {val === null || val === undefined ? (
+                          "-"
+                        ) : col.isReference ? (
+                          Array.isArray(val) ? (
+                            (val as string[])
+                              .map((id) => resolvedReferences[id] || id)
+                              .join(", ")
                           ) : (
-                            <span
-                              className={`${s.statusDot} ${s.draft}`}
-                              title="Draft"
-                            />
-                          )}
-                          {isChanged && (
-                            <span
-                              className={`${s.statusDot} ${s.changed}`}
-                              title="Unpublished Changes"
-                            />
-                          )}
-                        </div>
-                      )}
-                      <Link
-                        href={`/editor/${modelSlug}/${record.slug || record.id}`}
-                        className={s.recordName}
-                      >
-                        {getDisplayName(record)}
-                      </Link>
-                    </div>
-                  </td>
+                            resolvedReferences[val as string] || (val as string)
+                          )
+                        ) : isMedia ? (
+                          <div style={{ display: "flex", gap: "4px" }}>
+                            {(Array.isArray(val)
+                              ? (val as MediaAsset[])
+                              : [val as MediaAsset]
+                            ).map((asset, i) => (
+                              <div
+                                key={i}
+                                style={{
+                                  position: "relative",
+                                  width: "32px",
+                                  height: "32px",
+                                  borderRadius: "4px",
+                                  overflow: "hidden",
+                                }}
+                              >
+                                <Image
+                                  src={
+                                    (
+                                      asset as unknown as {
+                                        secure_url?: string
+                                      }
+                                    ).secure_url || asset.url
+                                  }
+                                  alt=""
+                                  fill
+                                  sizes="32px"
+                                  style={{ objectFit: "cover" }}
+                                  unoptimized // External CMS assets often need this unless loader configured
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        ) : typeof val === "object" ? (
+                          JSON.stringify(val)
+                        ) : (
+                          String(val)
+                        )}
+                      </>
+                    )
+
+                    if (idx === 0) {
+                      return (
+                        <td key={col.name}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                            }}
+                          >
+                            {modelData && modelData.has_draft_mode && (
+                              <div className={s.statusDots}>
+                                {isPublished ? (
+                                  <span
+                                    className={`${s.statusDot} ${s.published}`}
+                                    title="Published"
+                                  />
+                                ) : (
+                                  <span
+                                    className={`${s.statusDot} ${s.draft}`}
+                                    title="Draft"
+                                  />
+                                )}
+                                {isChanged && (
+                                  <span
+                                    className={`${s.statusDot} ${s.changed}`}
+                                    title="Unpublished Changes"
+                                  />
+                                )}
+                              </div>
+                            )}
+                            <Link
+                              href={`/editor/${modelSlug}/${record.slug || record.id}`}
+                              className={s.recordName}
+                            >
+                              {cellContent}
+                            </Link>
+                          </div>
+                        </td>
+                      )
+                    }
+
+                    return (
+                      <td key={col.name} className={s.dateCell}>
+                        {cellContent}
+                      </td>
+                    )
+                  })}
                   {modelData && modelData.has_draft_mode && (
                     <td className={s.dateCell}>
                       <span
