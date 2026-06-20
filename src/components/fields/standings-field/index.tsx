@@ -130,7 +130,7 @@ export default function StandingsField({
     return {
       teams: {
         league: leagueId,
-        divison: divisionId,
+        division: divisionId,
       },
     }
   }, [leagueId, divisionId, isFilterReady])

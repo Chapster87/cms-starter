@@ -173,15 +173,13 @@ export async function POST(req: NextRequest) {
                     colInfo?.data_type?.includes("text") ||
                     colInfo?.data_type?.includes("char")
 
-                  if (isJson || col === "league" || col === "divison") {
-                    // We need to use PostgREST .cs. syntax directly in an .or() or similar
-                    // if .contains() is still causing JSON syntax errors due to how
-                    // Supabase JS maps arrays to JSONB for non-explicitly-jsonb columns.
-                    // Let's try the direct OR filter with JSON strings.
-                    const orParts = cleanVals.map((v) => {
+                  if (isJson || col === "league" || col === "division") {
+                    // Reverting to working array containment logic
+                    const orParts: string[] = []
+                    cleanVals.forEach((v) => {
                       const jsonV = JSON.stringify(v)
-                      // This matches the ["uuid"] structure normalized in the DB
-                      return `${col}.cs.[${jsonV}]`
+                      // This produces: column.cs.["uuid"]
+                      orParts.push(`${col}.cs.[${jsonV}]`)
                     })
                     query = query.or(orParts.join(","))
                   } else if (isUuid || isText) {

@@ -231,7 +231,7 @@ export default function RecordForm({
       // Force relationship fields on 'teams' model to stay as arrays for jsonb compatibility
       if (
         model === "teams" &&
-        (field.field_name === "league" || field.field_name === "divison")
+        (field.field_name === "league" || field.field_name === "division")
       ) {
         if (val && !Array.isArray(val)) {
           cleanData[field.field_name] = [val]
@@ -252,11 +252,22 @@ export default function RecordForm({
       }
 
       // 2. Unwrap single-reference fields (Postgres expects UUID, not UUID[])
+      // EXCEPT for teams model where league/division must remain arrays
       if (field.field_type === "reference") {
         const settings = (field.settings || {}) as Record<string, unknown>
         const isMultiple =
           settings.multiple === true || settings.allow_multiple === true
-        if (!isMultiple && Array.isArray(val) && val.length > 0) {
+
+        const isTeamsSpecialField =
+          model === "teams" &&
+          (field.field_name === "league" || field.field_name === "division")
+
+        if (
+          !isMultiple &&
+          !isTeamsSpecialField &&
+          Array.isArray(val) &&
+          val.length > 0
+        ) {
           cleanData[field.field_name] = val[0]
         }
       }

@@ -111,6 +111,7 @@ export const generateSchema = async () => {
       case "seo_metadata":
       case "modular_content":
       case "navigation":
+      case "standings_table":
         return GraphQLJSON
       case "select":
         return GraphQLString
@@ -280,6 +281,7 @@ export const generateSchema = async () => {
                     "seo_metadata",
                     "modular_content",
                     "navigation",
+                    "standings_table",
                   ].includes(field.field_type)
                     ? parseJsonValue(val)
                     : val
