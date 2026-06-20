@@ -145,7 +145,8 @@ export async function POST(req: NextRequest) {
           selectFields.push("_draft")
         }
 
-        let query = systemClient.from(tableName).select(selectFields.join(","))
+        // Fetch all columns to ensure we have the full record data
+        let query = systemClient.from(tableName).select("*")
 
         if (excludeIds && Array.isArray(excludeIds) && excludeIds.length > 0) {
           query = query.not("id", "in", `(${excludeIds.join(",")})`)
@@ -213,6 +214,7 @@ export async function POST(req: NextRequest) {
           model_id: modelId,
           status: hasDraftMode ? (record.status as string) : undefined,
           has_draft: hasDraftMode ? record._draft !== null : false,
+          raw_data: record,
         }))
       })
     )

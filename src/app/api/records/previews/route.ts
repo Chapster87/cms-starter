@@ -137,9 +137,10 @@ export async function POST(req: NextRequest) {
           selectFields.push("_draft")
         }
 
+        // Fetch all columns to ensure we have the full record data
         const { data, error } = await systemClient
           .from(model.table_name)
-          .select(selectFields.join(", "))
+          .select("*")
           .in("id", ids)
 
         if (error) {
@@ -160,6 +161,7 @@ export async function POST(req: NextRequest) {
           model_id: model.id,
           status: model.has_draft_mode ? (record.status as string) : undefined,
           has_draft: model.has_draft_mode ? record._draft !== null : false,
+          raw_data: record,
         }))
       })
     )

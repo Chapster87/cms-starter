@@ -35,6 +35,7 @@ interface RecordPreview {
   model_id?: string
   status?: string
   has_draft?: boolean
+  raw_data?: Record<string, unknown>
 }
 
 /**

@@ -18,6 +18,7 @@ import s from "./style.module.css"
 interface StandingRow {
   team_id: string
   team_name: string
+  team_logo?: unknown
   is_focused?: boolean
   gp: number
   w: number
@@ -39,6 +40,7 @@ interface RecordPreview {
   model_id?: string
   status?: string
   has_draft?: boolean
+  raw_data?: Record<string, unknown>
 }
 
 interface StandingsFieldProps {
@@ -96,9 +98,12 @@ export default function StandingsField({
     // Check if team already exists
     if (rows.find((r) => r.team_id === record.id)) return
 
+    console.log("Adding team to standings:", record)
+
     const newRow: StandingRow = {
       team_id: record.id,
       team_name: record.display_name,
+      team_logo: record.raw_data?.logo || record.raw_data?.team_logo,
       gp: 0,
       w: 0,
       l: 0,
