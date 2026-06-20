@@ -46,11 +46,12 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Choose What Colums to show in Linked Record Selector**
+- [ ] **Linked Record Selection Customization:** Empower users to configure which columns appear in the Reference/Linked Record selection modal. Currently, it defaults to a standard set (name, title, etc.).
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [ ] **Choose What Colums to show in Linked Record Selector**
+- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
+- [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
 
 ### 3. Future Roadmap
 
@@ -123,6 +124,10 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Integrated Cloudinary Media Library Widget for account-wide asset browsing.
   - Developed Registry Sync tool for Cloudinary alignment.
   - Updated GraphQL CDA to resolve media IDs into full metadata objects.
+- [x] **Robust GraphQL Filtering**:
+  - Resolved "relationship schema cache" errors in PostgREST by implementing a two-step recursive filtering engine.
+  - Added support for complex nested relationship filtering (e.g., `where: { league: { slug: "..." } }`).
+  - Implemented automatic JSONB quoting for reference column filtering.
 
 ## Glossary
 

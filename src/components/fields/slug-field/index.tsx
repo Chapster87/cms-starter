@@ -59,9 +59,15 @@ export default function SlugField({
       .replace(trimRegex, "") // Trim separators from ends
   }
 
-  // Sync with sourceValue if not touched
+  // Sync with sourceValue if not touched AND the field is currently empty.
+  // This prevents the slugifier from "correcting" existing slugs in the DB on load.
   useEffect(() => {
-    if (!isTouched && sourceValue !== undefined && sourceValue !== "") {
+    if (
+      !isTouched &&
+      !value &&
+      sourceValue !== undefined &&
+      sourceValue !== ""
+    ) {
       const newSlug = slugify(sourceValue)
       if (newSlug !== value) {
         onChange(newSlug)

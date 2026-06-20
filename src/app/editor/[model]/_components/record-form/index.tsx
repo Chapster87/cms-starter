@@ -427,13 +427,14 @@ export default function RecordForm({
           )
         }
 
-        if (field.field_type === "seo_slug") {
+        if (field.field_type === "seo_slug" || field.field_name === "slug") {
           // Attempt to find a "source" field for the slug (like 'title' or 'name')
           const sourceField = schema.find(
             (f) =>
               f.field_name === "title" ||
               f.field_name === "name" ||
-              f.field_label.toLowerCase() === "title"
+              f.field_label.toLowerCase() === "title" ||
+              f.field_label.toLowerCase() === "name"
           )
           const sourceValue = sourceField
             ? (formData[sourceField.field_name] as string)

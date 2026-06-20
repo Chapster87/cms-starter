@@ -46,8 +46,11 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
 
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
 
+  // Use the actual table name from the registry if available
+  const targetTable = modelData?.table_name || model || ""
+
   const loadRecord = useCallback(async () => {
-    if (!model || !id) return
+    if (!targetTable || !id) return
 
     setLoading(true)
     setError(null)
@@ -61,15 +64,15 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
 
       if (isUuid) {
         // If it looks like a UUID, try ID first to avoid noisy 400 errors if 'slug' doesn't exist
-        data = await dataService.getRecordById(model, id)
+        data = await dataService.getRecordById(targetTable, id)
         if (!data) {
-          data = await dataService.getRecordBySlug(model, id)
+          data = await dataService.getRecordBySlug(targetTable, id)
         }
       } else {
         // If not a UUID, it must be a slug
-        data = await dataService.getRecordBySlug(model, id)
+        data = await dataService.getRecordBySlug(targetTable, id)
         if (!data) {
-          data = await dataService.getRecordById(model, id)
+          data = await dataService.getRecordById(targetTable, id)
         }
       }
 
@@ -105,7 +108,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
 
   const handleAutoSave = useCallback(
     (formData: Record<string, unknown>) => {
-      if (!model || !record?.id || !modelData?.has_draft_mode) return
+      if (!targetTable || !record?.id || !modelData?.has_draft_mode) return
 
       if (autoSaveTimerRef.current) {
         clearTimeout(autoSaveTimerRef.current)
@@ -116,7 +119,12 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
         try {
           const isFirstDraft = !record?._draft
           const modelId = modelData?.id
-          await dataService.autoSaveRecord(model, record.id, formData, modelId)
+          await dataService.autoSaveRecord(
+            targetTable,
+            record.id,
+            formData,
+            modelId
+          )
           // Optimistically update local record state to show "Changed" status immediately
           editorStore.setRecord(
             record ? { ...record, _draft: formData } : record
@@ -139,16 +147,26 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
   )
 
   const handlePublish = async (formData: Record<string, unknown>) => {
-    if (!model || !record?.id) return
+    if (!targetTable || !record?.id) return
 
     setLoading(true)
     setError(null)
     try {
       const modelId = modelData?.id
       if (modelData?.has_draft_mode) {
-        await dataService.publishRecord(model, record.id, formData, modelId)
+        await dataService.publishRecord(
+          targetTable,
+          record.id,
+          formData,
+          modelId
+        )
       } else {
-        await dataService.updateRecord(model, record.id, formData, modelId)
+        await dataService.updateRecord(
+          targetTable,
+          record.id,
+          formData,
+          modelId
+        )
       }
       toast.success("Record published", "Your changes are now live.")
       await loadRecord()
@@ -163,13 +181,13 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
   }
 
   const handleDiscard = async () => {
-    if (!model || !record?.id) return
+    if (!targetTable || !record?.id) return
     if (!confirm("Are you sure you want to discard all unpublished changes?"))
       return
 
     setLoading(true)
     try {
-      await dataService.discardChanges(model, record.id)
+      await dataService.discardChanges(targetTable, record.id)
       await loadRecord()
       toast.success("Changes discarded", "Draft has been reset.")
     } catch (err: unknown) {
@@ -183,7 +201,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
   }
 
   const handleUnpublish = async () => {
-    if (!model || !record?.id) return
+    if (!targetTable || !record?.id) return
     if (
       !confirm(
         "Are you sure you want to unpublish this record? It will no longer be visible on the live site."
@@ -194,7 +212,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
     setLoading(true)
     try {
       const modelId = modelData?.id
-      await dataService.unpublishRecord(model, record.id, modelId)
+      await dataService.unpublishRecord(targetTable, record.id, modelId)
       await loadRecord()
       toast.success(
         "Record unpublished",
@@ -211,7 +229,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
   }
 
   const handleDelete = async () => {
-    if (!model || !record?.id) return
+    if (!targetTable || !record?.id) return
     if (
       !confirm(
         "Are you sure you want to delete this record? This action cannot be undone."
@@ -221,7 +239,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
 
     setLoading(true)
     try {
-      await dataService.deleteRecord(model, record.id)
+      await dataService.deleteRecord(targetTable, record.id)
       toast.success("Record deleted", "The record has been removed.")
       router.push(`/editor/${model}`)
     } catch (err: unknown) {
@@ -334,7 +352,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
       {record && (
         <RecordForm
           id="record-form"
-          model={model}
+          model={targetTable}
           initialData={workingData || undefined}
           onSubmit={handlePublish}
           onAutoSave={handleAutoSave}

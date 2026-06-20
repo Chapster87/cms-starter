@@ -113,6 +113,53 @@ query {
 }
 ```
 
+---
+
+## 3. Filtering (The `where` Argument)
+
+The CDA supports industry-standard nested filtering on all collection queries via the `where` argument. This allows you to filter records based on their own fields or the fields of their related records.
+
+### Basic Filtering
+
+Filter by a direct field on the model:
+
+```graphql
+query {
+  teamsCollection(where: { short_name: "MLR" }) {
+    edges {
+      node {
+        team_name
+      }
+    }
+  }
+}
+```
+
+### Nested Filtering (Relational)
+
+You can filter based on fields in a related model (e.g., finding teams that belong to a specific league). The CDA automatically handles the necessary database joins.
+
+```graphql
+query {
+  standingsCollection(
+    where: { league: { short_name: "MLR" }, season: { year: 2024 } }
+  ) {
+    edges {
+      node {
+        league_standings
+        league {
+          name
+        }
+      }
+    }
+  }
+}
+```
+
+### Technical Note: Type Safety
+
+The `where` argument is type-safe. Each model has a corresponding `FilterInput` type (e.g., `TeamsFilterInput`) generated automatically based on its fields.
+
 ### Media Assets
 
 Media fields return a structured object instead of a raw JSON string.
@@ -135,7 +182,7 @@ query {
 
 ---
 
-## 3. External Project Implementation
+## 4. External Project Implementation
 
 To use this CMS in another project (like a rugby website or mobile app), follow these steps:
 
@@ -269,7 +316,7 @@ export default async function PreviewPage({ params }) {
 
 ---
 
-## 4. Security & API Keys
+## 5. Security & API Keys
 
 The Content Delivery API is protected by a secret token to prevent unauthorized access.
 
@@ -291,7 +338,7 @@ echo "CMS_API_TOKEN=cms_sk_v1_$([guid]::NewGuid().ToString().Replace('-', ''))"
 
 ---
 
-## 5. Troubleshooting
+## 6. Troubleshooting
 
 - **401 Unauthorized**: Ensure the `x-api-key` header matches the `CMS_API_TOKEN` exactly.
 - **"Type Query must define one or more fields"**: This occurs if the `models` table in Supabase is empty. Add at least one model to fix.

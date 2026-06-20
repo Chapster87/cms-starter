@@ -1,21 +1,25 @@
 # SQL Execution Guidelines
 
-When executing SQL against the Supabase management layer via the `exec_sql` RPC, follow these rules to ensure consistency and bypass PowerShell escaping issues on Windows:
+> [!IMPORTANT]
+> **DO NOT attempt to execute SQL commands via the terminal (Node.js, curl, or psql) in this environment.**
+> Previous attempts have consistently failed due to Windows/PowerShell escaping issues and environment-specific execution restrictions.
 
-## Use Node.js for SQL Execution
+## Recommended Workflow for Database Changes
 
-Instead of using `curl` directly in the terminal (which often fails due to complex nested escaping in PowerShell), use a small Node.js script to handle the request. This ensures that the SQL string is correctly JSON-encoded without shell interference.
+1. **Use the Supabase Dashboard**: Perform all schema modifications (adding columns, changing types, RLS policies) and direct SQL queries through the **Supabase SQL Editor** in your web browser.
+2. **Verify via Code/API**: Instead of querying the database from the CLI, verify your changes by:
+   - Checking the CMS Metadata Registry (`SCHEMA.md` or `public.models` table via API).
+   - Testing the relevant API endpoints (e.g., `/api/models/schema`).
+   - Observing the behavior in the CMS Editor.
 
-### Example Template
+## Why CLI Execution is Forbidden
 
-```bash
-node -e "const https = require('https'); const data = JSON.stringify({ sql: \`YOUR_SQL_HERE\` }); const options = { hostname: 'knqlsiuhdcflazlnefob.supabase.co', path: '/rest/v1/rpc/exec_sql', method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': '...', 'Authorization': 'Bearer ...', 'Content-Length': Buffer.byteLength(data) } }; const req = https.request(options, res => { let body = ''; res.on('data', d => body += d); res.on('end', () => console.log(body)); }); req.write(data); req.end();"
-```
+- **Escaping Failures**: PowerShell on Windows interferes with nested JSON and SQL quotes in `curl` and `node -e` commands.
+- **Environment Restrictions**: Node.js scripts using `https` to hit the Supabase management RPCs are frequently blocked or fail to stream output correctly in this shell.
+- **Data Integrity**: Manual execution via the dashboard ensures you are operating in a stable, visual environment with transaction support.
 
 ## Best Practices
 
-1. **File-Based Execution**: For long SQL scripts, write the SQL to a temporary file (e.g., `migration.sql`) and use Node.js to read that file before sending the request. This keeps the command clean and avoids command-length limits.
-2. **Atomic Operations**: Try to group related schema changes into a single SQL block to ensure they succeed or fail together.
-3. **Verification**: Always run a follow-up query to verify that tables or columns were created as expected.
-4. **Row-Level Security (RLS)**: Always enable RLS for newly created tables and define appropriate policies. This should be a default action for every table creation.
-5. **Environment Variables**: Always retrieve the Supabase URL and Keys from `.env.local` before formulating the command.
+- **Atomic Migrations**: When updating the database, do so in logical blocks.
+- **RLS First**: Always ensure Row-Level Security (RLS) is enabled and policies are defined for any new table created via the dashboard.
+- **Update Metadata**: If you change a table structure, ensure you also update the corresponding entries in the `public.models` and `public.fields` tables so the CMS remains in sync.

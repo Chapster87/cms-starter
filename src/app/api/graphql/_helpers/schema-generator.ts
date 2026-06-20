@@ -1,6 +1,8 @@
 import {
   GraphQLBoolean,
   GraphQLFieldConfigMap,
+  GraphQLInputFieldConfigMap,
+  GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
   GraphQLNonNull,
@@ -30,6 +32,7 @@ interface CMSModel {
   model_name: string
   friendly_name: string
   table_name: string
+  has_draft_mode?: boolean
   [key: string]: unknown
 }
 
@@ -88,6 +91,7 @@ export const generateSchema = async () => {
   if (fieldsError) console.error("GraphQL: Fields fetch error", fieldsError)
 
   const types: Record<string, GraphQLObjectType> = {}
+  const filterInputTypes: Record<string, GraphQLInputObjectType> = {}
   const validModels = ((models as CMSModel[] | null) || []).filter(
     (m) => (m.friendly_name || m.model_name) && m.table_name
   )
@@ -96,13 +100,14 @@ export const generateSchema = async () => {
     `GraphQL: Found ${models?.length || 0} models and ${fields?.length || 0} fields.`
   )
 
-  const getGraphQLType = (field: CMSField) => {
+  const getGraphQLType = (field: CMSField, isInput = false) => {
     switch (field.field_type) {
       case "number":
         return GraphQLInt
       case "boolean":
         return GraphQLBoolean
       case "media":
+        if (isInput) return GraphQLString
         return field.settings?.allow_multiple
           ? new GraphQLList(MediaType)
           : MediaType
@@ -131,9 +136,6 @@ export const generateSchema = async () => {
     return val
   }
 
-  /**
-   * Helper to convert strings to PascalCase for GraphQL types
-   */
   const toPascalCase = (str: string) => {
     return str
       .replace(/[^a-zA-Z0-9]/g, " ")
@@ -143,12 +145,61 @@ export const generateSchema = async () => {
       .replace(/^[0-9]/, "M_")
   }
 
-  // 1. Pass: Create Object Types
+  // 1. Pass: Create Filter Input Types First (to support recursion/references)
+  validModels.forEach((model) => {
+    const typeName = toPascalCase(model.friendly_name || model.table_name)
+    filterInputTypes[model.id] = new GraphQLInputObjectType({
+      name: `${typeName}FilterInput`,
+      fields: () => {
+        const modelFields = (
+          (fields as ExtendedCMSField[] | null) || []
+        ).filter((f) => f.model_id === model.id)
+        const filterFields: GraphQLInputFieldConfigMap = {
+          id: { type: GraphQLString },
+          created_at: { type: GraphQLString },
+          updated_at: { type: GraphQLString },
+        }
+
+        modelFields.forEach((field) => {
+          if (field.field_type === "reference") {
+            const allowedIds =
+              (field.settings?.allowed_models as string[]) || []
+            const linkedModelId =
+              allowedIds.find((id) => filterInputTypes[id]) ||
+              field.validation_rules?.linkedModel ||
+              (field.settings?.linkedModel as string)
+
+            const linkedFilterType = filterInputTypes[linkedModelId || ""]
+            if (linkedFilterType) {
+              filterFields[field.field_name] = { type: linkedFilterType }
+            } else {
+              filterFields[field.field_name] = { type: GraphQLString }
+            }
+          } else {
+            const inputType = getGraphQLType(field, true)
+            // Ensure only valid Input types are used
+            if (
+              inputType instanceof GraphQLScalarType ||
+              inputType instanceof GraphQLInputObjectType
+            ) {
+              filterFields[field.field_name] = { type: inputType }
+            } else if (inputType instanceof GraphQLList) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              filterFields[field.field_name] = { type: inputType as any }
+            } else {
+              filterFields[field.field_name] = { type: GraphQLString }
+            }
+          }
+        })
+        return filterFields
+      },
+    })
+  })
+
+  // 2. Pass: Create Object Types
   validModels.forEach((model) => {
     try {
-      // Use PascalCase for cleaner type names (e.g., SocialLinks)
       const typeName = toPascalCase(model.friendly_name || model.table_name)
-
       types[model.id] = new GraphQLObjectType({
         name: typeName,
         fields: () => {
@@ -216,12 +267,7 @@ export const generateSchema = async () => {
             } else if (field.field_type === "media") {
               fieldsConfig[field.field_name] = {
                 type: getGraphQLType(field),
-                resolve: async (
-                  parent: Record<string, unknown>,
-                  _args,
-                  _context,
-                  info
-                ) => {
+                resolve: async (parent: Record<string, unknown>) => {
                   const draft = parent._draft as Record<string, unknown> | null
                   const val =
                     draft && draft[field.field_name] !== undefined
@@ -236,7 +282,6 @@ export const generateSchema = async () => {
                     ? parsedValue
                     : [parsedValue]
 
-                  // If we have an ID (string), fetch from media_assets table.
                   const assetIds = assets
                     .map((a) => (typeof a === "string" ? a : a.id))
                     .filter(Boolean) as string[]
@@ -255,20 +300,13 @@ export const generateSchema = async () => {
                       return isMultiple ? results : results[0] || null
                     }
                   }
-
-                  // Fallback to raw value (e.g. legacy data)
                   return isMultiple ? assets : assets[0] || null
                 },
               }
             } else {
               fieldsConfig[field.field_name] = {
                 type: getGraphQLType(field),
-                resolve: (
-                  parent: Record<string, unknown>,
-                  _args,
-                  _context,
-                  info
-                ) => {
+                resolve: (parent: Record<string, unknown>) => {
                   const draft = parent._draft as Record<string, unknown> | null
                   const val =
                     draft && draft[field.field_name] !== undefined
@@ -300,7 +338,6 @@ export const generateSchema = async () => {
     }
   })
 
-  // 2. Build Root Query
   const QueryType = new GraphQLObjectType({
     name: "Query",
     fields: () => {
@@ -313,6 +350,7 @@ export const generateSchema = async () => {
         if (!modelType) return
 
         const technicalName = model.table_name || model.model_id
+        const filterType = filterInputTypes[model.id]
 
         queryFields[technicalName] = {
           type: modelType,
@@ -322,21 +360,12 @@ export const generateSchema = async () => {
           },
           resolve: async (_source, { id, preview }) => {
             let query = supabase.from(model.table_name).select("*").eq("id", id)
-
-            // If not in preview mode and draft mode is enabled, only show published
             if (model.has_draft_mode && !preview) {
               query = query.eq("status", "published")
             }
-
             const { data } = await query.single()
             if (!data) return null
-
-            // If preview is false, we should hide the draft data from the resolvers
-            if (!preview) {
-              return { ...data, _draft: null }
-            }
-
-            return data
+            return !preview ? { ...data, _draft: null } : data
           },
         }
 
@@ -359,32 +388,155 @@ export const generateSchema = async () => {
           args: {
             preview: { type: GraphQLBoolean, defaultValue: false },
             includeDrafts: { type: GraphQLBoolean, defaultValue: false },
+            where: { type: filterType },
           },
-          resolve: async (_source, { preview, includeDrafts }) => {
-            let query = supabase.from(model.table_name).select("*")
+          resolve: async (_source, { preview, includeDrafts, where }) => {
+            /**
+             * Helper to apply filters to a Supabase query builder.
+             * Bypasses relationship errors by fetching matching IDs from linked tables first.
+             */
+            const applyFilters = async (
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              queryBuilder: any,
+              currentWhere: Record<string, unknown> | null | undefined,
+              currentModel: CMSModel,
+              isSubQuery = false
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ): Promise<any> => {
+              if (!currentWhere) return queryBuilder
+              let localQuery = queryBuilder
 
-            // If not including drafts and not in preview, only show published
+              for (const key of Object.keys(currentWhere)) {
+                const val = currentWhere[key]
+                const field = (
+                  (fields as ExtendedCMSField[] | null) || []
+                ).find(
+                  (f) =>
+                    f.model_id === (currentModel.id || currentModel.model_id) &&
+                    f.field_name === key
+                )
+
+                if (
+                  field?.field_type === "reference" &&
+                  typeof val === "object" &&
+                  val !== null
+                ) {
+                  const valObj = val as Record<string, unknown>
+
+                  // Special Case: Direct ID filter
+                  if (
+                    Object.keys(valObj).length === 1 &&
+                    valObj.id &&
+                    typeof valObj.id === "string"
+                  ) {
+                    // Quoted UUID for JSONB reference columns (main table),
+                    // but raw UUID for string/uuid columns (sub-query / normal tables)
+                    if (!isSubQuery) {
+                      localQuery = localQuery.filter(
+                        key,
+                        "eq",
+                        `"${valObj.id}"`
+                      )
+                    } else {
+                      localQuery = localQuery.eq(key, valObj.id)
+                    }
+                    continue
+                  }
+
+                  // Complex Case: Nested filter (e.g., slug, year)
+                  // 1. Find the linked model
+                  const allowedIds =
+                    (field.settings?.allowed_models as string[]) || []
+                  const linkedModelId =
+                    allowedIds[0] ||
+                    field.validation_rules?.linkedModel ||
+                    (field.settings?.linkedModel as string)
+                  const linkedModel = validModels.find(
+                    (m) => m.id === linkedModelId
+                  )
+
+                  if (linkedModel) {
+                    // 2. Build and execute a sub-query to find matching IDs in the linked table
+                    let subQuery = supabase
+                      .from(linkedModel.table_name)
+                      .select("id")
+
+                    // Recursive call to apply filters to the sub-query
+                    // isSubQuery = true ensures we use standard .eq() for non-JSONB columns
+                    subQuery = await applyFilters(
+                      subQuery,
+                      valObj,
+                      linkedModel,
+                      true
+                    )
+
+                    const { data: matchedRecords } = await subQuery
+                    const matchedIds = (matchedRecords || []).map(
+                      (r) => `"${r.id}"`
+                    )
+
+                    if (matchedIds.length === 0) {
+                      // No matches in the linked table means no possible matches in the main table
+                      localQuery = localQuery.filter(
+                        key,
+                        "eq",
+                        '"00000000-0000-0000-0000-000000000000"'
+                      )
+                    } else if (matchedIds.length === 1) {
+                      // Single match - use standard eq for JSONB
+                      localQuery = localQuery.filter(key, "eq", matchedIds[0])
+                    } else {
+                      // 3. Filter the main query where the reference column is in the matched IDs list.
+                      // For JSONB columns, PostgREST doesn't support the 'in' operator with quoted JSON values well in all versions.
+                      // Using multiple .eq() inside an .or() is more reliable for JSONB string equality.
+                      const orFilter = matchedIds
+                        .map((id) => `${key}.eq.${id}`)
+                        .join(",")
+                      localQuery = localQuery.or(orFilter)
+                    }
+                  }
+                } else if (val !== undefined && val !== null) {
+                  const isBaseField = [
+                    "id",
+                    "created_at",
+                    "updated_at",
+                    "status",
+                  ].includes(key)
+                  if (field || isBaseField) {
+                    localQuery = localQuery.eq(key, val)
+                  }
+                }
+              }
+              return localQuery
+            }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            let queryBuilder: any = supabase
+              .from(model.table_name)
+              .select("*", { count: "exact" })
+
+            // Apply filters (now async)
+            queryBuilder = await applyFilters(queryBuilder, where, model, false)
+
             if (model.has_draft_mode && !includeDrafts && !preview) {
-              query = query.eq("status", "published")
+              queryBuilder = queryBuilder.eq("status", "published")
             }
 
-            const { data } = await query
-
-            if (!data) return []
-
-            // If preview is false, clear _draft for all records to ensure live content is served
-            if (!preview) {
-              return data.map((item: Record<string, unknown>) => ({
-                ...item,
-                _draft: null,
-              }))
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { data, error } = await (queryBuilder as any)
+            if (error) {
+              console.error("GraphQL Query Error:", error)
+              throw new Error(error.message)
             }
 
-            return data
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const results = (data as any[] | null) ?? []
+            return !preview
+              ? results.map((item) => ({ ...item, _draft: null }))
+              : results
           },
         }
       })
-
       return queryFields
     },
   })
