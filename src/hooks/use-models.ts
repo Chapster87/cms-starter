@@ -22,6 +22,8 @@ export interface ModelRegistryEntry {
   has_draft_mode: boolean
   display_order: number
   list_columns?: string[] | null
+  preview_columns?: string[] | null
+  subtitle_column?: string | null
 }
 
 interface GlobalModelState {

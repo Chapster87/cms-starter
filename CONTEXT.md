@@ -46,7 +46,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Linked Record Selection Customization:** Empower users to configure which columns appear in the Reference/Linked Record selection modal. Currently, it defaults to a standard set (name, title, etc.).
+- [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
 
 ### 2. Next Steps (In Progress/Upcoming)
 
@@ -128,6 +128,10 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Resolved "relationship schema cache" errors in PostgREST by implementing a two-step recursive filtering engine.
   - Added support for complex nested relationship filtering (e.g., `where: { league: { slug: "..." } }`).
   - Implemented automatic JSONB quoting for reference column filtering.
+- [x] **Linked Record Customization**:
+  - Empowered users to configure which fields appear in the Reference/Linked Record selection modal.
+  - Implemented a "Preview Settings" tab in the Model Editor to manage these display preferences.
+  - Standardized the selection interface on a high-fidelity 2-line layout with configurable subtitles.
 
 ## Glossary
 

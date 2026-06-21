@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { deeplyResolveMedia } from "@/utils/media-helpers"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -38,13 +39,14 @@ export async function POST(req: NextRequest) {
       table_name: string
       friendly_name: string
       has_draft_mode: boolean
+      preview_columns?: string[] | null
+      list_columns?: string[] | null
+      subtitle_column?: string | null
     }
     let modelsData: ModelMetadata[] = []
 
     if (registeredModelIds.length > 0 || requestedModelIds.length === 0) {
-      let modelsQuery = systemClient
-        .from("models")
-        .select("id, table_name, friendly_name, has_draft_mode")
+      let modelsQuery = systemClient.from("models").select("*")
 
       if (registeredModelIds.length > 0) {
         modelsQuery = modelsQuery.in("id", registeredModelIds)
@@ -65,6 +67,7 @@ export async function POST(req: NextRequest) {
         table_name: "users",
         friendly_name: "CMS User",
         has_draft_mode: false,
+        preview_columns: [],
       })
     }
 
@@ -76,7 +79,7 @@ export async function POST(req: NextRequest) {
     const previewResults = await Promise.all(
       modelsData.map(async (model) => {
         let displayColumn = "id"
-        let hasSlug = false
+        const subtitleColumn = model.subtitle_column || null
         const selectFields = ["id"]
 
         if (model.table_name === "users") {
@@ -109,6 +112,7 @@ export async function POST(req: NextRequest) {
             "year",
             "season_name",
             "team_name",
+            "short_name",
           ]
 
           displayColumn =
@@ -127,9 +131,9 @@ export async function POST(req: NextRequest) {
             displayColumn = firstTextColumn?.column_name || "id"
           }
 
-          hasSlug = columnNames.includes("slug")
           selectFields.push(displayColumn)
-          if (hasSlug && displayColumn !== "slug") selectFields.push("slug")
+          if (subtitleColumn && subtitleColumn !== displayColumn)
+            selectFields.push(subtitleColumn)
         }
 
         if (model.has_draft_mode) {
@@ -149,20 +153,51 @@ export async function POST(req: NextRequest) {
 
         const records =
           (data as unknown as Array<Record<string, unknown>>) || []
-        return records.map((record) => ({
-          id: record.id as string,
-          display_name:
-            (record[displayColumn!] as string) || (record.id as string),
-          subtitle:
-            model.table_name === "users"
-              ? (record.email as string)
-              : (record.slug as string | undefined),
-          model_name: model.friendly_name,
-          model_id: model.id,
-          status: model.has_draft_mode ? (record.status as string) : undefined,
-          has_draft: model.has_draft_mode ? record._draft !== null : false,
-          raw_data: record,
-        }))
+
+        const resolvedRecords = await Promise.all(
+          records.map(async (record) => {
+            const resolvedData = await deeplyResolveMedia(record)
+
+            // Smarter display name discovery if the discovered column is still a UUID or missing
+            let discoveredName = record[displayColumn!] as string | undefined
+            if (
+              !discoveredName ||
+              /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                String(discoveredName)
+              )
+            ) {
+              // Try fallback candidates manually
+              const fallback = [
+                "name",
+                "title",
+                "label",
+                "friendly_name",
+                "short_name",
+                "year",
+              ].find((c) => record[c])
+              if (fallback) discoveredName = record[fallback] as string
+            }
+
+            return {
+              id: record.id as string,
+              display_name: discoveredName || (record.id as string),
+              subtitle: subtitleColumn
+                ? (record[subtitleColumn] as string)
+                : undefined,
+              model_name: model.friendly_name,
+              model_id: model.id,
+              status: model.has_draft_mode
+                ? (record.status as string)
+                : undefined,
+              has_draft: model.has_draft_mode ? record._draft !== null : false,
+              raw_data: resolvedData,
+              preview_columns: model.preview_columns || [],
+              list_columns: model.list_columns || [],
+            }
+          })
+        )
+
+        return resolvedRecords
       })
     )
 

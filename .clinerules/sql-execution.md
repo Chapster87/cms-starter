@@ -6,17 +6,25 @@
 
 ## Recommended Workflow for Database Changes
 
-1. **Use the Supabase Dashboard**: Perform all schema modifications (adding columns, changing types, RLS policies) and direct SQL queries through the **Supabase SQL Editor** in your web browser.
-2. **Verify via Code/API**: Instead of querying the database from the CLI, verify your changes by:
+1. **Migrations First**: Create a `.sql` file in `docs/migrations/` (e.g., `0001_initial.sql`).
+2. **Execute via Node/PSQL**: Use the following pattern to execute migrations using the environment variables from `.env.local` and the system's `psql` client.
+
+### Execution Pattern
+
+```bash
+node -e "const dotenv = require('dotenv'); dotenv.config({ path: '.env.local' }); const url = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL); const ref = url.hostname.split('.')[0]; const pw = process.env.SUPABASE_DB_PASSWORD; const conn = 'postgresql://postgres:' + pw + '@db.' + ref + '.supabase.co:5432/postgres'; const { execSync } = require('child_process'); try { const out = execSync('psql \"' + conn + '\" -f docs/migrations/YOUR_MIGRATION.sql'); console.log(out.toString()); } catch (e) { console.error(e.message); }"
+```
+
+3. **Verify via Code/API**: After execution, verify your changes by:
    - Checking the CMS Metadata Registry (`SCHEMA.md` or `public.models` table via API).
    - Testing the relevant API endpoints (e.g., `/api/models/schema`).
    - Observing the behavior in the CMS Editor.
 
-## Why CLI Execution is Forbidden
+## Why this approach works
 
-- **Escaping Failures**: PowerShell on Windows interferes with nested JSON and SQL quotes in `curl` and `node -e` commands.
-- **Environment Restrictions**: Node.js scripts using `https` to hit the Supabase management RPCs are frequently blocked or fail to stream output correctly in this shell.
-- **Data Integrity**: Manual execution via the dashboard ensures you are operating in a stable, visual environment with transaction support.
+- **Connection via DB Port**: Using `psql` directly on port 5432 bypasses many of the limitations and escaping issues found when trying to hit the Supabase Management API via `curl` or HTTPS RPCs.
+- **Auth via Environment**: Credentials are pulled from `.env.local`, ensuring no hardcoded passwords in command history.
+- **Atomic Migrations**: Using the `-f` flag with a file ensures the entire migration is processed as written.
 
 ## Best Practices
 

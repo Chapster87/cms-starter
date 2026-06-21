@@ -283,7 +283,7 @@ export const generateSchema = async () => {
                     : [parsedValue]
 
                   const assetIds = assets
-                    .map((a) => (typeof a === "string" ? a : a.id))
+                    .map((a) => (typeof a === "string" ? a : a?.id))
                     .filter(Boolean) as string[]
 
                   if (assetIds.length > 0) {
@@ -313,7 +313,7 @@ export const generateSchema = async () => {
                       ? draft[field.field_name]
                       : parent[field.field_name]
 
-                  return [
+                  const parsed = [
                     "tags",
                     "json",
                     "seo_metadata",
@@ -323,6 +323,83 @@ export const generateSchema = async () => {
                   ].includes(field.field_type)
                     ? parseJsonValue(val)
                     : val
+
+                  // Deep resolve media objects within complex JSON structures (like standings tables)
+                  const isDeepResolvable =
+                    field.field_type === "standings_table" ||
+                    field.field_type === "json" ||
+                    field.field_type === "modular_content" ||
+                    field.field_name === "league_standings"
+
+                  if (isDeepResolvable && Array.isArray(parsed)) {
+                    return Promise.all(
+                      parsed.map(async (row: Record<string, unknown>) => {
+                        let updatedRow = { ...row }
+
+                        // 1. Resolve explicit team_logo object if it exists
+                        if (
+                          row.team_logo &&
+                          typeof row.team_logo === "object"
+                        ) {
+                          const logoObj = row.team_logo as Record<
+                            string,
+                            unknown
+                          >
+                          const assetId = logoObj.id as string
+                          if (assetId) {
+                            const { data: mediaData } = await supabase
+                              .from("media_assets")
+                              .select("*")
+                              .eq("id", assetId)
+                              .single()
+                            if (mediaData) {
+                              updatedRow.team_logo = mediaData
+                            }
+                          }
+                        }
+
+                        // 2. Resolve team details (logo, etc) from team_id if missing
+                        if (row.team_id && typeof row.team_id === "string") {
+                          const { data: teamData } = await supabase
+                            .from("teams")
+                            .select("*")
+                            .eq("id", row.team_id)
+                            .single()
+
+                          if (teamData) {
+                            // Merge team data into the row (e.g. logo, short_name)
+                            // We prefer the existing row data if it exists
+                            updatedRow = {
+                              ...teamData,
+                              ...updatedRow,
+                            }
+
+                            // If team has a logo ID, resolve it to full media
+                            const teamLogoId =
+                              teamData.logo || teamData.team_logo
+                            if (
+                              teamLogoId &&
+                              (!updatedRow.team_logo ||
+                                typeof updatedRow.team_logo !== "object")
+                            ) {
+                              const { data: mediaData } = await supabase
+                                .from("media_assets")
+                                .select("*")
+                                .eq("id", teamLogoId)
+                                .single()
+                              if (mediaData) {
+                                updatedRow.team_logo = mediaData
+                              }
+                            }
+                          }
+                        }
+
+                        return updatedRow
+                      })
+                    )
+                  }
+
+                  return parsed
                 },
               }
             }

@@ -96,6 +96,8 @@ export async function POST(req: NextRequest) {
       has_draft_mode,
       emoji,
       group_id,
+      preview_columns,
+      subtitle_column,
     } = await req.json()
 
     if (!name || typeof name !== "string" || name.trim() === "") {
@@ -160,6 +162,8 @@ export async function POST(req: NextRequest) {
           display_order: nextOrder,
           emoji: emoji || null,
           group_id: group_id || null,
+          preview_columns: preview_columns || [],
+          subtitle_column: subtitle_column || null,
         },
       ])
       .select()
@@ -218,6 +222,8 @@ export async function PATCH(req: NextRequest) {
       emoji,
       group_id,
       list_columns,
+      preview_columns,
+      subtitle_column,
     } = await req.json()
 
     if (!table_name) {
@@ -245,6 +251,10 @@ export async function PATCH(req: NextRequest) {
     if (emoji !== undefined) updatePayload.emoji = emoji
     if (group_id !== undefined) updatePayload.group_id = group_id
     if (list_columns !== undefined) updatePayload.list_columns = list_columns
+    if (preview_columns !== undefined)
+      updatePayload.preview_columns = preview_columns
+    if (subtitle_column !== undefined)
+      updatePayload.subtitle_column = subtitle_column
 
     const { error: registryUpdateError } = await authenticatedSupabase
       .from("models")

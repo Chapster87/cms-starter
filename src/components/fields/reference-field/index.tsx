@@ -27,6 +27,12 @@ interface ReferenceFieldProps {
   triggerRef?: React.RefObject<HTMLDivElement | null>
 }
 
+interface RecordMedia {
+  url: string
+  type: string
+  [key: string]: unknown
+}
+
 interface RecordPreview {
   id: string
   display_name: string
@@ -36,6 +42,8 @@ interface RecordPreview {
   status?: string
   has_draft?: boolean
   raw_data?: Record<string, unknown>
+  preview_columns?: string[]
+  list_columns?: string[]
 }
 
 /**
@@ -247,6 +255,7 @@ export default function ReferenceField({
               ) : filteredRecords.length > 0 ? (
                 filteredRecords.map((record) => {
                   const isSelected = selectedIds.includes(record.id)
+
                   return (
                     <div
                       key={record.id}
@@ -260,18 +269,18 @@ export default function ReferenceField({
                           <FileText size={20} />
                         )}
                       </div>
+
                       <div className={s.recordMeta}>
                         <div className={s.recordTitle}>
                           {record.display_name}
                         </div>
                         {record.subtitle && (
                           <div className={s.recordSubtitle}>
-                            {record.model_id === "users"
-                              ? record.subtitle
-                              : `Slug: /${record.subtitle}`}
+                            {record.subtitle}
                           </div>
                         )}
                       </div>
+
                       <div className={s.recordType}>
                         <span className={s.typeBadge}>{record.model_name}</span>
                         {record.model_id !== "users" && (

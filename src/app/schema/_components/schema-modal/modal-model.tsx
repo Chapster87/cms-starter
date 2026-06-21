@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { Settings, Eye } from "lucide-react"
+import * as Tabs from "@radix-ui/react-tabs"
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
 import Button from "@/components/button"
-import { CheckboxField, SlugField } from "@/components/fields"
+import { CheckboxField, SlugField, SelectField } from "@/components/fields"
 import { toast } from "@/client/toast-store"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
@@ -35,6 +37,8 @@ export default function ModalModel({
   const [showPicker, setShowPicker] = useState(false)
   const [isSingleton, setIsSingleton] = useState(false)
   const [hasDraftMode, setHasDraftMode] = useState(true)
+  const [previewColumns, setPreviewColumns] = useState<string[]>([])
+  const [subtitleColumn, setSubtitleColumn] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isIdTouched, setIsIdTouched] = useState(false)
@@ -67,6 +71,8 @@ export default function ModalModel({
             setEmoji(existing.emoji || "")
             setIsSingleton(existing.is_singleton)
             setHasDraftMode(existing.has_draft_mode || false)
+            setPreviewColumns(existing.preview_columns || [])
+            setSubtitleColumn(existing.subtitle_column || null)
             setIsIdTouched(true)
           } else {
             // Duplicate mode
@@ -76,6 +82,8 @@ export default function ModalModel({
             setEmoji(existing.emoji || "")
             setIsSingleton(existing.is_singleton)
             setHasDraftMode(existing.has_draft_mode || false)
+            setPreviewColumns(existing.preview_columns || [])
+            setSubtitleColumn(existing.subtitle_column || null)
             setIsIdTouched(true)
           }
         }
@@ -119,6 +127,8 @@ export default function ModalModel({
             has_draft_mode: hasDraftMode,
             emoji: emoji || null,
             group_id: groupId,
+            preview_columns: previewColumns,
+            subtitle_column: subtitleColumn,
           }
         : {
             name: modelName,
@@ -127,6 +137,8 @@ export default function ModalModel({
             has_draft_mode: hasDraftMode,
             emoji: emoji || null,
             group_id: groupId,
+            preview_columns: previewColumns,
+            subtitle_column: subtitleColumn,
           }
 
       const response = await fetch(url, {
@@ -158,102 +170,201 @@ export default function ModalModel({
     }
   }
 
-  const { groups } = useModels()
+  const { groups, models: allModels } = useModels()
+  const [availableFields, setAvailableFields] = useState<
+    { field_name: string; field_label: string }[]
+  >([])
+
+  useEffect(() => {
+    const fetchFields = async () => {
+      if (mode === "edit" && modelSlug) {
+        const model = allModels.find((m) => m.slug === modelSlug)
+        if (model) {
+          try {
+            const response = await fetch(
+              `/api/models/schema/fields?table=${model.slug}`,
+              {
+                headers: { Authorization: `Bearer ${accessToken}` },
+              }
+            )
+            if (response.ok) {
+              const fields = await response.json()
+              setAvailableFields(fields)
+            }
+          } catch (err) {
+            console.error("Error fetching fields for preview selection:", err)
+          }
+        }
+      }
+    }
+    fetchFields()
+  }, [mode, modelSlug, allModels, accessToken])
+
+  const togglePreviewColumn = (fieldName: string) => {
+    setPreviewColumns((prev) =>
+      prev.includes(fieldName)
+        ? prev.filter((f) => f !== fieldName)
+        : [...prev, fieldName]
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit} className={s.modalForm}>
       {error && <p className={s.errorText}>{error}</p>}
 
-      <div className={s.nameFieldSection}>
-        <label className={s.fieldLabel}>Display Name</label>
-        <div className={s.nameInputRow}>
-          <div className={s.emojiFieldWrapper}>
-            <Button
-              variant="secondary"
-              unstyled
-              type="button"
-              className={s.emojiButton}
-              onClick={() => setShowPicker(!showPicker)}
-              disabled={isSaving}
-            >
-              {emoji || "⬚"}
-            </Button>
-            {showPicker && (
-              <div className={s.pickerContainer} ref={pickerRef}>
-                <EmojiPicker
-                  onEmojiClick={onEmojiClick}
-                  autoFocusSearch={false}
-                />
+      <Tabs.Root defaultValue="basic" className={s.tabsRoot}>
+        <Tabs.List className={s.tabsList}>
+          <Tabs.Trigger value="basic" className={s.tabsTrigger}>
+            <Settings size={14} style={{ marginRight: "8px" }} /> Basic
+          </Tabs.Trigger>
+          {mode === "edit" && availableFields.length > 0 && (
+            <Tabs.Trigger value="preview" className={s.tabsTrigger}>
+              <Eye size={14} style={{ marginRight: "8px" }} /> Preview Settings
+            </Tabs.Trigger>
+          )}
+        </Tabs.List>
+
+        <Tabs.Content value="basic" className={s.tabsContent}>
+          <div className={s.nameFieldSection}>
+            <label className={s.fieldLabel}>Display Name</label>
+            <div className={s.nameInputRow}>
+              <div className={s.emojiFieldWrapper}>
+                <Button
+                  variant="secondary"
+                  unstyled
+                  type="button"
+                  className={s.emojiButton}
+                  onClick={() => setShowPicker(!showPicker)}
+                  disabled={isSaving}
+                >
+                  {emoji || "⬚"}
+                </Button>
+                {showPicker && (
+                  <div className={s.pickerContainer} ref={pickerRef}>
+                    <EmojiPicker
+                      onEmojiClick={onEmojiClick}
+                      autoFocusSearch={false}
+                    />
+                  </div>
+                )}
               </div>
-            )}
+
+              <input
+                type="text"
+                placeholder="e.g. Article"
+                value={friendlyName}
+                onChange={handleFriendlyNameChange}
+                className={s.nameInput}
+                disabled={isSaving}
+                required
+              />
+            </div>
+            <p className={s.fieldDescription}>
+              Human-friendly label used in the CMS. Please write it down in
+              singular.
+            </p>
           </div>
 
-          <input
-            type="text"
-            placeholder="e.g. Article"
-            value={friendlyName}
-            onChange={handleFriendlyNameChange}
-            className={s.nameInput}
-            disabled={isSaving}
+          <SlugField
+            label="Model ID (Database Table)"
+            placeholder="e.g. blog_posts"
+            value={modelName}
+            sourceValue={friendlyName}
+            onChange={setModelName}
+            isTouched={isIdTouched}
+            onToggleTouched={setIsIdTouched}
+            disabled={isSaving || mode === "edit"}
             required
+            description="Lowercase, no spaces. This will be the physical table name."
           />
-        </div>
-        <p className={s.fieldDescription}>
-          Human-friendly label used in the CMS. Please write it down in
-          singular.
-        </p>
-      </div>
 
-      <SlugField
-        label="Model ID (Database Table)"
-        placeholder="e.g. blog_posts"
-        value={modelName}
-        sourceValue={friendlyName}
-        onChange={setModelName}
-        isTouched={isIdTouched}
-        onToggleTouched={setIsIdTouched}
-        disabled={isSaving || mode === "edit"}
-        required
-        description="Lowercase, no spaces. This will be the physical table name."
-      />
+          <CheckboxField
+            label="Is Singleton"
+            checked={isSingleton}
+            onChange={setIsSingleton}
+            disabled={isSaving}
+            description="Check this if the model should only ever have one record (e.g., Global Settings)."
+            variant="switch"
+          />
 
-      {/* <div className={s.fieldSection}>
-        <label className={s.fieldLabel}>Group / Folder</label>
-        <select
-          className={s.selectField}
-          value={groupId || ""}
-          onChange={(e) => setGroupId(e.target.value || null)}
-          disabled={isSaving}
-        >
-          <option value="">(No Group)</option>
-          {groups
-            .filter((g) => g.type === "schema")
-            .map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.emoji} {group.name}
-              </option>
-            ))}
-        </select>
-        <p className={s.fieldDescription}>Organize this model into a folder.</p>
-      </div> */}
+          <CheckboxField
+            label="Enable Draft/Publish"
+            checked={hasDraftMode}
+            onChange={setHasDraftMode}
+            disabled={isSaving}
+            description="Check this if you want to manage record visibility with Draft and Published statuses."
+            variant="switch"
+          />
+        </Tabs.Content>
 
-      <CheckboxField
-        label="Is Singleton"
-        checked={isSingleton}
-        onChange={setIsSingleton}
-        disabled={isSaving}
-        description="Check this if the model should only ever have one record (e.g., Global Settings)."
-        variant="switch"
-      />
+        {mode === "edit" && availableFields.length > 0 && (
+          <Tabs.Content value="preview" className={s.tabsContent}>
+            <div className={s.fieldSection}>
+              <label className={s.fieldLabel}>Preview Columns</label>
+              <div className={s.previewColumnsGrid}>
+                {availableFields
+                  .filter(
+                    (f) =>
+                      ![
+                        "id",
+                        "created_at",
+                        "updated_at",
+                        "status",
+                        "_draft",
+                      ].includes(f.field_name)
+                  )
+                  .map((field) => (
+                    <div
+                      key={field.field_name}
+                      className={s.previewColumnCheck}
+                    >
+                      <CheckboxField
+                        label={`${field.field_label}`}
+                        checked={previewColumns.includes(field.field_name)}
+                        onChange={() => togglePreviewColumn(field.field_name)}
+                        disabled={isSaving}
+                      />
+                    </div>
+                  ))}
+              </div>
+              <p className={s.fieldDescription}>
+                Pick fields to show on the top line of reference selection
+                modals.
+              </p>
+            </div>
 
-      <CheckboxField
-        label="Enable Draft/Publish"
-        checked={hasDraftMode}
-        onChange={setHasDraftMode}
-        disabled={isSaving}
-        description="Check this if you want to manage record visibility with Draft and Published statuses."
-        variant="switch"
-      />
+            <div className={s.fieldSection}>
+              <SelectField
+                label="Subtitle Column"
+                value={subtitleColumn || "none"}
+                onChange={(val) =>
+                  setSubtitleColumn(val === "none" ? null : val)
+                }
+                disabled={isSaving}
+                options={[
+                  { label: "(None)", value: "none" },
+                  ...availableFields
+                    .filter(
+                      (f) =>
+                        ![
+                          "id",
+                          "created_at",
+                          "updated_at",
+                          "status",
+                          "_draft",
+                        ].includes(f.field_name)
+                    )
+                    .map((field) => ({
+                      label: `${field.field_label}`,
+                      value: field.field_name,
+                    })),
+                ]}
+                description="Pick a field to show as a second line (subtitle) in selection modals."
+              />
+            </div>
+          </Tabs.Content>
+        )}
+      </Tabs.Root>
 
       <div className={s.modalActions}>
         <Button

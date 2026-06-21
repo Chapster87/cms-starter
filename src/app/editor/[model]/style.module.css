@@ -85,12 +85,12 @@
 
 .recordName {
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--color-primary);
+  text-decoration: none;
 }
 
-.dateCell {
-  color: var(--text-primary);
-  font-size: 13px;
+.recordName:hover {
+  text-decoration: underline;
 }
 
 .statusDots {
