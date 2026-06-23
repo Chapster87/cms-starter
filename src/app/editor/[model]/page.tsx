@@ -11,8 +11,15 @@ import { useModels } from "@/hooks/use-models"
 import { getRecordDisplayName } from "@/helpers/record-helpers"
 import ContextMenu from "@/components/context-menu"
 import { useUsers } from "@/hooks/use-users"
-import { Edit2, Trash2 } from "lucide-react"
+import {
+  Edit2,
+  Trash2,
+  ArrowUpAZ,
+  ArrowDownAZ,
+  ArrowUpDown,
+} from "lucide-react"
 import ColumnSettings from "./_components/column-settings"
+import SortSettings from "./_components/sort-settings"
 import { CMSField } from "@/types/fields"
 import { MediaAsset } from "@/types/media"
 import s from "./style.module.css"
@@ -42,6 +49,13 @@ export default function RecordListPage({ params }: RecordListPageProps) {
 
   const modelData = models.find((m) => m.slug === modelSlug) || null
 
+  const [sortColumn, setSortColumn] = useState<string>(
+    modelData?.default_sort_column || "created_at"
+  )
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
+    (modelData?.default_sort_direction as "asc" | "desc") || "desc"
+  )
+
   const loadRecords = useCallback(async () => {
     if (!modelSlug || !accessToken) return
 
@@ -49,7 +63,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     setError(null)
     try {
       const [fetchedRecords, fieldsRes] = await Promise.all([
-        dataService.getRecords(modelSlug),
+        dataService.getRecords(modelSlug, sortColumn, sortDirection),
         fetch(`/api/models/schema/fields?table=${modelSlug}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         }),
@@ -128,7 +142,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     } finally {
       setLoading(false)
     }
-  }, [modelSlug, accessToken])
+  }, [modelSlug, accessToken, sortColumn, sortDirection])
 
   useEffect(() => {
     if (!authLoading && accessToken) {
@@ -137,7 +151,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [loadRecords, authLoading, accessToken])
+  }, [loadRecords, authLoading, accessToken, sortColumn, sortDirection])
 
   // Redirect singletons if a record already exists
   useEffect(() => {
@@ -209,6 +223,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
           name: colName,
           label: field?.field_label || colName,
           isReference: field?.field_type === "reference",
+          isSortable: field?.field_type !== "media",
         }
       })
     }
@@ -221,10 +236,59 @@ export default function RecordListPage({ params }: RecordListPageProps) {
         name: firstField.field_name,
         label: firstField.field_label,
         isReference: firstField.field_type === "reference",
+        isSortable: firstField.field_type !== "media",
       })
     }
     return cols
   }, [modelData, fields])
+
+  const handleSort = async (columnName: string) => {
+    let newDir: "asc" | "desc" = "asc"
+    let newCol = columnName
+
+    if (sortColumn === columnName) {
+      newDir = sortDirection === "asc" ? "desc" : "asc"
+    } else {
+      newCol = columnName
+      newDir = "asc"
+    }
+
+    setSortColumn(newCol)
+    setSortDirection(newDir)
+
+    // Persist to database
+    if (modelData && accessToken) {
+      try {
+        await fetch("/api/models", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            table_name: modelData.table_name,
+            default_sort_column: newCol,
+            default_sort_direction: newDir,
+          }),
+        })
+        // No need to refreshModels() here as it might trigger a flash,
+        // the local state is already updated.
+      } catch (err) {
+        console.error("Failed to persist sort order:", err)
+      }
+    }
+  }
+
+  const renderSortIcon = (columnName: string) => {
+    if (sortColumn !== columnName) {
+      return <ArrowUpDown size={12} className={s.sortIconPlaceholder} />
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUpAZ size={12} className={s.sortIconActive} />
+    ) : (
+      <ArrowDownAZ size={12} className={s.sortIconActive} />
+    )
+  }
 
   if (loading || authLoading) {
     return (
@@ -316,11 +380,42 @@ export default function RecordListPage({ params }: RecordListPageProps) {
         </div>
         <div className={s.actions}>
           {modelData && (
-            <ColumnSettings
-              model={modelData}
-              fields={fields}
-              onUpdate={handleUpdateColumns}
-            />
+            <>
+              <SortSettings
+                fields={fields}
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSortChange={async (col, dir) => {
+                  setSortColumn(col)
+                  setSortDirection(dir)
+
+                  // Persist to database
+                  if (modelData && accessToken) {
+                    try {
+                      await fetch("/api/models", {
+                        method: "PATCH",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${accessToken}`,
+                        },
+                        body: JSON.stringify({
+                          table_name: modelData.table_name,
+                          default_sort_column: col,
+                          default_sort_direction: dir,
+                        }),
+                      })
+                    } catch (err) {
+                      console.error("Failed to persist sort order:", err)
+                    }
+                  }
+                }}
+              />
+              <ColumnSettings
+                model={modelData}
+                fields={fields}
+                onUpdate={handleUpdateColumns}
+              />
+            </>
           )}
 
           {(!modelData?.is_singleton || records.length === 0) && (
@@ -364,12 +459,29 @@ export default function RecordListPage({ params }: RecordListPageProps) {
           <thead>
             <tr>
               {activeColumns.map((col) => (
-                <th key={col.name}>{col.label}</th>
+                <th
+                  key={col.name}
+                  onClick={() => col.isSortable && handleSort(col.name)}
+                  className={col.isSortable ? s.sortableHeader : ""}
+                >
+                  <div className={s.headerContent}>
+                    {col.label}
+                    {col.isSortable && renderSortIcon(col.name)}
+                  </div>
+                </th>
               ))}
               {modelData && modelData.has_draft_mode && (
                 <th style={{ width: "100px" }}>Status</th>
               )}
-              <th>Updated At</th>
+              <th
+                onClick={() => handleSort("updated_at")}
+                className={s.sortableHeader}
+              >
+                <div className={s.headerContent}>
+                  Updated At
+                  {renderSortIcon("updated_at")}
+                </div>
+              </th>
               <th>Created By</th>
               <th className={s.actionsCell}></th>
             </tr>
@@ -405,16 +517,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                               ? (val as MediaAsset[])
                               : [val as MediaAsset]
                             ).map((asset, i) => (
-                              <div
-                                key={i}
-                                style={{
-                                  position: "relative",
-                                  width: "32px",
-                                  height: "32px",
-                                  borderRadius: "4px",
-                                  overflow: "hidden",
-                                }}
-                              >
+                              <div key={i} className={s.mediaAssetThumb}>
                                 <Image
                                   src={
                                     (
@@ -426,7 +529,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                                   alt=""
                                   fill
                                   sizes="32px"
-                                  style={{ objectFit: "cover" }}
+                                  className={s.mediaAssetImage}
                                   unoptimized // External CMS assets often need this unless loader configured
                                 />
                               </div>

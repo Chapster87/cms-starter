@@ -93,6 +93,18 @@
   text-decoration: underline;
 }
 
+.mediaAssetThumb {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mediaAssetImage {
+  object-fit: contain;
+}
+
 .statusDots {
   display: inline-flex;
   align-items: center;
@@ -215,6 +227,34 @@
   line-height: 1.5;
   color: var(--color-grey-600);
   margin-bottom: 8px;
+}
+
+.headerContent {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sortableHeader {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.sortableHeader:hover {
+  background-color: var(--color-grey-200) !important;
+}
+
+.sortIconPlaceholder {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.sortableHeader:hover .sortIconPlaceholder {
+  opacity: 0.5;
+}
+
+.sortIconActive {
+  color: var(--color-primary);
 }
 
 .error {

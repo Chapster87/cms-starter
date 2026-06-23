@@ -224,6 +224,8 @@ export async function PATCH(req: NextRequest) {
       list_columns,
       preview_columns,
       subtitle_column,
+      default_sort_column,
+      default_sort_direction,
     } = await req.json()
 
     if (!table_name) {
@@ -255,6 +257,10 @@ export async function PATCH(req: NextRequest) {
       updatePayload.preview_columns = preview_columns
     if (subtitle_column !== undefined)
       updatePayload.subtitle_column = subtitle_column
+    if (default_sort_column !== undefined)
+      updatePayload.default_sort_column = default_sort_column
+    if (default_sort_direction !== undefined)
+      updatePayload.default_sort_direction = default_sort_direction
 
     const { error: registryUpdateError } = await authenticatedSupabase
       .from("models")

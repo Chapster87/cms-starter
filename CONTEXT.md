@@ -132,6 +132,11 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Empowered users to configure which fields appear in the Reference/Linked Record selection modal.
   - Implemented a "Preview Settings" tab in the Model Editor to manage these display preferences.
   - Standardized the selection interface on a high-fidelity 2-line layout with configurable subtitles.
+- [x] **Persisted Record Table Sorting**:
+  - Added ordering controls to record table column headers with visual feedback icons.
+  - Implemented a dedicated "Sort" dropdown utility in the header for mobile-friendly access.
+  - Integrated database-level persistence via `default_sort_column` and `default_sort_direction` in the model registry.
+  - Automated state synchronization between the UI and database to maintain preferred ordering across sessions.
 
 ## Glossary
 

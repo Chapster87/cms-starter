@@ -16,14 +16,20 @@ export const dataService = {
   /**
    * Fetches all records for a given model.
    * @param model - The name of the model (table).
+   * @param orderBy - Optional column to order by (defaults to "created_at").
+   * @param orderDir - Optional direction to order by ("asc" or "desc", defaults to "desc").
    * @returns A promise that resolves to an array of records.
    */
-  async getRecords(model: string): Promise<RecordBase[]> {
+  async getRecords(
+    model: string,
+    orderBy: string = "created_at",
+    orderDir: "asc" | "desc" = "desc"
+  ): Promise<RecordBase[]> {
     const supabase = createClient()
     const { data, error } = await supabase
       .from(model)
       .select("*")
-      .order("created_at", { ascending: false })
+      .order(orderBy, { ascending: orderDir === "asc" })
 
     if (error) {
       console.error(`Error fetching records for '${model}':`, error.message)

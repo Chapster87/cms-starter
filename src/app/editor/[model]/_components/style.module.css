@@ -117,3 +117,47 @@
 .triggerButton {
   margin-right: 4px;
 }
+
+.sortItemWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.directionToggle {
+  display: flex;
+  gap: 2px;
+  padding-right: 4px;
+}
+
+.dirButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: 1px solid var(--color-grey-200);
+  background: var(--color-white);
+  color: var(--color-grey-400);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dirButton:hover {
+  background-color: var(--color-grey-50);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.dirButton.activeDir {
+  background-color: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.fieldItem.active {
+  font-weight: 600;
+  background-color: var(--color-grey-50);
+}

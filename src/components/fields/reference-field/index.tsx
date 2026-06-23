@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { Search, ChevronDown, FileText, Check, User } from "lucide-react"
+import { Search, Plus, FileText, Check, User } from "lucide-react"
 
 import Button from "@/components/button"
 import Modal from "@/components/modal"
@@ -193,38 +193,41 @@ export default function ReferenceField({
       required={required}
     >
       <div className={s.referenceContainer} ref={triggerRef}>
-        <div
-          className={`${s.selectionArea} ${disabled ? s.disabled : ""}`}
+        <Button
+          type="button"
+          variant="primary"
+          className={s.addBtn}
           onClick={() => !disabled && setIsModalOpen(true)}
+          disabled={disabled}
+          beforeText={<Plus size={14} />}
         >
-          <div className={s.pillList}>
-            {selectedRecords.map((record) => (
-              <span key={record.id} className={s.pill}>
-                <span className={s.pillModel}>{record.model_name}:</span>
-                {record.display_name}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="small"
-                  unstyled
-                  className={s.removeBtn}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleRemove(record.id)
-                  }}
-                  disabled={disabled}
-                >
-                  ✕
-                </Button>
-              </span>
-            ))}
-            {selectedRecords.length === 0 && (
-              <span className={s.placeholder}>{placeholder}</span>
-            )}
-          </div>
-          <div className={s.browseIcon}>
-            <ChevronDown size={16} />
-          </div>
+          Add
+        </Button>
+
+        <div className={s.pillList}>
+          {selectedRecords.length === 0 && (
+            <span className={s.placeholder}>{placeholder}</span>
+          )}
+          {selectedRecords.map((record) => (
+            <span key={record.id} className={s.pill}>
+              <span className={s.pillModel}>{record.model_name}:</span>
+              {record.display_name}
+              <Button
+                type="button"
+                variant="secondary"
+                size="small"
+                unstyled
+                className={s.removeBtn}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleRemove(record.id)
+                }}
+                disabled={disabled}
+              >
+                ✕
+              </Button>
+            </span>
+          ))}
         </div>
 
         <Modal
@@ -272,39 +275,85 @@ export default function ReferenceField({
 
                       <div className={s.recordMeta}>
                         <div className={s.recordTitle}>
-                          {record.display_name}
+                          {record.preview_columns &&
+                          record.preview_columns.length > 0 ? (
+                            <div className={s.previewGrid}>
+                              {record.preview_columns.map((col, i) => {
+                                const val = record.raw_data?.[col]
+                                if (!val) return null
+                                return (
+                                  <React.Fragment key={col}>
+                                    <span>
+                                      {(() => {
+                                        if (Array.isArray(val)) {
+                                          return val
+                                            .map((v) =>
+                                              typeof v === "object" &&
+                                              v !== null
+                                                ? (v as Record<string, unknown>)
+                                                    .display_name ||
+                                                  (v as Record<string, unknown>)
+                                                    .name ||
+                                                  JSON.stringify(v)
+                                                : String(v)
+                                            )
+                                            .join(", ")
+                                        }
+                                        if (
+                                          typeof val === "object" &&
+                                          val !== null
+                                        ) {
+                                          const obj = val as Record<
+                                            string,
+                                            unknown
+                                          >
+                                          return String(
+                                            obj.display_name ||
+                                              obj.name ||
+                                              JSON.stringify(val)
+                                          )
+                                        }
+                                        return String(val)
+                                      })()}
+                                    </span>
+                                    {i < record.preview_columns!.length - 1 && (
+                                      <span className={s.separator}>•</span>
+                                    )}
+                                  </React.Fragment>
+                                )
+                              })}
+                            </div>
+                          ) : (
+                            record.display_name
+                          )}
                         </div>
                         {record.subtitle && (
                           <div className={s.recordSubtitle}>
-                            {record.subtitle}
+                            {(() => {
+                              const val = record.raw_data?.[record.subtitle]
+                              if (Array.isArray(val)) {
+                                return val
+                                  .map((v) =>
+                                    typeof v === "object" && v !== null
+                                      ? (v as Record<string, unknown>)
+                                          .display_name ||
+                                        (v as Record<string, unknown>).name
+                                      : String(v)
+                                  )
+                                  .join(", ")
+                              }
+                              if (typeof val === "object" && val !== null) {
+                                const obj = val as Record<string, unknown>
+                                return String(obj.display_name || obj.name)
+                              }
+                              return String(val || record.subtitle)
+                            })()}
                           </div>
                         )}
                       </div>
 
                       <div className={s.recordType}>
                         <span className={s.typeBadge}>{record.model_name}</span>
-                        {record.model_id !== "users" && (
-                          <div className={s.statusDots}>
-                            {record.status === "published" ? (
-                              <span
-                                className={`${s.statusDot} ${s.published}`}
-                                title="Published"
-                              />
-                            ) : (
-                              <span
-                                className={`${s.statusDot} ${s.draft}`}
-                                title="Draft"
-                              />
-                            )}
-                            {record.status === "published" &&
-                              record.has_draft && (
-                                <span
-                                  className={`${s.statusDot} ${s.changed}`}
-                                  title="Unpublished Changes"
-                                />
-                              )}
-                          </div>
-                        )}
                       </div>
                       {allowMultiple && isSelected && (
                         <div className={s.checkIcon}>
@@ -318,6 +367,18 @@ export default function ReferenceField({
                 <div className={s.statusMessage}>No records found</div>
               )}
             </div>
+
+            {allowMultiple && (
+              <div className={s.modalActions}>
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Select
+                </Button>
+              </div>
+            )}
           </div>
         </Modal>
       </div>

@@ -1,36 +1,29 @@
 .referenceContainer {
-  position: relative;
+  display: flex;
+  align-items: stretch;
   width: 100%;
 }
 
-.selectionArea {
-  display: flex;
-  align-items: center;
-  min-height: 40px;
-  padding: 4px 12px;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  background: var(--color-white);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.selectionArea:hover {
-  border-color: var(--color-primary);
-  background: var(--color-bg-alt);
-}
-
-.selectionArea.disabled {
-  background: var(--color-bg-alt);
-  cursor: not-allowed;
-  opacity: 0.6;
+.addBtn {
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+  height: 40px;
+  flex-shrink: 0;
 }
 
 .pillList {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   flex: 1;
+  min-height: 40px;
+  padding: 4px 12px;
+  border: 1px solid var(--color-border);
+  border-left: none;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  background: var(--color-white);
 }
 
 .pill {
@@ -74,13 +67,6 @@
   color: var(--color-error);
 }
 
-.browseIcon {
-  display: flex;
-  align-items: center;
-  color: var(--color-text-dim);
-  margin-left: 8px;
-}
-
 /* Modal Styling */
 .browseModal {
   max-width: 600px !important;
@@ -91,6 +77,15 @@
   flex-direction: column;
   gap: 16px;
   max-height: 500px;
+  overflow: hidden;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
 }
 
 .searchWrapper {
@@ -217,6 +212,18 @@
 .recordSubtitle {
   font-size: 12px;
   color: var(--color-text-dim);
+}
+
+.previewGrid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.separator {
+  color: var(--color-border);
+  font-size: 10px;
 }
 
 .recordType {

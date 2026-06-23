@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { deeplyResolveMedia } from "@/utils/media-helpers"
+import { resolveRecordReferences } from "@/utils/reference-resolution"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -213,10 +214,14 @@ export async function POST(req: NextRequest) {
         const records =
           (data as unknown as Array<Record<string, unknown>>) || []
 
-        // Deeply resolve media for each record's raw data
+        // Deeply resolve media and references for each record's raw data
         const resolvedRecords = await Promise.all(
           records.map(async (record) => {
-            const resolvedData = await deeplyResolveMedia(record)
+            const resolvedWithMedia = await deeplyResolveMedia(record)
+            const resolvedData = (await resolveRecordReferences(
+              resolvedWithMedia as Record<string, unknown>,
+              modelId
+            )) as Record<string, unknown>
 
             // Smarter display name discovery if the discovered column is still a UUID or missing
             let discoveredName = record[displayColumn!] as string | undefined
@@ -238,12 +243,31 @@ export async function POST(req: NextRequest) {
               if (fallback) discoveredName = record[fallback] as string
             }
 
+            const subtitleVal = subtitleColumn
+              ? (resolvedData[subtitleColumn] as unknown)
+              : undefined
+            let resolvedSubtitle: string | unknown = subtitleVal
+            if (Array.isArray(subtitleVal)) {
+              resolvedSubtitle = subtitleVal
+                .map((v) =>
+                  typeof v === "object" && v !== null
+                    ? (v as Record<string, unknown>).display_name
+                    : v
+                )
+                .join(", ")
+            } else if (
+              typeof subtitleVal === "object" &&
+              subtitleVal !== null
+            ) {
+              resolvedSubtitle =
+                (subtitleVal as Record<string, unknown>).display_name ||
+                (subtitleVal as Record<string, unknown>).name
+            }
+
             return {
               id: record.id as string,
               display_name: discoveredName || (record.id as string),
-              subtitle: subtitleColumn
-                ? (record[subtitleColumn] as string)
-                : undefined,
+              subtitle: resolvedSubtitle ? String(resolvedSubtitle) : undefined,
               model_name: friendlyName,
               model_id: modelId,
               status: hasDraftMode ? (record.status as string) : undefined,

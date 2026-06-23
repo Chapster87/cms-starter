@@ -378,11 +378,12 @@ export default function StandingsField({
             className={s.addTeamButton}
             onClick={() => {
               // Trigger the ReferenceField inside the container
-              const selectionArea = pickerRef.current?.querySelector(
-                'div[class*="selectionArea"]'
+              // We look for the add button inside the reference field container
+              const addBtn = pickerRef.current?.querySelector(
+                'button[class*="addBtn"]'
               ) as HTMLElement
-              if (selectionArea) {
-                selectionArea.click()
+              if (addBtn) {
+                addBtn.click()
               }
             }}
             disabled={disabled || !isFilterReady}

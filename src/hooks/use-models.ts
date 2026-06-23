@@ -24,6 +24,8 @@ export interface ModelRegistryEntry {
   list_columns?: string[] | null
   preview_columns?: string[] | null
   subtitle_column?: string | null
+  default_sort_column?: string | null
+  default_sort_direction?: "asc" | "desc" | null
 }
 
 interface GlobalModelState {
