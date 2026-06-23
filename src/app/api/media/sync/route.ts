@@ -64,9 +64,34 @@ export async function POST() {
       if (deleteError) throw deleteError
     }
 
+    // 4. Also clean up any duplicates that might have slipped in (sanity check)
+    const { data: duplicates } = await supabase.rpc("exec_sql", {
+      sql: `
+        WITH duplicates AS (
+          SELECT 
+            id,
+            ROW_NUMBER() OVER (
+              PARTITION BY storage_provider, (provider_metadata->>'public_id') 
+              ORDER BY created_at DESC
+            ) as row_num
+          FROM public.media_assets
+          WHERE storage_provider = 'cloudinary'
+            AND provider_metadata->>'public_id' IS NOT NULL
+        )
+        SELECT id FROM duplicates WHERE row_num > 1;
+      `,
+    })
+
+    let duplicateCount = 0
+    if (duplicates && duplicates.length > 0) {
+      duplicateCount = duplicates.length
+      const duplicateIds = duplicates.map((d: { id: string }) => d.id)
+      await supabase.from("media_assets").delete().in("id", duplicateIds)
+    }
+
     return NextResponse.json({
-      message: `Sync complete. Removed ${deletedIds.length} broken references.`,
-      deletedCount: deletedIds.length,
+      message: `Sync complete. Removed ${deletedIds.length} broken references and ${duplicateCount} duplicates.`,
+      deletedCount: deletedIds.length + duplicateCount,
       deletedIds,
     })
   } catch (err: unknown) {

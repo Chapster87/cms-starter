@@ -114,6 +114,7 @@ export async function POST(req: NextRequest) {
           // Choose best display field
           const displayCandidates = [
             "name",
+            "team_name",
             "title",
             "label",
             "friendly_name",
@@ -121,11 +122,10 @@ export async function POST(req: NextRequest) {
             "full_name",
             "heading",
             "text",
-            "slug",
             "year",
             "season_name",
-            "team_name",
             "short_name",
+            "slug",
           ]
 
           displayColumn =
@@ -167,9 +167,23 @@ export async function POST(req: NextRequest) {
           const modelFilters =
             filters[modelId] || filters[tableName] || filters[friendlyName]
           if (modelFilters) {
-            Object.entries(modelFilters).forEach(([col, val]) => {
+            Object.entries(modelFilters).forEach(([filterCol, val]) => {
               if (val !== undefined && val !== null && val !== "") {
-                const colInfo = typedColumns?.find((c) => c.column_name === col)
+                // Map filter names to physical columns if needed (e.g. season -> seasons)
+                let col = filterCol
+                let colInfo = typedColumns?.find((c) => c.column_name === col)
+
+                if (!colInfo && filterCol === "season") {
+                  const pluralCol = "seasons"
+                  const pluralInfo = typedColumns?.find(
+                    (c) => c.column_name === pluralCol
+                  )
+                  if (pluralInfo) {
+                    col = pluralCol
+                    colInfo = pluralInfo
+                  }
+                }
+
                 const isJson = colInfo?.data_type === "jsonb"
 
                 // Handle various array scenarios (e.g. [uuid], or just uuid)
@@ -178,21 +192,38 @@ export async function POST(req: NextRequest) {
                   (v) => v !== null && v !== "" && v !== undefined
                 )
 
-                if (cleanVals.length > 0) {
-                  const isUuid = colInfo?.data_type === "uuid"
-                  const isText =
-                    colInfo?.data_type?.includes("text") ||
-                    colInfo?.data_type?.includes("char")
+                const isUuid = colInfo?.data_type === "uuid"
+                const isText =
+                  colInfo?.data_type?.includes("text") ||
+                  colInfo?.data_type?.includes("char")
 
-                  if (isJson || col === "league" || col === "division") {
-                    // Reverting to working array containment logic
-                    const orParts: string[] = []
-                    cleanVals.forEach((v) => {
+                if (cleanVals.length > 0) {
+                  if (
+                    isJson ||
+                    col === "league" ||
+                    col === "division" ||
+                    col === "season" ||
+                    col === "seasons"
+                  ) {
+                    // Teams model uses JSONB arrays for league/division/season.
+                    // We need to AND different columns (League AND Season) but OR values within the same column.
+                    // Using .filter with 'cs' (containment) is more robust for JSONB arrays.
+                    const containmentFilters = cleanVals.map((v) => {
                       const jsonV = JSON.stringify(v)
-                      // This produces: column.cs.["uuid"]
-                      orParts.push(`${col}.cs.[${jsonV}]`)
+                      return `${col}.cs.[${jsonV}]`
                     })
-                    query = query.or(orParts.join(","))
+
+                    if (containmentFilters.length === 1) {
+                      // PostgREST naturally ANDs successive .filter() calls
+                      query = query.filter(
+                        col,
+                        "cs",
+                        `[${JSON.stringify(cleanVals[0])}]`
+                      )
+                    } else if (containmentFilters.length > 0) {
+                      // OR multiple values for the SAME column
+                      query = query.or(containmentFilters.join(","))
+                    }
                   } else if (isUuid || isText) {
                     query = query.in(col, cleanVals)
                   } else {

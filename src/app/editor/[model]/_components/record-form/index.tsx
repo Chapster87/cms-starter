@@ -550,13 +550,14 @@ export default function RecordForm({
         }
 
         if (field.field_type === "standings_table") {
-          // Resolve dependency values. We look for 'league' and 'division' columns.
+          // Resolve dependency values. We look for 'league', 'division' and 'season' columns.
           // In ReferenceField, the value is often an array (e.g., [uuid]).
           const leagueId = formData["league"] as string | string[] | undefined
           const divisionId = formData["division"] as
             | string
             | string[]
             | undefined
+          const seasonId = formData["season"] as string | string[] | undefined
 
           return (
             <StandingsField
@@ -568,6 +569,7 @@ export default function RecordForm({
               divisionId={
                 Array.isArray(divisionId) ? divisionId[0] : divisionId
               }
+              seasonId={Array.isArray(seasonId) ? seasonId[0] : seasonId}
             />
           )
         }

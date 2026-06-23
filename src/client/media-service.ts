@@ -38,6 +38,7 @@ export const mediaService = {
 
   /**
    * Registers a new asset in the database.
+   * Prevents duplicates by returning existing record if public_id already exists.
    */
   async registerAsset(asset: Partial<MediaAsset>): Promise<MediaAsset> {
     const supabase = createClient()
@@ -52,6 +53,25 @@ export const mediaService = {
       .single()
 
     if (error) {
+      // Handle unique constraint violation (duplicate asset)
+      if (
+        error.code === "23505" &&
+        asset.storage_provider === "cloudinary" &&
+        asset.provider_metadata?.public_id
+      ) {
+        const { data: existing } = await supabase
+          .from("media_assets")
+          .select("*")
+          .eq("storage_provider", "cloudinary")
+          .eq(
+            "provider_metadata->>public_id",
+            asset.provider_metadata.public_id
+          )
+          .single()
+
+        if (existing) return existing as MediaAsset
+      }
+
       console.error("Error registering media asset:", error.message)
       throw error
     }

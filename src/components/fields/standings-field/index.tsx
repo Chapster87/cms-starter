@@ -53,6 +53,7 @@ interface StandingsFieldProps {
   disabled?: boolean
   leagueId?: string
   divisionId?: string
+  seasonId?: string
 }
 
 /**
@@ -68,6 +69,7 @@ export default function StandingsField({
   disabled,
   leagueId,
   divisionId,
+  seasonId,
 }: StandingsFieldProps) {
   const id = React.useId()
   const pickerRef = React.useRef<HTMLDivElement>(null)
@@ -136,9 +138,10 @@ export default function StandingsField({
       teams: {
         league: leagueId,
         division: divisionId,
+        season: seasonId,
       },
     }
-  }, [leagueId, divisionId, isFilterReady])
+  }, [leagueId, divisionId, seasonId, isFilterReady])
 
   const excludeIds = useMemo(() => {
     return rows.map((r) => r.team_id).filter(Boolean)
