@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import * as Tooltip from "@radix-ui/react-tooltip"
 
 import Link from "@components/link"
 import Logo from "./_components/logo"
@@ -70,48 +71,78 @@ export default function Navigation() {
     <nav className={s.nav}>
       <Logo showText={false} />
       <div className={s.navInner}>
-        <ul className={s.navList}>
-          {NAV_TOP.map((item) => {
-            const isActive =
-              item.url === "/"
-                ? pathname === item.url
-                : pathname.startsWith(item.url)
+        <Tooltip.Provider delayDuration={0}>
+          <ul className={s.navList}>
+            {NAV_TOP.map((item) => {
+              const isActive =
+                item.url === "/"
+                  ? pathname === item.url
+                  : pathname.startsWith(item.url)
 
-            return (
-              <li key={item.title}>
-                <Link
-                  href={item.url}
-                  className={`${s.navLink} ${isActive ? s.active : ""}`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <span className={s.navLinkIcon}>{item.icon}</span>
-                  <span className={s.navLinkTitle}>{item.title}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
-        <ul className={s.navList}>
-          {NAV_BOTTOM.map((item) => {
-            const isActive =
-              item.url === "/"
-                ? pathname === item.url
-                : pathname.startsWith(item.url)
+              return (
+                <li key={item.title}>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <Link
+                        href={item.url}
+                        className={`${s.navLink} ${isActive ? s.active : ""}`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <span className={s.navLinkIcon}>{item.icon}</span>
+                        <span className={s.navLinkTitle}>{item.title}</span>
+                      </Link>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content
+                        className={`${s.tooltipContent} ${s.brand}`}
+                        side="right"
+                        sideOffset={4}
+                      >
+                        {item.title}
+                        <Tooltip.Arrow className={s.tooltipArrow} />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
+                </li>
+              )
+            })}
+          </ul>
+          <ul className={s.navList}>
+            {NAV_BOTTOM.map((item) => {
+              const isActive =
+                item.url === "/"
+                  ? pathname === item.url
+                  : pathname.startsWith(item.url)
 
-            return (
-              <li key={item.title}>
-                <Link
-                  href={item.url}
-                  className={`${s.navLink} ${isActive ? s.active : ""}`}
-                  aria-current={isActive ? "page" : undefined}
-                >
-                  <span className={s.navLinkIcon}>{item.icon}</span>
-                  <span className={s.navLinkTitle}>{item.title}</span>
-                </Link>
-              </li>
-            )
-          })}
-        </ul>
+              return (
+                <li key={item.title}>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <Link
+                        href={item.url}
+                        className={`${s.navLink} ${isActive ? s.active : ""}`}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        <span className={s.navLinkIcon}>{item.icon}</span>
+                        <span className={s.navLinkTitle}>{item.title}</span>
+                      </Link>
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content
+                        className={`${s.tooltipContent} ${s.brand}`}
+                        side="right"
+                        sideOffset={4}
+                      >
+                        {item.title}
+                        <Tooltip.Arrow className={s.tooltipArrow} />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
+                </li>
+              )
+            })}
+          </ul>
+        </Tooltip.Provider>
       </div>
     </nav>
   )

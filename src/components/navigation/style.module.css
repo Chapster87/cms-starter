@@ -63,3 +63,68 @@
 .navLinkTitle {
   display: none;
 }
+
+.tooltipContent {
+  background-color: var(--color-grey-900);
+  color: var(--color-white);
+  padding: 12px 16px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  user-select: none;
+  animation-duration: 400ms;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  z-index: 100;
+  border: 1px solid var(--color-grey-700);
+
+  /* Alternative Styles via data attributes or separate classes */
+  &.brand {
+    background-color: var(--color-primary);
+    border: none;
+  }
+
+  &.glass {
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  &.outline {
+    background-color: var(--color-black);
+    border: 2px solid var(--color-primary);
+  }
+}
+
+.tooltipContent[data-state="delayed-open"][data-side="right"] {
+  animation-name: slideLeftAndFade;
+}
+
+.tooltipArrow {
+  fill: var(--color-grey-700);
+
+  .brand & {
+    fill: var(--color-primary);
+  }
+
+  .glass & {
+    fill: rgba(0, 0, 0, 0.8);
+  }
+
+  .outline & {
+    fill: var(--color-primary);
+  }
+}
+
+@keyframes slideLeftAndFade {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
