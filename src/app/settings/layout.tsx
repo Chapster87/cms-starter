@@ -31,6 +31,15 @@ function SettingsSidebar() {
         </svg>
       ),
     },
+    {
+      title: "Site",
+      url: "/settings/site",
+      icon: (
+        <svg className="feather-icon" width="18" height="18">
+          <use href="/feather-sprite.svg#globe" />
+        </svg>
+      ),
+    },
     // Future settings pages can be added here
   ]
 

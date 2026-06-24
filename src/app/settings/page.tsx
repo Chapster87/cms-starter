@@ -28,10 +28,13 @@ export default function SettingsDashboard() {
             (Coming Soon) Track changes across your content and schema registry.
           </p>
         </div>
-        <div className={s.card}>
-          <h3>Global Config</h3>
-          <p>(Coming Soon) Manage site-wide variables and API settings.</p>
-        </div>
+        <Link href="/settings/site" className={s.card}>
+          <h3>Global Config & SEO</h3>
+          <p>
+            Manage site-wide variables, baseline SEO settings, and social card
+            defaults.
+          </p>
+        </Link>
       </div>
     </div>
   )

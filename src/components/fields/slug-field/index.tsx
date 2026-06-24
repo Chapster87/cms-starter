@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from "react"
 import TextField from "../text-field"
+import { useSiteSettings } from "@/hooks/use-site-settings"
+import s from "./style.module.css"
 
 interface SlugFieldProps {
   label: string
@@ -38,6 +40,7 @@ export default function SlugField({
   isTouched: controlledIsTouched,
   onToggleTouched,
 }: SlugFieldProps) {
+  const { settings } = useSiteSettings()
   const [internalIsTouched, setInternalIsTouched] = useState(false)
 
   const isTouched = controlledIsTouched ?? internalIsTouched
@@ -86,16 +89,21 @@ export default function SlugField({
     onChange(val)
   }
 
+  const siteUrl = settings?.siteUrl?.replace(/\/$/, "") || "https://example.com"
+
   return (
-    <TextField
-      label={label}
-      name={name}
-      value={value}
-      onChange={handleInputChange}
-      placeholder={placeholder}
-      description={description}
-      required={required}
-      disabled={disabled}
-    />
+    <div className={s.slugFieldContainer}>
+      <TextField
+        label={label}
+        name={name}
+        value={value}
+        onChange={handleInputChange}
+        placeholder={placeholder}
+        description={description}
+        required={required}
+        disabled={disabled}
+        leftElement={<div className={s.urlPrefix}>{siteUrl}/</div>}
+      />
+    </div>
   )
 }

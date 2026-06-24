@@ -9,6 +9,7 @@ interface TextFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   fieldNote?: string
   error?: string
   required?: boolean
+  leftElement?: React.ReactNode
 }
 
 /**
@@ -22,6 +23,7 @@ export default function TextField({
   required,
   id,
   className,
+  leftElement,
   ...props
 }: TextFieldProps) {
   const inputId = id || `text-field-${props.name}`
@@ -36,12 +38,15 @@ export default function TextField({
       required={required}
       className={className}
     >
-      <input
-        {...props}
-        id={inputId}
-        className={clsx(s.input, error && s.error)}
-        required={required}
-      />
+      <div className={clsx(s.inputContainer, error && s.error)}>
+        {leftElement && <div className={s.leftElement}>{leftElement}</div>}
+        <input
+          {...props}
+          id={inputId}
+          className={s.input}
+          required={required}
+        />
+      </div>
     </FieldWrapper>
   )
 }

@@ -618,5 +618,68 @@ export const generateSchema = async () => {
     },
   })
 
-  return new GraphQLSchema({ query: QueryType })
+  const SiteSettingsType = new GraphQLObjectType({
+    name: "SiteSettings",
+    fields: {
+      defaultPageTitle: { type: GraphQLString },
+      titleSuffix: { type: GraphQLString },
+      fallbackDescription: { type: GraphQLString },
+      noIndex: { type: GraphQLBoolean },
+      socialSiteName: { type: GraphQLString },
+      twitterHandle: { type: GraphQLString },
+      twitterUrl: { type: GraphQLString },
+      socialCard: { type: MediaType },
+      facebookUrl: { type: GraphQLString },
+      instagramUrl: { type: GraphQLString },
+      siteUrl: { type: GraphQLString },
+      favicon: { type: MediaType },
+    },
+  })
+
+  const schemaFields: GraphQLFieldConfigMap<unknown, unknown> = {
+    ...QueryType.toConfig().fields,
+    siteSettings: {
+      type: SiteSettingsType,
+      resolve: async () => {
+        const { data } = await supabase
+          .from("globals")
+          .select("value")
+          .eq("key", "site_settings")
+          .single()
+
+        if (!data?.value) return null
+
+        const settings = data.value as Record<string, unknown>
+
+        // Resolve social card if it exists
+        if (settings.socialCard && typeof settings.socialCard === "string") {
+          const { data: mediaData } = await supabase
+            .from("media_assets")
+            .select("*")
+            .eq("id", settings.socialCard)
+            .single()
+          settings.socialCard = mediaData
+        }
+
+        // Resolve favicon if it exists
+        if (settings.favicon && typeof settings.favicon === "string") {
+          const { data: mediaData } = await supabase
+            .from("media_assets")
+            .select("*")
+            .eq("id", settings.favicon)
+            .single()
+          settings.favicon = mediaData
+        }
+
+        return settings
+      },
+    },
+  }
+
+  return new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: "Query",
+      fields: schemaFields,
+    }),
+  })
 }

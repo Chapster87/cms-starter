@@ -137,6 +137,11 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Implemented a dedicated "Sort" dropdown utility in the header for mobile-friendly access.
   - Integrated database-level persistence via `default_sort_column` and `default_sort_direction` in the model registry.
   - Automated state synchronization between the UI and database to maintain preferred ordering across sessions.
+- [x] **Global Site Settings & baseline SEO**:
+  - Implemented a centralized `/settings/site` module for managing global variables.
+  - Features include: Site URL (with dynamic `SlugField` integration), baseline SEO (Default Title, Suffix, Fallback Description, No Index), and Brand Assets (Favicon).
+  - Comprehensive social connectivity for Open Graph/Twitter metadata and profile links.
+  - Fully integrated with the GraphQL CDA, supporting automatic resolution of media assets (Favicon/Social Card).
 
 ## Glossary
 

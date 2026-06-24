@@ -1,0 +1,8 @@
+.slugFieldContainer {
+  width: 100%;
+}
+
+.urlPrefix {
+  color: var(--color-grey-500);
+  font-size: 14px;
+}
