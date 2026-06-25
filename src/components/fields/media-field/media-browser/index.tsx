@@ -9,7 +9,7 @@ import Modal from "@/components/modal"
 import { mediaService } from "@/client/media-service"
 import { storageFactory } from "@/client/storage-factory"
 import { useCloudinaryWidget } from "@/hooks/use-cloudinary-widget"
-import { MediaAsset } from "@/types/media"
+import { MediaAsset } from "@/types/cms-generated"
 import MediaDetailsModal from "@/app/media/_components/media-details-modal"
 
 import s from "./style.module.css"

@@ -1,7 +1,22 @@
+import { exec } from "child_process"
 import { NextRequest, NextResponse } from "next/server"
+import { promisify } from "util"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { createClient } from "@/utils/supabase-server"
 import { getFieldDefinition } from "@/utils/field-types"
+
+const execPromise = promisify(exec)
+
+/**
+ * Triggers the type synchronization script.
+ */
+async function triggerTypeSync() {
+  try {
+    await execPromise("pnpm sync-types")
+  } catch (error) {
+    console.error("Failed to trigger type sync:", error)
+  }
+}
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -107,6 +122,9 @@ export async function POST(req: NextRequest) {
         .eq("field_name", sanitizedFieldName)
     }
 
+    // Trigger type sync in the background
+    triggerTypeSync()
+
     return NextResponse.json(
       {
         message: `Field '${field_label}' created successfully.`,
@@ -175,6 +193,9 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
+    // Trigger type sync in the background
+    triggerTypeSync()
+
     return NextResponse.json(data, { status: 200 })
   } catch (err: unknown) {
     console.error("Unexpected error in PATCH /api/models/schema/fields:", err)
@@ -227,6 +248,9 @@ export async function DELETE(req: NextRequest) {
         { status: 500 }
       )
     }
+
+    // Trigger type sync in the background
+    triggerTypeSync()
 
     return NextResponse.json({ message: "Field deleted successfully." })
   } catch (err: unknown) {

@@ -41,13 +41,14 @@ export default function FieldWrapper({
 
       {children}
 
+      {error && <div className={s.error}>{error}</div>}
+
       {(description || fieldNote) && (
         <div className={s.description}>
           {description && <p className={s.descriptionPart}>{description}</p>}
           {fieldNote && <p className={s.fieldNote}>{fieldNote}</p>}
         </div>
       )}
-      {error && <div className={s.error}>{error}</div>}
     </div>
   )
 }
@@ -75,13 +76,14 @@ export function FieldWrapperCheckbox({
         </div>
       </div>
 
+      {error && <div className={s.error}>{error}</div>}
+
       {(description || fieldNote) && (
         <div className={s.description}>
           {description && <p className={s.descriptionPart}>{description}</p>}
           {fieldNote && <p className={s.fieldNote}>{fieldNote}</p>}
         </div>
       )}
-      {error && <div className={s.error}>{error}</div>}
     </div>
   )
 }

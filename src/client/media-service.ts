@@ -1,5 +1,14 @@
-import { MediaAsset } from "@/types/media"
+import { MediaAsset } from "@/types/cms-generated"
 import { createClient } from "@/utils/supabase"
+
+export interface StorageAdapter {
+  upload(
+    file: File,
+    options?: { folder?: string; tags?: string[] }
+  ): Promise<Partial<MediaAsset>>
+  delete(asset: MediaAsset): Promise<void>
+  getSignedUrl(asset: MediaAsset): Promise<string>
+}
 
 /**
  * Service for managing media asset metadata in Supabase.

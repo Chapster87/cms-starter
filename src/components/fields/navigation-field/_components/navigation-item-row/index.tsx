@@ -13,7 +13,7 @@ import {
   Trash2,
   Plus,
 } from "lucide-react"
-import { NavigationItem } from "@/types/navigation"
+import { NavigationItem } from "@/types/cms-generated"
 import Button from "@/components/button"
 import ContextMenu from "@/components/context-menu"
 import SvgIcon from "@/components/svg-icon"

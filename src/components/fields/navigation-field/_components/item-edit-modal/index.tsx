@@ -1,5 +1,5 @@
 import React, { useState } from "react"
-import { NavigationItem } from "@/types/navigation"
+import { NavigationItem } from "@/types/cms-generated"
 import Modal from "@/components/modal"
 import { ReferenceField, TextField, CheckboxField } from "@/components/fields"
 import Button from "@/components/button"

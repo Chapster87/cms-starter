@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 
 import Button from "@/components/button"
-import { MediaAsset } from "@/types/media"
+import { MediaAsset } from "@/types/cms-generated"
 import FieldWrapper from "../field-wrapper"
 import MediaBrowser from "./media-browser"
 

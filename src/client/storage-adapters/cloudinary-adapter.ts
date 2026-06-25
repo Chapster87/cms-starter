@@ -1,4 +1,5 @@
-import { MediaAsset, StorageAdapter } from "@/types/media"
+import { MediaAsset } from "@/types/cms-generated"
+import { StorageAdapter } from "../media-service"
 
 /**
  * Cloudinary Storage Adapter for secure client-side uploads using signed signatures.

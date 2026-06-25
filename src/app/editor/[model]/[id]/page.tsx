@@ -13,6 +13,7 @@ import SvgIcon from "@/components/svg-icon"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
 import { getRecordDisplayName } from "@/helpers/record-helpers"
+import { CMSModelName } from "@/types/cms-generated"
 import RecordForm from "@/app/editor/[model]/_components/record-form"
 import StatusBadge, {
   RecordStatus,
@@ -32,7 +33,8 @@ interface EditRecordPageProps {
  */
 export default function EditRecordPage({ params }: EditRecordPageProps) {
   const router = useRouter()
-  const { model, id } = use(params)
+  const { model: modelSlug, id } = use(params)
+  const model = modelSlug as CMSModelName
   const { accessToken, loading: authLoading } = useAuth()
   const { models } = useModels()
 
@@ -352,7 +354,7 @@ export default function EditRecordPage({ params }: EditRecordPageProps) {
       {record && (
         <RecordForm
           id="record-form"
-          model={targetTable}
+          model={model}
           initialData={workingData || undefined}
           onSubmit={handlePublish}
           onAutoSave={handleAutoSave}

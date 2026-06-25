@@ -1,5 +1,6 @@
 import { getDelta } from "@/utils/diff"
 import { createClient } from "@/utils/supabase"
+import { resolveReferences } from "./reference-resolver"
 
 export interface RecordBase {
   id: string
@@ -16,15 +17,22 @@ export const dataService = {
   /**
    * Fetches all records for a given model.
    * @param model - The name of the model (table).
-   * @param orderBy - Optional column to order by (defaults to "created_at").
-   * @param orderDir - Optional direction to order by ("asc" or "desc", defaults to "desc").
+   * @param options - Optional parameters for ordering and resolution.
    * @returns A promise that resolves to an array of records.
    */
-  async getRecords(
+  async getRecords<T extends RecordBase = RecordBase>(
     model: string,
-    orderBy: string = "created_at",
-    orderDir: "asc" | "desc" = "desc"
-  ): Promise<RecordBase[]> {
+    options: {
+      orderBy?: string
+      orderDir?: "asc" | "desc"
+      resolve?: boolean
+    } = {}
+  ): Promise<T[]> {
+    const {
+      orderBy = "created_at",
+      orderDir = "desc",
+      resolve = false,
+    } = options
     const supabase = createClient()
     const { data, error } = await supabase
       .from(model)
@@ -36,20 +44,37 @@ export const dataService = {
       throw error
     }
 
-    return data as RecordBase[]
+    let records = data as T[]
+
+    if (resolve && records.length > 0) {
+      // Fetch schema to know what to resolve
+      const res = await fetch(`/api/models/schema/fields?table=${model}`)
+      if (res.ok) {
+        const fields = await res.json()
+        records = await Promise.all(
+          records.map((r) => resolveReferences(r, fields) as Promise<T>)
+        )
+      }
+    }
+
+    return records
   },
 
   /**
    * Fetches a single record by its ID.
    * @param model - The name of the model.
    * @param id - The UUID of the record.
-   * @param fields - Optional string of fields to fetch (default all "*").
+   * @param options - Optional parameters for fields and resolution.
    */
-  async getRecordById(
+  async getRecordById<T extends RecordBase = RecordBase>(
     model: string,
     id: string,
-    fields: string = "*"
-  ): Promise<RecordBase | null> {
+    options: {
+      fields?: string
+      resolve?: boolean
+    } = {}
+  ): Promise<T | null> {
+    const { fields = "*", resolve = false } = options
     const supabase = createClient()
     // Basic UUID validation to prevent 400 errors from Supabase
     const isUuid =
@@ -72,18 +97,33 @@ export const dataService = {
       throw error
     }
 
-    return data as unknown as RecordBase
+    let record = data as unknown as T
+
+    if (resolve && record) {
+      const res = await fetch(`/api/models/schema/fields?table=${model}`)
+      if (res.ok) {
+        const fields = await res.json()
+        record = (await resolveReferences(record, fields)) as T
+      }
+    }
+
+    return record
   },
 
   /**
    * Fetches a single record by its Slug.
    * @param model - The name of the model.
    * @param slug - The slug of the record.
+   * @param options - Optional parameters for resolution.
    */
-  async getRecordBySlug(
+  async getRecordBySlug<T extends RecordBase = RecordBase>(
     model: string,
-    slug: string
-  ): Promise<RecordBase | null> {
+    slug: string,
+    options: {
+      resolve?: boolean
+    } = {}
+  ): Promise<T | null> {
+    const { resolve = false } = options
     const supabase = createClient()
     try {
       const { data, error } = await supabase
@@ -97,7 +137,17 @@ export const dataService = {
         return null
       }
 
-      return data as unknown as RecordBase
+      let record = data as unknown as T
+
+      if (resolve && record) {
+        const res = await fetch(`/api/models/schema/fields?table=${model}`)
+        if (res.ok) {
+          const fields = await res.json()
+          record = (await resolveReferences(record, fields)) as T
+        }
+      }
+
+      return record
     } catch (err) {
       // Column might not exist
       return null
@@ -435,11 +485,11 @@ export const dataService = {
    * Inserts a new record using upsert.
    * Automatically unwraps stringified JSON for clean storage.
    */
-  async createRecord(
+  async createRecord<T extends RecordBase = RecordBase>(
     model: string,
     recordData: Record<string, unknown>,
     modelId?: string
-  ): Promise<RecordBase | null> {
+  ): Promise<T | null> {
     const supabase = createClient()
 
     // Ensure we don't save stringified JSON into what should be native JSON columns
@@ -482,6 +532,6 @@ export const dataService = {
       throw error
     }
 
-    return data as RecordBase
+    return data as T
   },
 }

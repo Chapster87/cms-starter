@@ -13,7 +13,7 @@ import Button from "@/components/button"
 import { mediaService } from "@/client/media-service"
 import { storageFactory } from "@/client/storage-factory"
 import { useCloudinaryWidget } from "@/hooks/use-cloudinary-widget"
-import { MediaAsset } from "@/types/media"
+import { MediaAsset } from "@/types/cms-generated"
 import FolderSidebar from "./_components/folder-sidebar"
 import MediaDetailsModal from "./_components/media-details-modal"
 

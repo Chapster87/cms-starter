@@ -1,4 +1,4 @@
-import { GraphQLClient } from "graphql-request"
+import { GraphQLClient, RequestDocument, Variables } from "graphql-request"
 import { createClient } from "@/utils/supabase"
 
 const graphqlEndpoint = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/graphql/v1`
@@ -32,4 +32,19 @@ export async function getGraphqlClient(
   }
 
   return new GraphQLClient(graphqlEndpoint, { headers })
+}
+
+/**
+ * Executes a GraphQL query and returns a typed response.
+ * @param query - The GraphQL query or mutation.
+ * @param variables - Optional variables for the query.
+ * @param accessToken - Optional access token for authenticated requests.
+ */
+export async function executeCMSQuery<T>(
+  query: RequestDocument,
+  variables?: Variables,
+  accessToken?: string | null
+): Promise<T> {
+  const client = await getGraphqlClient(accessToken)
+  return client.request<T>(query, variables)
 }

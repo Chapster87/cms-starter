@@ -21,7 +21,7 @@ import {
 import ColumnSettings from "./_components/column-settings"
 import SortSettings from "./_components/sort-settings"
 import { CMSField } from "@/types/fields"
-import { MediaAsset } from "@/types/media"
+import { MediaAsset } from "@/types/cms-generated"
 import s from "./style.module.css"
 
 interface RecordListPageProps {
@@ -63,7 +63,10 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     setError(null)
     try {
       const [fetchedRecords, fieldsRes] = await Promise.all([
-        dataService.getRecords(modelSlug, sortColumn, sortDirection),
+        dataService.getRecords(modelSlug, {
+          orderBy: sortColumn,
+          orderDir: sortDirection,
+        }),
         fetch(`/api/models/schema/fields?table=${modelSlug}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         }),

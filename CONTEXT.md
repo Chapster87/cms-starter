@@ -46,17 +46,15 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
+- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
-- [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
+- [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup.
+- [ ] **Environment Tooling:** Tooling for migrating model definitions between development and production environments.
 
 ### 3. Future Roadmap
 
-- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
-- [ ] **Type Safety:** Evaluation of Schema & Type Generation for the frontend (similar to Sanity/Strapi).
 - [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup. Make note of tables that should exist by default(models, authors, fields, model_groups, users, audit_logs, media_assets, etc) and what columns they should start with (perhaps using our existing database to populate this list). Need to create a admin account by default during init.
 - [ ] **Environment Tooling:** Tooling for migrating model definitions between development and production environments.
 - [ ] **Implement "View-As" Control** Allow Admin user roles to view CMS as other roles to assist in debugging/permission audits.
@@ -142,6 +140,12 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Features include: Site URL (with dynamic `SlugField` integration), baseline SEO (Default Title, Suffix, Fallback Description, No Index), and Brand Assets (Favicon).
   - Comprehensive social connectivity for Open Graph/Twitter metadata and profile links.
   - Fully integrated with the GraphQL CDA, supporting automatic resolution of media assets (Favicon/Social Card).
+- [x] **Advanced Type Safety & Logical Controls (Phase 3 & 4)**:
+  - **Unified Metadata Types**: Consolidated all record shapes into a single generated file (`cms-generated.ts`) driven by the database registry.
+  - **Relationship Integrity**: Enhanced `dataService` and created a client-side `reference-resolver` to automatically resolve record IDs into rich, typed objects, ensuring frontend data matches TypeScript interfaces.
+  - **Computed Fields**: Added `is_computed` metadata support. The form engine now identifies read-only system fields, disabling them in the UI and excluding them from save payloads.
+  - **Permission-Based UI (RBAC)**: Integrated field-level access control via `required_role` and `hide_from_roles` metadata. `RecordForm` conditionally renders or disables fields based on the current user's role.
+  - **Architectural Pruning**: Modernized the type system by eliminating redundant manual definitions (e.g., `media.ts`) in favor of the central generated source of truth.
 
 ## Glossary
 

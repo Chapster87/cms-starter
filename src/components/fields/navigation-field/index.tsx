@@ -5,7 +5,7 @@ import { DndContext, closestCenter, DragOverlay } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { Menu, Plus, FolderPlus } from "lucide-react"
 import Button from "@/components/button"
-import { NavigationData, NavigationItem } from "@/types/navigation"
+import { NavigationData, NavigationItem } from "@/types/cms-generated"
 import { useAuth } from "@/hooks/use-auth"
 import { useTreeDnd } from "@/hooks/use-tree-dnd"
 import {

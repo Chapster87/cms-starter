@@ -1,4 +1,5 @@
-import { StorageAdapter, StorageProvider } from "@/types/media"
+import { StorageProvider } from "@/types/cms-generated"
+import { StorageAdapter } from "./media-service"
 import { cloudinaryAdapter } from "./storage-adapters/cloudinary-adapter"
 
 /**

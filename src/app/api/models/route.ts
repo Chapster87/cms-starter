@@ -1,6 +1,27 @@
+import { exec } from "child_process"
 import { NextRequest, NextResponse } from "next/server"
+import { promisify } from "util"
 import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 import { hasPermission } from "@/utils/permissions"
+
+const execPromise = promisify(exec)
+
+/**
+ * Triggers the type synchronization script.
+ * Runs asynchronously to avoid blocking the API response.
+ */
+async function triggerTypeSync() {
+  try {
+    // We use pnpm sync-types which is defined in package.json
+    const { stdout, stderr } = await execPromise("pnpm sync-types")
+    if (stderr) {
+      console.warn("Type sync produced stderr:", stderr)
+    }
+    console.log("Type sync completed successfully:", stdout)
+  } catch (error) {
+    console.error("Failed to trigger type sync:", error)
+  }
+}
 import { createClient } from "@/utils/supabase-server"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
@@ -180,6 +201,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Trigger type sync in the background
+    triggerTypeSync()
+
     return NextResponse.json(
       {
         message: `Table '${sanitizedName}' created and registered successfully.`,
@@ -311,6 +335,9 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
+    // Trigger type sync in the background
+    triggerTypeSync()
+
     return NextResponse.json(
       { message: `Model '${table_name}' updated successfully.` },
       { status: 200 }
@@ -403,6 +430,9 @@ export async function DELETE(req: NextRequest) {
           .select()
       }
     }
+
+    // Trigger type sync in the background
+    triggerTypeSync()
 
     return NextResponse.json(
       { message: `Table '${sanitizedName}' deleted successfully.` },

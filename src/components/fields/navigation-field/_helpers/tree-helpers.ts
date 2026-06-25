@@ -1,4 +1,4 @@
-import { NavigationItem } from "@/types/navigation"
+import { NavigationItem } from "@/types/cms-generated"
 import { FlattenedItem as GlobalFlattenedItem } from "@/helpers/tree-helpers"
 
 export interface RecordPreview {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { RefreshCw } from "lucide-react"
-import { MediaAsset } from "@/types/media"
 import {
   TextField,
   NumberField,
@@ -26,7 +25,12 @@ import { useAuth } from "@/hooks/use-auth"
 import { useUsers } from "@/hooks/use-users"
 import { CMSField } from "@/types/fields"
 import { toast } from "@/client/toast-store"
-import { NavigationData } from "@/types/navigation"
+import {
+  MediaAsset,
+  NavigationData,
+  CMSModelMap,
+  CMSModelName,
+} from "@/types/cms-generated"
 import s from "./style.module.css"
 
 interface FieldSchema {
@@ -36,12 +40,12 @@ interface FieldSchema {
   column_default: string | null
 }
 
-interface RecordFormProps {
+interface RecordFormProps<T extends CMSModelName> {
   id?: string
-  model: string
-  initialData?: Record<string, unknown>
-  onSubmit: (data: Record<string, unknown>) => Promise<void>
-  onAutoSave?: (data: Record<string, unknown>) => void
+  model: T
+  initialData?: Partial<CMSModelMap[T]>
+  onSubmit: (data: Partial<CMSModelMap[T]>) => Promise<void>
+  onAutoSave?: (data: Partial<CMSModelMap[T]>) => void
   isLoading: boolean
   hasDraftMode?: boolean
 }
@@ -49,7 +53,7 @@ interface RecordFormProps {
 /**
  * A dynamic form component that generates inputs based on a table's schema.
  */
-export default function RecordForm({
+export default function RecordForm<T extends CMSModelName>({
   id,
   model,
   initialData,
@@ -57,25 +61,51 @@ export default function RecordForm({
   onAutoSave,
   isLoading,
   hasDraftMode,
-}: RecordFormProps) {
+}: RecordFormProps<T>) {
   const { accessToken } = useAuth()
   const { users } = useUsers()
   const [schema, setSchema] = useState<CMSField[]>([])
+
+  // Use a more flexible internal type for the form data while keeping the component generic
   const [formData, setFormData] = useState<Record<string, unknown>>(
-    initialData || {}
+    (initialData as Record<string, unknown>) || {}
   )
+  const [errors, setErrors] = useState<Record<string, string>>({})
   const [fetchingSchema, setFetchingSchema] = useState(true)
+
+  /**
+   * Internal helper for accessing form data dynamically.
+   */
+  function getFieldValue(key: string): unknown {
+    return formData[key]
+  }
+
+  /**
+   * Validates a single field and updates the error state.
+   */
+  function validateField(name: string, value: unknown, isRequired?: boolean) {
+    if (isRequired && (value === undefined || value === null || value === "")) {
+      setErrors((prev) => ({ ...prev, [name]: "This field is required" }))
+      return false
+    }
+    setErrors((prev) => {
+      const next = { ...prev }
+      delete next[name]
+      return next
+    })
+    return true
+  }
 
   // Sync internal form data with initialData when it changes from above
   useEffect(() => {
     if (initialData) {
       // Proactively "unwrap" stringified JSON for media/json fields on load
-      const unwrappedData = { ...initialData }
+      const unwrappedData = { ...initialData } as Record<string, unknown>
 
       // We don't have schema yet in this effect usually, so we'll do a general check
       // or rely on the fact that these strings look like JSON.
       Object.keys(unwrappedData).forEach((key) => {
-        const val = unwrappedData[key]
+        const val = (unwrappedData as Record<string, unknown>)[key]
         if (
           typeof val === "string" &&
           (val.trim().startsWith("{") || val.trim().startsWith("["))
@@ -174,11 +204,17 @@ export default function RecordForm({
     }
   }, [model, accessToken])
 
-  const handleChange = (columnName: string, value: unknown) => {
-    let nextData = { ...formData, [columnName]: value }
+  function handleChange(columnName: string, value: unknown) {
+    const nextData = {
+      ...formData,
+      [columnName]: value,
+    }
+
+    const field = schema.find((f) => f.field_name === columnName)
+    validateField(columnName, value, field?.is_required)
 
     // Auto-sync from user if linking for the first time
-    if (model === "authors" && columnName === "user_id" && value) {
+    if ((model as string) === "authors" && columnName === "user_id" && value) {
       const userId = Array.isArray(value) ? value[0] : value
       const linkedUser = users.find((u) => u.id === userId)
 
@@ -193,7 +229,7 @@ export default function RecordForm({
         }
 
         if (Object.keys(updates).length > 0) {
-          nextData = { ...nextData, ...updates }
+          Object.assign(nextData, updates)
           toast.info(`Auto-populated from ${linkedUser.display_name || "user"}`)
         }
       }
@@ -201,36 +237,51 @@ export default function RecordForm({
 
     setFormData(nextData)
     if (onAutoSave) {
-      onAutoSave(nextData)
+      onAutoSave(nextData as Partial<CMSModelMap[T]>)
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
 
-    // validation
-    const isPublished = formData["status"] === "published"
-    if (hasDraftMode && isPublished) {
-      const missingRequired = schema.filter(
-        (f) => f.is_required && !formData[f.field_name]
-      )
-      if (missingRequired.length > 0) {
-        toast.error(
-          "Validation Error",
-          `Required fields: ${missingRequired.map((f) => f.field_label).join(", ")}`
-        )
-        return
+    // Perform full validation
+    const nextErrors: Record<string, string> = {}
+    let hasErrors = false
+
+    schema.forEach((field) => {
+      const val = formData[field.field_name]
+      if (
+        field.is_required &&
+        (val === undefined || val === null || val === "")
+      ) {
+        nextErrors[field.field_name] = "This field is required"
+        hasErrors = true
       }
+    })
+
+    if (hasErrors) {
+      setErrors(nextErrors)
+      toast.error(
+        "Validation Error",
+        "Please fix the errors in the form before submitting."
+      )
+      return
     }
 
     // Clean data before submission
     const cleanData = { ...formData }
     schema.forEach((field) => {
+      // Remove computed fields from payload
+      if (field.is_computed) {
+        delete cleanData[field.field_name]
+        return
+      }
+
       const val = cleanData[field.field_name]
 
       // Force relationship fields on 'teams' model to stay as arrays for jsonb compatibility
       if (
-        model === "teams" &&
+        (model as string) === "teams" &&
         (field.field_name === "league" || field.field_name === "division")
       ) {
         if (val && !Array.isArray(val)) {
@@ -259,7 +310,7 @@ export default function RecordForm({
           settings.multiple === true || settings.allow_multiple === true
 
         const isTeamsSpecialField =
-          model === "teams" &&
+          (model as string) === "teams" &&
           (field.field_name === "league" || field.field_name === "division")
 
         if (
@@ -273,10 +324,10 @@ export default function RecordForm({
       }
     })
 
-    onSubmit(cleanData)
+    onSubmit(cleanData as Partial<CMSModelMap[T]>)
   }
 
-  const handleSyncFromUser = () => {
+  function handleSyncFromUser() {
     const userId = formData["user_id"]
     if (!userId) {
       toast.error("No user selected to sync from")
@@ -317,7 +368,7 @@ export default function RecordForm({
     if (updateCount > 0) {
       const nextData = { ...formData, ...updates }
       setFormData(nextData)
-      if (onAutoSave) onAutoSave(nextData)
+      if (onAutoSave) onAutoSave(nextData as Partial<CMSModelMap[T]>)
       toast.success("Synced from User Profile", `Updated ${updateCount} fields`)
     } else {
       toast.info(
@@ -331,7 +382,7 @@ export default function RecordForm({
 
   return (
     <form id={id} onSubmit={handleSubmit} className={s.form}>
-      {model === "authors" && !!formData["user_id"] && (
+      {(model as string) === "authors" && !!getFieldValue("user_id") && (
         <div style={{ marginBottom: "8px" }}>
           <Button
             type="button"
@@ -345,21 +396,25 @@ export default function RecordForm({
         </div>
       )}
       {schema.map((field) => {
+        const isComputed = !!field.is_computed
         const commonProps = {
           label: field.field_label as string,
           description: field.field_description as string | undefined,
           fieldNote: (field.field_note as string) || undefined,
           required: field.is_required,
-          disabled: isLoading,
+          disabled: isLoading || isComputed,
           name: field.field_name,
+          error: errors[field.field_name],
         }
+
+        const value = getFieldValue(field.field_name)
 
         if (field.field_type === "boolean") {
           return (
             <CheckboxField
               key={field.field_name}
               {...commonProps}
-              checked={!!formData[field.field_name]}
+              checked={!!value}
               onChange={(checked) => handleChange(field.field_name, checked)}
             />
           )
@@ -370,7 +425,7 @@ export default function RecordForm({
             <NumberField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as number) ?? ""}
+              value={(value as number) ?? ""}
               onChange={(val) => handleChange(field.field_name, val)}
               min={field.settings?.min}
               max={field.settings?.max}
@@ -385,7 +440,7 @@ export default function RecordForm({
             <MarkdownField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || ""}
+              value={(value as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
               rows={6}
               placeholder={field.settings?.placeholder}
@@ -398,7 +453,7 @@ export default function RecordForm({
             <RichTextField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || ""}
+              value={(value as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
               enabledTools={field.settings?.enabled_tools}
             />
@@ -410,7 +465,7 @@ export default function RecordForm({
             <SelectField
               key={field.field_name}
               field={field}
-              value={(formData[field.field_name] as string) || ""}
+              value={(value as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
             />
           )
@@ -421,7 +476,7 @@ export default function RecordForm({
             <ColorField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || ""}
+              value={(value as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
             />
           )
@@ -437,14 +492,14 @@ export default function RecordForm({
               f.field_label.toLowerCase() === "name"
           )
           const sourceValue = sourceField
-            ? (formData[sourceField.field_name] as string)
+            ? (getFieldValue(sourceField.field_name) as string)
             : ""
 
           return (
             <SlugField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || ""}
+              value={(value as string) || ""}
               sourceValue={sourceValue}
               onChange={(val) => handleChange(field.field_name, val)}
             />
@@ -460,9 +515,7 @@ export default function RecordForm({
             <MediaField
               key={field.field_name}
               {...commonProps}
-              value={
-                formData[field.field_name] as string | MediaAsset | MediaAsset[]
-              }
+              value={value as string | MediaAsset | MediaAsset[]}
               onChange={(val) => handleChange(field.field_name, val)}
               multiple={isMultiple}
             />
@@ -474,7 +527,7 @@ export default function RecordForm({
             <SeoField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || ""}
+              value={(value as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
             />
           )
@@ -485,7 +538,7 @@ export default function RecordForm({
             <TagField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || []}
+              value={(value as string) || []}
               onChange={(val) => handleChange(field.field_name, val)}
             />
           )
@@ -493,9 +546,9 @@ export default function RecordForm({
 
         if (["json", "modular_content"].includes(field.field_type)) {
           const jsonValue =
-            typeof formData[field.field_name] === "object"
-              ? JSON.stringify(formData[field.field_name], null, 2)
-              : (formData[field.field_name] as string) || ""
+            typeof value === "object"
+              ? JSON.stringify(value, null, 2)
+              : (value as string) || ""
 
           return (
             <JsonField
@@ -516,7 +569,7 @@ export default function RecordForm({
               key={field.field_name}
               {...commonProps}
               showTime={showTime}
-              value={(formData[field.field_name] as string) || ""}
+              value={(value as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
             />
           )
@@ -530,7 +583,7 @@ export default function RecordForm({
               {...commonProps}
               allowedModels={(settings.allowed_models as string[]) || []}
               allowMultiple={!!settings.allow_multiple}
-              value={(formData[field.field_name] as string | string[]) || null}
+              value={(value as string | string[]) || null}
               onChange={(val) => handleChange(field.field_name, val)}
             />
           )
@@ -542,7 +595,7 @@ export default function RecordForm({
             <NavigationField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as NavigationData) || null}
+              value={(value as NavigationData) || null}
               onChange={(val) => handleChange(field.field_name, val)}
               settings={settings}
             />
@@ -552,18 +605,24 @@ export default function RecordForm({
         if (field.field_type === "standings_table") {
           // Resolve dependency values. We look for 'league', 'division' and 'season' columns.
           // In ReferenceField, the value is often an array (e.g., [uuid]).
-          const leagueId = formData["league"] as string | string[] | undefined
-          const divisionId = formData["division"] as
+          const leagueId = getFieldValue("league") as
             | string
             | string[]
             | undefined
-          const seasonId = formData["season"] as string | string[] | undefined
+          const divisionId = getFieldValue("division") as
+            | string
+            | string[]
+            | undefined
+          const seasonId = getFieldValue("season") as
+            | string
+            | string[]
+            | undefined
 
           return (
             <StandingsField
               key={field.field_name}
               {...commonProps}
-              value={(formData[field.field_name] as string) || []}
+              value={(value as string) || []}
               onChange={(val: unknown) => handleChange(field.field_name, val)}
               leagueId={Array.isArray(leagueId) ? leagueId[0] : leagueId}
               divisionId={
@@ -578,7 +637,7 @@ export default function RecordForm({
           <TextField
             key={field.field_name}
             {...commonProps}
-            value={(formData[field.field_name] as string) || ""}
+            value={(value as string) || ""}
             onChange={(e) => handleChange(field.field_name, e.target.value)}
             placeholder={field.settings?.placeholder}
             minLength={field.settings?.min_length}

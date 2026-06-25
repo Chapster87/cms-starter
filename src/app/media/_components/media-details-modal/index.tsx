@@ -5,8 +5,7 @@ import { Loader2 } from "lucide-react"
 
 import Button from "@/components/button"
 import Modal from "@/components/modal"
-import { mediaService } from "@/client/media-service"
-import { MediaAsset } from "@/types/media"
+import { MediaAsset } from "@/types/cms-generated"
 
 import s from "./style.module.css"
 

@@ -33,6 +33,10 @@ export interface CMSFieldSettings {
   placeholder?: string
   help_text?: string
 
+  // RBAC
+  required_role?: "admin" | "editor" | "author"
+  hide_from_roles?: ("admin" | "editor" | "author")[]
+
   // Number settings
   min?: number
   max?: number
@@ -77,6 +81,7 @@ export interface CMSField {
   is_required: boolean
   is_unique: boolean
   is_system: boolean
+  is_computed: boolean
   ui_order: number
   settings: CMSFieldSettings
   field_note?: string | null
