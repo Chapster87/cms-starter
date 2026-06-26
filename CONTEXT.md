@@ -9,7 +9,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - **Separation of Concerns:** Routes are split into `/editor` (Content Management/Record editing) and `/schema` (Model & Table Definitions).
 - **Metadata-Driven Architecture:** Field types, labels, validation, and UI ordering are stored in a `fields` registry and utilized by a dynamic form engine (`RecordForm`). See [SCHEMA.md](./SCHEMA.md) for detailed database registry structure.
 - **Native Supabase Integration:** Uses the native Supabase client (PostgREST via `dataService`) for reliable data operations and `SECURITY DEFINER` RPCs for schema-modifying operations.
-- **SQL Execution:** A specialized `exec_sql(sql text)` RPC is available for advanced schema migrations and direct table manipulation when standard PostgREST or specific RPCs are insufficient. Direct SQL access (e.g., `psql`) is generally avoided in favor of this RPC to maintain consistency with the application's security model.
+- **SQL Execution:** A specialized `exec_sql(sql text)` RPC is available for advanced schema migrations. For record inspection and manual data management, AI agents should use the **ForgeCMS MCP Server**, which provides high-privilege access via the Supabase Service Role.
 - **Supabase SSR & Middleware:** Implements `@supabase/ssr` for robust authentication. Uses Next.js Middleware to automatically refresh sessions and synchronize tokens with cookies, preventing "Refresh Token Not Found" errors.
 - **URL-Driven State:** Modals and management actions are driven by query parameters (e.g., `?action=new-field`) for deep-linking and cleaner state synchronization.
 - **Zero-Prop Architecture:** Forms (`ModalModel`, `ModalField`) are self-contained, fetching their own data and auth state.
@@ -50,8 +50,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [ ] **Onboarding:** Professional Project README.md and Installation CLI for automated environment setup.
-- [ ] **Environment Tooling:** Tooling for migrating model definitions between development and production environments.
+- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
 
 ### 3. Future Roadmap
 
@@ -61,9 +60,11 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - [ ] **Dynamic Permission Management:** CMS UI for editing what Roles can do.
 - [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
 - [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
+- [ ] **Remote MCP Expansion:** Transition the local MCP bridge to a public-facing, authenticated SSE service for remote agent management. See [mcp-remote-expansion.md](./docs/plans/roadmap/mcp-remote-expansion.md) for the detailed plan.
 
 ### 4. Completed Items
 
+- [x] **MCP Agent Bridge (Local)**: Implemented a Model Context Protocol server (`src/server/mcp`) that exposes CMS CRUD operations as tools for AI agents, enabling direct record manipulation and schema awareness.
 - [x] **Dynamic Record Table Columns:** Empowered users to configure which fields from a model appear as columns in the record list view. Features include bulk reference resolution, borderless media previews with `next/image`, and interactive reordering via a Gear utility in the header.
 - [x] **Field-Specific Settings:**
   - Implemented a Radix Tabs interface (Basic, Validation, Appearance) in the Field Modal.
@@ -149,6 +150,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ## Glossary
 
+- **MCP:** Model Context Protocol. Provides AI agents with direct tools for CMS interaction.
 - **CMS:** Custom management interface for digital assets and database schema.
 - **Page Model:** Database schema and Next.js component for content display/editing.
 - **Edge Functions:** Serverless logic for SSR, data validation, and scheduled tasks.
