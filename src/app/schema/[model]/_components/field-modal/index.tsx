@@ -15,7 +15,7 @@ import Button from "@/components/button"
 import { TextField, SelectField, CheckboxField } from "@/components/fields"
 import Modal from "@/components/modal"
 import Tabs from "@/components/tabs"
-import { CMSField } from "@/types/fields"
+import { CMSField, CMSFieldset } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 
 import s from "./style.module.css"
@@ -28,6 +28,7 @@ interface FieldModalProps {
   accessToken: string | null
   field?: CMSField | null // If present, we are in edit or duplicate mode
   mode?: "create" | "edit" | "duplicate"
+  fieldsets?: CMSFieldset[]
 }
 
 /**
@@ -41,7 +42,9 @@ export default function FieldModal({
   accessToken,
   field,
   mode = "create",
+  fieldsets = [],
 }: FieldModalProps) {
+  const [step, setStep] = useState<1 | 2>(mode === "create" ? 1 : 2)
   const [label, setLabel] = useState("")
   const [name, setName] = useState("")
   const [type, setType] = useState(FIELD_DEFINITIONS[0].type)
@@ -49,6 +52,7 @@ export default function FieldModal({
   const [isUnique, setIsUnique] = useState(false)
   const [settings, setSettings] = useState<Record<string, unknown>>({})
   const [note, setNote] = useState("")
+  const [fieldsetId, setFieldsetId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -57,6 +61,8 @@ export default function FieldModal({
       // Use setTimeout to move state updates out of the synchronous render cycle
       // resolving cascading render warnings from ESLint/Next.js
       const timer = setTimeout(() => {
+        setStep(mode === "create" ? 1 : 2)
+
         if (field) {
           if (mode === "edit") {
             setLabel(field.field_label)
@@ -66,6 +72,7 @@ export default function FieldModal({
             setIsUnique(field.is_unique)
             setSettings(field.settings || {})
             setNote(field.field_note || "")
+            setFieldsetId(field.fieldset_id || null)
           } else if (mode === "duplicate") {
             setLabel(`${field.field_label} (copy)`)
             setName(`${field.field_name}_copy`)
@@ -74,6 +81,7 @@ export default function FieldModal({
             setIsUnique(field.is_unique)
             setSettings(field.settings || {})
             setNote(field.field_note || "")
+            setFieldsetId(field.fieldset_id || null)
           }
         } else {
           // Reset for new field
@@ -84,6 +92,7 @@ export default function FieldModal({
           setIsUnique(false)
           setSettings({})
           setNote("")
+          setFieldsetId(null)
         }
         setError(null)
       }, 0)
@@ -111,6 +120,7 @@ export default function FieldModal({
             is_required: isRequired,
             is_unique: isUnique,
             settings: settings,
+            fieldset_id: fieldsetId,
           }
         : {
             model_id: modelId,
@@ -120,6 +130,7 @@ export default function FieldModal({
             is_required: isRequired,
             is_unique: isUnique,
             settings: settings,
+            fieldset_id: fieldsetId,
           }
 
       const response = await fetch(url, {
@@ -166,18 +177,87 @@ export default function FieldModal({
     >
       {error && <p className={s.errorText}>{error}</p>}
 
-      <form onSubmit={handleSubmit} className={s.modalForm}>
-        <TextField
-          label="Field Label"
-          placeholder="e.g. Featured Image"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          required
-          description="Human-friendly name for the field."
-        />
+      {step === 1 && (
+        <div className={s.modalForm}>
+          <div className={s.typeSelection}>
+            <label className={s.fieldLabel}>Choose Field Type</label>
+            <Tabs defaultValue="basic" className={s.typeTabs}>
+              <Tabs.List className={s.tabsList}>
+                <Tabs.Trigger value="basic" className={s.tabTrigger}>
+                  <Type size={14} /> Basic
+                </Tabs.Trigger>
+                <Tabs.Trigger value="content" className={s.tabTrigger}>
+                  <Layers size={14} /> Content
+                </Tabs.Trigger>
+                <Tabs.Trigger value="relational" className={s.tabTrigger}>
+                  <ExternalLink size={14} /> Relational
+                </Tabs.Trigger>
+                <Tabs.Trigger value="advanced" className={s.tabTrigger}>
+                  <Database size={14} /> Advanced
+                </Tabs.Trigger>
+              </Tabs.List>
 
-        {mode !== "edit" && (
-          <>
+              {(["basic", "content", "relational", "advanced"] as const).map(
+                (cat) => (
+                  <Tabs.Content key={cat} value={cat} className={s.tabsContent}>
+                    <div className={s.typeGrid}>
+                      {FIELD_DEFINITIONS.filter(
+                        (def) => def.category === cat
+                      ).map((def) => (
+                        <button
+                          key={def.type}
+                          type="button"
+                          className={clsx(
+                            s.typeCard,
+                            type === def.type && s.active
+                          )}
+                          onClick={() => {
+                            setType(def.type)
+                            setStep(2)
+                          }}
+                        >
+                          <div className={s.typeCardIcon}>
+                            <FileText size={20} />
+                          </div>
+                          <div className={s.typeCardInfo}>
+                            <div className={s.typeCardLabel}>{def.label}</div>
+                            <div className={s.typeCardDesc}>
+                              {def.description}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </Tabs.Content>
+                )
+              )}
+            </Tabs>
+          </div>
+
+          <div className={s.modalActions}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <form onSubmit={handleSubmit} className={s.modalForm}>
+          <TextField
+            label="Field Label"
+            placeholder="e.g. Featured Image"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            required
+            description="Human-friendly name for the field."
+          />
+
+          {mode !== "edit" && (
             <TextField
               label="Field Name (Database Column)"
               placeholder="e.g. featured_image"
@@ -185,67 +265,8 @@ export default function FieldModal({
               onChange={(e) => setName(e.target.value)}
               description="The physical column name in your database."
             />
+          )}
 
-            <div className={s.typeSelection}>
-              <label className={s.fieldLabel}>Field Type</label>
-              <Tabs defaultValue="basic" className={s.typeTabs}>
-                <Tabs.List className={s.tabsList}>
-                  <Tabs.Trigger value="basic" className={s.tabTrigger}>
-                    <Type size={14} /> Basic
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value="content" className={s.tabTrigger}>
-                    <Layers size={14} /> Content
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value="relational" className={s.tabTrigger}>
-                    <ExternalLink size={14} /> Relational
-                  </Tabs.Trigger>
-                  <Tabs.Trigger value="advanced" className={s.tabTrigger}>
-                    <Database size={14} /> Advanced
-                  </Tabs.Trigger>
-                </Tabs.List>
-
-                {(["basic", "content", "relational", "advanced"] as const).map(
-                  (cat) => (
-                    <Tabs.Content
-                      key={cat}
-                      value={cat}
-                      className={s.tabsContent}
-                    >
-                      <div className={s.typeGrid}>
-                        {FIELD_DEFINITIONS.filter(
-                          (def) => def.category === cat
-                        ).map((def) => (
-                          <button
-                            key={def.type}
-                            type="button"
-                            className={clsx(
-                              s.typeCard,
-                              type === def.type && s.active
-                            )}
-                            onClick={() => setType(def.type)}
-                          >
-                            <div className={s.typeCardIcon}>
-                              {/* In a real app we'd map def.icon to a Lucide component */}
-                              <FileText size={20} />
-                            </div>
-                            <div className={s.typeCardInfo}>
-                              <div className={s.typeCardLabel}>{def.label}</div>
-                              <div className={s.typeCardDesc}>
-                                {def.description}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </Tabs.Content>
-                  )
-                )}
-              </Tabs>
-            </div>
-          </>
-        )}
-
-        {mode === "edit" && (
           <TextField
             label="Field Note"
             placeholder="e.g. This image is used on the home page."
@@ -253,53 +274,78 @@ export default function FieldModal({
             onChange={(e) => setNote(e.target.value)}
             description="Internal description or help text for editors."
           />
-        )}
 
-        <CheckboxField
-          label="Required Field"
-          checked={isRequired}
-          onChange={setIsRequired}
-          description="Make this field mandatory."
-          variant="switch"
-        />
-
-        <CheckboxField
-          label="Unique Constraint"
-          checked={isUnique}
-          onChange={setIsUnique}
-          description="Prevent duplicate values in this column."
-          variant="switch"
-        />
-
-        {type === "media" && (
           <CheckboxField
-            label="Multiple Assets"
-            checked={!!settings.allow_multiple}
-            onChange={(val) =>
-              setSettings((prev) => ({ ...prev, allow_multiple: val }))
-            }
-            description="Allow multiple images or files to be uploaded."
+            label="Required Field"
+            checked={isRequired}
+            onChange={setIsRequired}
+            description="Make this field mandatory."
             variant="switch"
           />
-        )}
 
-        <div className={s.modalActions}>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" isLoading={isSaving} disabled={isSaving}>
-            {mode === "edit"
-              ? "Update Field"
-              : mode === "duplicate"
-                ? "Create Duplicate"
-                : "Create Field"}
-          </Button>
-        </div>
-      </form>
+          <CheckboxField
+            label="Unique Constraint"
+            checked={isUnique}
+            onChange={setIsUnique}
+            description="Prevent duplicate values in this column."
+            variant="switch"
+          />
+
+          {type === "media" && (
+            <CheckboxField
+              label="Multiple Assets"
+              checked={!!settings.allow_multiple}
+              onChange={(val) =>
+                setSettings((prev) => ({ ...prev, allow_multiple: val }))
+              }
+              description="Allow multiple images or files to be uploaded."
+              variant="switch"
+            />
+          )}
+
+          <SelectField
+            label="Field Grouping"
+            description="Place this field inside a visual group (fieldset)."
+            value={fieldsetId || "__none__"}
+            onChange={(val) =>
+              setFieldsetId(val === "__none__" ? null : (val as string))
+            }
+            options={[
+              { label: "None (Ungrouped)", value: "__none__" },
+              ...fieldsets.map((fs) => ({
+                label: fs.label,
+                value: fs.id,
+              })),
+            ]}
+          />
+
+          <div className={s.modalActions}>
+            {mode === "create" && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setStep(1)}
+              >
+                Back
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" isLoading={isSaving} disabled={isSaving}>
+              {mode === "edit"
+                ? "Update Field"
+                : mode === "duplicate"
+                  ? "Create Duplicate"
+                  : "Create Field"}
+            </Button>
+          </div>
+        </form>
+      )}
     </Modal>
   )
 }

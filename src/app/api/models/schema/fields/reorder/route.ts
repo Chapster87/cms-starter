@@ -41,11 +41,18 @@ export async function POST(req: NextRequest) {
     // Perform updates in parallel
     // NOTE: In a high-traffic production app, an RPC for batch updates would be more efficient
     const updatePromises = orders.map(
-      (item: { id: string; ui_order: number }) =>
-        systemClient
-          .from("fields")
-          .update({ ui_order: item.ui_order })
-          .eq("id", item.id)
+      (item: { id: string; ui_order: number; fieldset_id?: string | null }) => {
+        const updateData: { ui_order: number; fieldset_id?: string | null } = {
+          ui_order: item.ui_order,
+        }
+
+        // Only include fieldset_id if it's explicitly provided as string or null
+        if (item.fieldset_id !== undefined) {
+          updateData.fieldset_id = item.fieldset_id
+        }
+
+        return systemClient.from("fields").update(updateData).eq("id", item.id)
+      }
     )
 
     const results = await Promise.all(updatePromises)

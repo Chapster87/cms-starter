@@ -39,7 +39,14 @@
 .fieldStack {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+}
+
+.interleavedStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 100px;
 }
 
 .fieldCard {
@@ -48,12 +55,12 @@
   padding: 16px 20px;
   border-radius: 8px;
   background-color: var(--color-white);
-  transition: box-shadow 0.2s ease;
+  transition:
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
   gap: 20px;
   box-shadow: var(--box-shadow);
-}
-
-.fieldCard:hover {
+  border: 1px solid var(--color-border);
 }
 
 .dragHandle {
@@ -79,23 +86,6 @@
 .fieldIcon svg {
   width: 20px;
   height: 20px;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  fill: none;
-}
-
-/* Specific icon colors based on type categories */
-.icon_text {
-}
-.icon_media {
-}
-.icon_json {
-}
-.icon_seo {
-}
-.icon_boolean {
 }
 
 .fieldContent {
@@ -180,59 +170,118 @@
   color: #4f46e5;
 }
 
-/* Dropdown Menu Styling */
+/* Fieldset Grouping (Preferred style) */
+
+.fieldsetGroup {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.fieldsetGroup.isOver {
+  border: 2px dashed var(--color-primary);
+  background-color: rgba(var(--color-primary-rgb), 0.05);
+}
+
+.fieldsetCard {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: var(--color-grey-100);
+  transition: background-color 0.2s ease;
+  gap: 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.fieldsetGrip {
+  color: var(--color-grey-400);
+  display: flex;
+  align-items: center;
+  cursor: grab;
+}
+
+.fieldsetInfo {
+  flex-grow: 1;
+}
+
+.fieldsetLabelGroup {
+  display: flex;
+  align-items: center;
+}
+
+.fieldsetLabel {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--color-grey-700);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.groupNestedFields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background-color: transparent;
+  position: relative;
+}
+
+.actionButton {
+  color: var(--color-grey-400);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--color-primary);
+  }
+}
+
+.draggingOverlay {
+  pointer-events: none;
+  z-index: 1000;
+  width: 100%;
+  max-width: 800px;
+}
+
+.draggingOverlay > div {
+  box-shadow: var(--box-shadow-lg);
+  border-color: var(--color-primary) !important;
+  opacity: 1 !important;
+  background-color: var(--color-white) !important;
+  border-radius: 8px !important;
+}
+
+/* Modal and Menus */
 .menuContent {
   min-width: 160px;
   background-color: white;
   border-radius: 6px;
   padding: 5px;
-  box-shadow:
-    0px 10px 38px -10px rgba(22, 23, 24, 0.35),
-    0px 10px 20px -15px rgba(22, 23, 24, 0.2);
-  animation-duration: 400ms;
-  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity;
+  box-shadow: var(--box-shadow-lg);
   z-index: 1100;
 }
 
 .menuItem {
   font-size: 14px;
-  line-height: 1;
   color: #374151;
-  border-radius: 3px;
   display: flex;
   align-items: center;
   height: 32px;
   padding: 0 10px;
-  position: relative;
-  user-select: none;
-  outline: none;
   cursor: pointer;
 }
 
 .menuItem[data-highlighted] {
   background-color: #f3f4f6;
-  color: #111;
 }
 
-.deleteItem {
-  color: #ef4444;
-}
-
-.deleteItem[data-highlighted] {
-  background-color: #fef2f2;
-  color: #dc2626;
-}
-
-/* Modal Styling */
 .modalOverlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   background-color: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -245,73 +294,7 @@
   border-radius: 12px;
   width: 100%;
   max-width: 500px;
-  box-shadow:
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.modal h3 {
-  margin-top: 0;
-  margin-bottom: 24px;
-  font-size: 20px;
-}
-
-.formGroup {
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.label {
-  font-weight: 500;
-  margin-bottom: 8px;
-  font-size: 14px;
-  color: #374151;
-}
-
-.input,
-.select {
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: border-color 0.2s;
-}
-
-.input:focus,
-.select:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  ring: 2px solid var(--color-primary);
-}
-
-.checkboxGroup {
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
-}
-
-.checkboxGroup input {
-  margin: 0;
-  width: 16px;
-  height: 16px;
-}
-
-.modalActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 32px;
-}
-
-.errorText {
-  color: #dc2626;
-  font-size: 14px;
-  margin-bottom: 16px;
-  padding: 8px 12px;
-  background-color: #fef2f2;
-  border-radius: 6px;
-  border: 1px solid #fecaca;
+  box-shadow: var(--box-shadow-lg);
 }
 
 .emptyState {
@@ -321,5 +304,4 @@
   border: 2px dashed #e5e7eb;
   border-radius: 8px;
   color: #6b7280;
-  font-size: 14px;
 }

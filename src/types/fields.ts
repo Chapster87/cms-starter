@@ -76,6 +76,7 @@ export interface CMSFieldSettings {
 export interface CMSField {
   id: string
   model_id: string
+  fieldset_id?: string | null
   field_name: string
   field_label: string
   field_description?: string
@@ -87,6 +88,21 @@ export interface CMSField {
   ui_order: number
   settings: CMSFieldSettings
   field_note?: string | null
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Represents a field grouping in the registry.
+ */
+export interface CMSFieldset {
+  id: string
+  model_id: string
+  label: string
+  ui_order: number
+  settings?: {
+    default_open?: boolean
+  }
   created_at: string
   updated_at: string
 }

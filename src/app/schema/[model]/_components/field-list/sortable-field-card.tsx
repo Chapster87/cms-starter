@@ -1,5 +1,6 @@
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
+import clsx from "clsx"
 import Button from "@/components/button"
 import ContextMenu from "@/components/context-menu"
 import SvgIcon from "@/components/svg-icon"
@@ -15,6 +16,7 @@ interface SortableFieldCardProps {
   onEdit: (field: CMSField) => void
   onDuplicate: (field: CMSField) => void
   onDelete: (field: CMSField) => void
+  isDragging?: boolean
 }
 
 export function SortableFieldCard({
@@ -23,6 +25,7 @@ export function SortableFieldCard({
   onEdit,
   onDuplicate,
   onDelete,
+  isDragging: isDraggingProp,
 }: SortableFieldCardProps) {
   const {
     attributes,
@@ -30,8 +33,10 @@ export function SortableFieldCard({
     setNodeRef,
     transform,
     transition,
-    isDragging,
+    isDragging: isSorting,
   } = useSortable({ id: field.id })
+
+  const isDragging = isDraggingProp || isSorting
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -46,7 +51,7 @@ export function SortableFieldCard({
     <div
       ref={setNodeRef}
       style={style}
-      className={`${s.fieldCard} ${isDragging ? s.isDragging : ""}`}
+      className={clsx(s.fieldCard, isDragging && s.isDragging)}
     >
       <div className={s.dragHandle} {...attributes} {...listeners}>
         <SvgIcon icon="menu" size={20} />

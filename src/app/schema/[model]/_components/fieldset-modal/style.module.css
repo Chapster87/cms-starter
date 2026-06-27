@@ -1,0 +1,18 @@
+.modalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.errorText {
+  color: var(--color-error);
+  font-size: 14px;
+  margin-bottom: 16px;
+}

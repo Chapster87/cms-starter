@@ -46,11 +46,12 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
+- [ ] **Blocks:** Implement blocks (tabbed next to models on schema sidebar). Which should be configurable groups of fields which can then be used within our Modular Content field type.
 
-### 2. Next Steps (In Progress/Upcoming)
+### 2. Next Steps (Upcoming)
 
-- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
+- [ ] **Modular Content Field:** Expand current field type to include options for a single or multiple block inclusion. Also include configurabtion setting for which blocks should be allowed to include
+- [ ] **Structured Text:** Dato inspired (DAST type content) that basically mixes something like a rich-text field with the ability to include blocks within. Used mainly for blog type pages rather than landing pages.
 
 ### 3. Future Roadmap
 
@@ -59,7 +60,6 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - [ ] **Implement "View-As" Control** Allow Admin user roles to view CMS as other roles to assist in debugging/permission audits.
 - [ ] **Dynamic Permission Management:** CMS UI for editing what Roles can do.
 - [ ] **Invite by Email:** Implement an "Invite by Email" flow (requires SMTP configuration).
-- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 - [ ] **Remote MCP Expansion:** Transition the local MCP bridge to a public-facing, authenticated SSE service for remote agent management. See [mcp-remote-expansion.md](./docs/plans/roadmap/mcp-remote-expansion.md) for the detailed plan.
 
 ### 4. Completed Items
@@ -148,6 +148,12 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - **Computed Fields**: Added `is_computed` metadata support. The form engine now identifies read-only system fields, disabling them in the UI and excluding them from save payloads.
   - **Permission-Based UI (RBAC)**: Integrated field-level access control via `required_role` and `hide_from_roles` metadata. `RecordForm` conditionally renders or disables fields based on the current user's role.
   - **Architectural Pruning**: Modernized the type system by eliminating redundant manual definitions (e.g., `media.ts`) in favor of the central generated source of truth.
+- [x] **Fieldset Grouping & Persistence**:
+  - Implemented visual grouping for model fields (Fieldsets) with stable drag-and-drop support.
+  - Developed a professional two-step creation workflow in the Field Modal.
+  - Engineered immediate state synchronization to ensure group assignments persist reliably across page refreshes.
+  - Created high-fidelity accordion styling for grouped fields in the `RecordForm`, matching the project's SEO field type design.
+  - Implemented intelligent hiding of empty groups to maintain a clean record editing experience.
 
 ## Glossary
 

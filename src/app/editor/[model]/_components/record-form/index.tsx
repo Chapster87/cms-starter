@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { RefreshCw } from "lucide-react"
+import { useState, useEffect, useMemo } from "react"
+import { RefreshCw, ChevronDown } from "lucide-react"
+import * as Accordion from "@radix-ui/react-accordion"
 import {
   TextField,
   NumberField,
@@ -23,7 +24,8 @@ import {
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import { useUsers } from "@/hooks/use-users"
-import { CMSField } from "@/types/fields"
+import { createClient } from "@/utils/supabase"
+import { CMSField, CMSFieldset } from "@/types/fields"
 import { toast } from "@/client/toast-store"
 import {
   MediaAsset,
@@ -65,6 +67,7 @@ export default function RecordForm<T extends CMSModelName>({
   const { accessToken } = useAuth()
   const { users } = useUsers()
   const [schema, setSchema] = useState<CMSField[]>([])
+  const [fieldsets, setFieldsets] = useState<CMSFieldset[]>([])
 
   // Use a more flexible internal type for the form data while keeping the component generic
   const [formData, setFormData] = useState<Record<string, unknown>>(
@@ -156,6 +159,26 @@ export default function RecordForm<T extends CMSModelName>({
               )
           )
           setSchema(filteredData)
+
+          // 1.1 Fetch Fieldsets for this model
+          // We need the model ID first
+          const supabase = createClient()
+          const { data: modelData } = await supabase
+            .from("models")
+            .select("id")
+            .eq("table_name", model)
+            .single()
+
+          if (modelData) {
+            const fsResponse = await fetch(
+              `/api/models/schema/fieldsets?model_id=${modelData.id}`,
+              { headers }
+            )
+            if (fsResponse.ok) {
+              const fsData = await fsResponse.json()
+              setFieldsets(fsData || [])
+            }
+          }
         } else {
           // Fallback: If no registry entry found, try to fetch raw schema
           const response = await fetch(`/api/models/schema?table=${model}`, {
@@ -380,6 +403,284 @@ export default function RecordForm<T extends CMSModelName>({
     }
   }
 
+  const renderField = (field: CMSField) => {
+    const isComputed = !!field.is_computed
+    const commonProps = {
+      label: field.field_label as string,
+      description: field.field_description as string | undefined,
+      fieldNote: (field.field_note as string) || undefined,
+      required: field.is_required,
+      disabled: isLoading || isComputed,
+      name: field.field_name,
+      error: errors[field.field_name],
+    }
+
+    const value = getFieldValue(field.field_name)
+
+    if (field.field_type === "boolean") {
+      return (
+        <CheckboxField
+          key={field.field_name}
+          {...commonProps}
+          checked={!!value}
+          onChange={(checked) => handleChange(field.field_name, checked)}
+        />
+      )
+    }
+
+    if (field.field_type === "number") {
+      return (
+        <NumberField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as number) ?? ""}
+          onChange={(val) => handleChange(field.field_name, val)}
+          min={field.settings?.min}
+          max={field.settings?.max}
+          step={field.settings?.step}
+          placeholder={field.settings?.placeholder}
+        />
+      )
+    }
+
+    if (field.field_type === "text_multi") {
+      return (
+        <MarkdownField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as string) || ""}
+          onChange={(val) => handleChange(field.field_name, val)}
+          rows={6}
+          placeholder={field.settings?.placeholder}
+        />
+      )
+    }
+
+    if (field.field_type === "rich_text") {
+      return (
+        <RichTextField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as string) || ""}
+          onChange={(val) => handleChange(field.field_name, val)}
+          enabledTools={field.settings?.enabled_tools}
+          placeholder={field.settings?.placeholder}
+        />
+      )
+    }
+
+    if (field.field_type === "select") {
+      return (
+        <SelectField
+          key={field.field_name}
+          field={field}
+          value={(value as string) || ""}
+          onChange={(val) => handleChange(field.field_name, val)}
+        />
+      )
+    }
+
+    if (field.field_type === "color") {
+      return (
+        <ColorField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as string) || ""}
+          onChange={(val) => handleChange(field.field_name, val)}
+        />
+      )
+    }
+
+    if (field.field_type === "seo_slug" || field.field_name === "slug") {
+      // Attempt to find a "source" field for the slug (like 'title' or 'name')
+      const sourceField = schema.find(
+        (f) =>
+          f.field_name === "title" ||
+          f.field_name === "name" ||
+          f.field_label.toLowerCase() === "title" ||
+          f.field_label.toLowerCase() === "name"
+      )
+      const sourceValue = sourceField
+        ? (getFieldValue(sourceField.field_name) as string)
+        : ""
+
+      return (
+        <SlugField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as string) || ""}
+          sourceValue={sourceValue}
+          onChange={(val) => handleChange(field.field_name, val)}
+        />
+      )
+    }
+
+    if (field.field_type === "media") {
+      const settings = (field.settings || {}) as Record<string, unknown>
+      const isMultiple =
+        settings.multiple === true || settings.allow_multiple === true
+
+      return (
+        <MediaField
+          key={field.field_name}
+          {...commonProps}
+          value={value as string | MediaAsset | MediaAsset[]}
+          onChange={(val) => handleChange(field.field_name, val)}
+          multiple={isMultiple}
+        />
+      )
+    }
+
+    if (field.field_type === "seo_metadata") {
+      return (
+        <SeoField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as string) || ""}
+          onChange={(val) => handleChange(field.field_name, val)}
+        />
+      )
+    }
+
+    if (field.field_type === "tags") {
+      return (
+        <TagField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as string) || []}
+          onChange={(val) => handleChange(field.field_name, val)}
+          placeholder={field.settings?.placeholder}
+        />
+      )
+    }
+
+    if (["json", "modular_content"].includes(field.field_type)) {
+      const jsonValue =
+        typeof value === "object"
+          ? JSON.stringify(value, null, 2)
+          : (value as string) || ""
+
+      return (
+        <JsonField
+          key={field.field_name}
+          {...commonProps}
+          value={jsonValue}
+          onChange={(val) => handleChange(field.field_name, val)}
+        />
+      )
+    }
+
+    if (field.field_type === "date_time") {
+      const settings = (field.settings || {}) as Record<string, unknown>
+      const showTime = settings.include_time !== false
+
+      return (
+        <DateField
+          key={field.field_name}
+          {...commonProps}
+          showTime={showTime}
+          value={(value as string) || ""}
+          onChange={(val) => handleChange(field.field_name, val)}
+        />
+      )
+    }
+
+    if (field.field_type === "reference") {
+      const settings = (field.settings || {}) as Record<string, unknown>
+      return (
+        <ReferenceField
+          key={field.field_name}
+          {...commonProps}
+          allowedModels={(settings.allowed_models as string[]) || []}
+          allowMultiple={!!settings.allow_multiple}
+          value={(value as string | string[]) || null}
+          onChange={(val) => handleChange(field.field_name, val)}
+        />
+      )
+    }
+
+    if (field.field_type === "navigation") {
+      const settings = (field.settings || {}) as Record<string, unknown>
+      return (
+        <NavigationField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as NavigationData) || null}
+          onChange={(val) => handleChange(field.field_name, val)}
+          settings={settings}
+        />
+      )
+    }
+
+    if (field.field_type === "standings_table") {
+      // Resolve dependency values. We look for 'league', 'division' and 'season' columns.
+      // In ReferenceField, the value is often an array (e.g., [uuid]).
+      const leagueId = getFieldValue("league") as string | string[] | undefined
+      const divisionId = getFieldValue("division") as
+        | string
+        | string[]
+        | undefined
+      const seasonId = getFieldValue("season") as string | string[] | undefined
+
+      return (
+        <StandingsField
+          key={field.field_name}
+          {...commonProps}
+          value={(value as string) || []}
+          onChange={(val: unknown) => handleChange(field.field_name, val)}
+          leagueId={Array.isArray(leagueId) ? leagueId[0] : leagueId}
+          divisionId={Array.isArray(divisionId) ? divisionId[0] : divisionId}
+          seasonId={Array.isArray(seasonId) ? seasonId[0] : seasonId}
+        />
+      )
+    }
+
+    return (
+      <TextField
+        key={field.field_name}
+        {...commonProps}
+        value={(value as string) || ""}
+        onChange={(e) => handleChange(field.field_name, e.target.value)}
+        placeholder={field.settings?.placeholder}
+        minLength={field.settings?.min_length}
+        maxLength={field.settings?.max_length}
+        pattern={field.settings?.regex_pattern}
+      />
+    )
+  }
+
+  // Determine open fieldsets
+  const defaultOpenValues = useMemo(
+    () =>
+      fieldsets
+        .filter((fs) => fs.settings?.default_open !== false)
+        .map((fs) => fs.id),
+    [fieldsets]
+  )
+
+  // Unified interleaved items for the form
+  const interleavedItems = useMemo(() => {
+    const items: Array<
+      | { type: "fieldset"; data: CMSFieldset }
+      | { type: "field"; data: CMSField }
+    > = [
+      ...fieldsets.map((fs) => ({
+        type: "fieldset" as const,
+        data: fs,
+      })),
+      ...schema
+        .filter((f) => !f.fieldset_id)
+        .map((f) => ({ type: "field" as const, data: f })),
+    ]
+
+    return items.sort((a, b) => {
+      if (a.data.ui_order !== b.data.ui_order) {
+        return a.data.ui_order - b.data.ui_order
+      }
+      return a.type === "fieldset" ? -1 : 1
+    })
+  }, [schema, fieldsets])
+
   if (fetchingSchema) return <p>Loading form fields...</p>
 
   return (
@@ -397,259 +698,46 @@ export default function RecordForm<T extends CMSModelName>({
           </Button>
         </div>
       )}
-      {schema.map((field) => {
-        const isComputed = !!field.is_computed
-        const commonProps = {
-          label: field.field_label as string,
-          description: field.field_description as string | undefined,
-          fieldNote: (field.field_note as string) || undefined,
-          required: field.is_required,
-          disabled: isLoading || isComputed,
-          name: field.field_name,
-          error: errors[field.field_name],
-        }
 
-        const value = getFieldValue(field.field_name)
+      {/* Render Interleaved Groups and Ungrouped Fields */}
+      <div className={s.fieldLayoutStack}>
+        {interleavedItems.map((item) => {
+          if (item.type === "fieldset") {
+            const fieldset = item.data
+            const fieldsInGroup = schema.filter(
+              (f) => f.fieldset_id === fieldset.id
+            )
 
-        if (field.field_type === "boolean") {
-          return (
-            <CheckboxField
-              key={field.field_name}
-              {...commonProps}
-              checked={!!value}
-              onChange={(checked) => handleChange(field.field_name, checked)}
-            />
-          )
-        }
+            // Don't render empty fieldsets in the record form
+            if (fieldsInGroup.length === 0) return null
 
-        if (field.field_type === "number") {
-          return (
-            <NumberField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as number) ?? ""}
-              onChange={(val) => handleChange(field.field_name, val)}
-              min={field.settings?.min}
-              max={field.settings?.max}
-              step={field.settings?.step}
-              placeholder={field.settings?.placeholder}
-            />
-          )
-        }
-
-        if (field.field_type === "text_multi") {
-          return (
-            <MarkdownField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as string) || ""}
-              onChange={(val) => handleChange(field.field_name, val)}
-              rows={6}
-              placeholder={field.settings?.placeholder}
-            />
-          )
-        }
-
-        if (field.field_type === "rich_text") {
-          return (
-            <RichTextField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as string) || ""}
-              onChange={(val) => handleChange(field.field_name, val)}
-              enabledTools={field.settings?.enabled_tools}
-              placeholder={field.settings?.placeholder}
-            />
-          )
-        }
-
-        if (field.field_type === "select") {
-          return (
-            <SelectField
-              key={field.field_name}
-              field={field}
-              value={(value as string) || ""}
-              onChange={(val) => handleChange(field.field_name, val)}
-            />
-          )
-        }
-
-        if (field.field_type === "color") {
-          return (
-            <ColorField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as string) || ""}
-              onChange={(val) => handleChange(field.field_name, val)}
-            />
-          )
-        }
-
-        if (field.field_type === "seo_slug" || field.field_name === "slug") {
-          // Attempt to find a "source" field for the slug (like 'title' or 'name')
-          const sourceField = schema.find(
-            (f) =>
-              f.field_name === "title" ||
-              f.field_name === "name" ||
-              f.field_label.toLowerCase() === "title" ||
-              f.field_label.toLowerCase() === "name"
-          )
-          const sourceValue = sourceField
-            ? (getFieldValue(sourceField.field_name) as string)
-            : ""
-
-          return (
-            <SlugField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as string) || ""}
-              sourceValue={sourceValue}
-              onChange={(val) => handleChange(field.field_name, val)}
-            />
-          )
-        }
-
-        if (field.field_type === "media") {
-          const settings = (field.settings || {}) as Record<string, unknown>
-          const isMultiple =
-            settings.multiple === true || settings.allow_multiple === true
-
-          return (
-            <MediaField
-              key={field.field_name}
-              {...commonProps}
-              value={value as string | MediaAsset | MediaAsset[]}
-              onChange={(val) => handleChange(field.field_name, val)}
-              multiple={isMultiple}
-            />
-          )
-        }
-
-        if (field.field_type === "seo_metadata") {
-          return (
-            <SeoField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as string) || ""}
-              onChange={(val) => handleChange(field.field_name, val)}
-            />
-          )
-        }
-
-        if (field.field_type === "tags") {
-          return (
-            <TagField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as string) || []}
-              onChange={(val) => handleChange(field.field_name, val)}
-              placeholder={field.settings?.placeholder}
-            />
-          )
-        }
-
-        if (["json", "modular_content"].includes(field.field_type)) {
-          const jsonValue =
-            typeof value === "object"
-              ? JSON.stringify(value, null, 2)
-              : (value as string) || ""
-
-          return (
-            <JsonField
-              key={field.field_name}
-              {...commonProps}
-              value={jsonValue}
-              onChange={(val) => handleChange(field.field_name, val)}
-            />
-          )
-        }
-
-        if (field.field_type === "date_time") {
-          const settings = (field.settings || {}) as Record<string, unknown>
-          const showTime = settings.include_time !== false
-
-          return (
-            <DateField
-              key={field.field_name}
-              {...commonProps}
-              showTime={showTime}
-              value={(value as string) || ""}
-              onChange={(val) => handleChange(field.field_name, val)}
-            />
-          )
-        }
-
-        if (field.field_type === "reference") {
-          const settings = (field.settings || {}) as Record<string, unknown>
-          return (
-            <ReferenceField
-              key={field.field_name}
-              {...commonProps}
-              allowedModels={(settings.allowed_models as string[]) || []}
-              allowMultiple={!!settings.allow_multiple}
-              value={(value as string | string[]) || null}
-              onChange={(val) => handleChange(field.field_name, val)}
-            />
-          )
-        }
-
-        if (field.field_type === "navigation") {
-          const settings = (field.settings || {}) as Record<string, unknown>
-          return (
-            <NavigationField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as NavigationData) || null}
-              onChange={(val) => handleChange(field.field_name, val)}
-              settings={settings}
-            />
-          )
-        }
-
-        if (field.field_type === "standings_table") {
-          // Resolve dependency values. We look for 'league', 'division' and 'season' columns.
-          // In ReferenceField, the value is often an array (e.g., [uuid]).
-          const leagueId = getFieldValue("league") as
-            | string
-            | string[]
-            | undefined
-          const divisionId = getFieldValue("division") as
-            | string
-            | string[]
-            | undefined
-          const seasonId = getFieldValue("season") as
-            | string
-            | string[]
-            | undefined
-
-          return (
-            <StandingsField
-              key={field.field_name}
-              {...commonProps}
-              value={(value as string) || []}
-              onChange={(val: unknown) => handleChange(field.field_name, val)}
-              leagueId={Array.isArray(leagueId) ? leagueId[0] : leagueId}
-              divisionId={
-                Array.isArray(divisionId) ? divisionId[0] : divisionId
-              }
-              seasonId={Array.isArray(seasonId) ? seasonId[0] : seasonId}
-            />
-          )
-        }
-
-        return (
-          <TextField
-            key={field.field_name}
-            {...commonProps}
-            value={(value as string) || ""}
-            onChange={(e) => handleChange(field.field_name, e.target.value)}
-            placeholder={field.settings?.placeholder}
-            minLength={field.settings?.min_length}
-            maxLength={field.settings?.max_length}
-            pattern={field.settings?.regex_pattern}
-          />
-        )
-      })}
+            return (
+              <Accordion.Root
+                key={fieldset.id}
+                type="multiple"
+                defaultValue={defaultOpenValues}
+                className={s.accordionRoot}
+              >
+                <Accordion.Item value={fieldset.id} className={s.accordionItem}>
+                  <Accordion.Header className={s.accordionHeader}>
+                    <Accordion.Trigger className={s.accordionTrigger}>
+                      <span className={s.fieldsetLabel}>{fieldset.label}</span>
+                      <ChevronDown className={s.accordionChevron} size={16} />
+                    </Accordion.Trigger>
+                  </Accordion.Header>
+                  <Accordion.Content className={s.accordionContent}>
+                    <div className={s.fieldsetFields}>
+                      {fieldsInGroup.map((field) => renderField(field))}
+                    </div>
+                  </Accordion.Content>
+                </Accordion.Item>
+              </Accordion.Root>
+            )
+          } else {
+            return renderField(item.data)
+          }
+        })}
+      </div>
 
       <div
         style={{

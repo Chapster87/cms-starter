@@ -34,3 +34,94 @@
   background-color: #ccc;
   cursor: not-allowed;
 }
+
+.fieldLayoutStack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.accordionRoot {
+  width: 100%;
+}
+
+.accordionItem {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background-color: var(--color-grey-100);
+}
+
+.accordionHeader {
+  display: flex;
+  margin: 0;
+}
+
+.accordionTrigger {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+}
+
+.fieldsetLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-grey-900);
+}
+
+.accordionChevron {
+  width: 16px;
+  height: 16px;
+  transition: transform 300ms cubic-bezier(0.87, 0, 0.13, 1);
+  color: var(--color-grey-500);
+}
+
+.accordionItem[data-state="open"] .accordionChevron {
+  transform: rotate(180deg);
+}
+
+.accordionContent {
+  overflow: hidden;
+  background-color: var(--color-white);
+  border-top: 1px solid var(--color-border);
+}
+
+.accordionContent[data-state="open"] {
+  animation: slideDown 300ms cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+.accordionContent[data-state="closed"] {
+  animation: slideUp 300ms cubic-bezier(0.87, 0, 0.13, 1);
+}
+
+.fieldsetFields {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@keyframes slideDown {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
+  }
+}
