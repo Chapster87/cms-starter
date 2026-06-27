@@ -147,6 +147,8 @@ export default function RecordForm<T extends CMSModelName>({
         if (data && data.length > 0) {
           if (!isMounted) return
           // Ensure system fields are suppressed even if registered
+          // Note: we filter out 'status' and '_draft' from the UI because they are managed via the workflow,
+          // but they are kept in the registry for data persistence and audit logging.
           const filteredData = data.filter(
             (f: CMSField) =>
               !["_draft", "status", "created_by", "updated_by"].includes(

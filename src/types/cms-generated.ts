@@ -132,14 +132,6 @@ export interface Teams {
   seasons: Seasons[];
 }
 
-export interface Boom {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  status: CMSStatus;
-  _draft?: unknown;
-}
-
 export interface Pages {
   id: string;
   created_at: string;
@@ -159,6 +151,14 @@ export interface Pages {
   page_link?: Pages;
   long_text?: string;
   standings_table?: StandingsData;
+}
+
+export interface Boom {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  status: CMSStatus;
+  _draft?: unknown;
 }
 
 export interface TestingCopy {
@@ -246,8 +246,8 @@ export interface CMSModelMap {
   leagues: Leagues;
   seasons: Seasons;
   teams: Teams;
-  boom: Boom;
   pages: Pages;
+  boom: Boom;
   testing_copy: TestingCopy;
   testing: Testing;
   social_links: SocialLinks;
