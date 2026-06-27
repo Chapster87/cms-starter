@@ -456,6 +456,7 @@ export default function RecordForm<T extends CMSModelName>({
               value={(value as string) || ""}
               onChange={(val) => handleChange(field.field_name, val)}
               enabledTools={field.settings?.enabled_tools}
+              placeholder={field.settings?.placeholder}
             />
           )
         }
@@ -540,6 +541,7 @@ export default function RecordForm<T extends CMSModelName>({
               {...commonProps}
               value={(value as string) || []}
               onChange={(val) => handleChange(field.field_name, val)}
+              placeholder={field.settings?.placeholder}
             />
           )
         }

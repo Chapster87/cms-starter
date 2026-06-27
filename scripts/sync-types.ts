@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js"
 import fs from "fs"
 import path from "path"
 import dotenv from "dotenv"
-import ws from "ws"
 
 // Load env vars from .env.local
 dotenv.config({ path: ".env.local" })
@@ -18,10 +17,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     persistSession: false,
-  },
-  realtime: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    transport: ws as any,
   },
 })
 

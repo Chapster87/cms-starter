@@ -46,11 +46,11 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
+- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 
 ### 2. Next Steps (In Progress/Upcoming)
 
-- [ ] **Field Type Expansion:** Formal integration of `rich_text` and `tags` into the automated schema generation layer.
+- [ ] **Modular Blocks (Modular Content):** Implement a "mini-model" registry (inspired by DatoCMS `dast`) for component-based layouts.
 
 ### 3. Future Roadmap
 
@@ -95,6 +95,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Enhanced **Media Asset** resolution, returning full asset metadata (URL, Name, Type) instead of raw JSON.
   - Established a secure **API Token System** (`CMS_API_TOKEN`) with a dual-authentication strategy for internal playground and external project use.
   - Created a comprehensive `CDA-GUIDE.md` for team onboarding and external implementation.
+- [x] **Field Type Expansion:** Formally integrated `rich_text` and `tags` into the automated schema generation layer. Added advanced validation (min/max tags) and appearance settings (placeholders) to the Schema Builder. Modernized script infrastructure (sync-types) to leverage Node 22 native capabilities.
 - [x] **Field Type Expansion:** Implemented a new "Dropdown / Select" field type with support for custom choice management in the schema builder.
 - [x] **Timezone-Aware Date Handling:** Upgraded the `DateField` to handle timezone selection and prevent UI jitter, ensuring absolute UTC storage while maintaining naive local picker behavior.
 - [x] **Toast messages for notifications** - Integrated Radix Toast with Jotai for global success/error/info alerts across Schema and Editor.

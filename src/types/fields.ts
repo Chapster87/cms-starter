@@ -57,6 +57,8 @@ export interface CMSFieldSettings {
   // Media / Reference
   allow_multiple?: boolean
   allowed_models?: string[]
+  min_items?: number
+  max_items?: number
 
   // Rich Text
   enabled_tools?: string[]

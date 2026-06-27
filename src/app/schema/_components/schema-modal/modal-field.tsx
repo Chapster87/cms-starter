@@ -119,6 +119,8 @@ export default function ModalField({
   const [step, setStep] = useState<number | "">("")
   const [minLength, setMinLength] = useState<number | "">("")
   const [maxLength, setMaxLength] = useState<number | "">("")
+  const [minItems, setMinItems] = useState<number | "">("")
+  const [maxItems, setMaxItems] = useState<number | "">("")
   const [regexPattern, setRegexPattern] = useState("")
   const [regexPreset, setRegexPreset] = useState("none")
 
@@ -126,7 +128,8 @@ export default function ModalField({
     type === "number" ||
     type === "text_single" ||
     type === "text_multi" ||
-    type === "rich_text"
+    type === "rich_text" ||
+    type === "tags"
 
   // Fetch field data
   useEffect(() => {
@@ -177,6 +180,8 @@ export default function ModalField({
             setStep((settings.step as number) ?? "")
             setMinLength((settings.min_length as number) ?? "")
             setMaxLength((settings.max_length as number) ?? "")
+            setMinItems((settings.min_items as number) ?? "")
+            setMaxItems((settings.max_items as number) ?? "")
             const pattern = (settings.regex_pattern as string) || ""
             setRegexPattern(pattern)
 
@@ -231,6 +236,8 @@ export default function ModalField({
             setStep((settings.step as number) ?? "")
             setMinLength((settings.min_length as number) ?? "")
             setMaxLength((settings.max_length as number) ?? "")
+            setMinItems((settings.min_items as number) ?? "")
+            setMaxItems((settings.max_items as number) ?? "")
             const pattern = (settings.regex_pattern as string) || ""
             setRegexPattern(pattern)
 
@@ -373,6 +380,11 @@ export default function ModalField({
         settings.min_length = minLength !== "" ? Number(minLength) : undefined
         settings.max_length = maxLength !== "" ? Number(maxLength) : undefined
         settings.regex_pattern = regexPattern || undefined
+      }
+
+      if (type === "tags") {
+        settings.min_items = minItems !== "" ? Number(minItems) : undefined
+        settings.max_items = maxItems !== "" ? Number(maxItems) : undefined
       }
 
       if (type === "reference") {
@@ -646,6 +658,29 @@ export default function ModalField({
                     description="Enter your custom regular expression."
                   />
                 )}
+              </div>
+            )}
+
+            {type === "tags" && (
+              <div className={s.settingsGrid}>
+                <TextField
+                  label="Min Tags"
+                  type="number"
+                  value={minItems}
+                  onChange={(e) =>
+                    setMinItems(e.target.value ? Number(e.target.value) : "")
+                  }
+                  placeholder="e.g. 1"
+                />
+                <TextField
+                  label="Max Tags"
+                  type="number"
+                  value={maxItems}
+                  onChange={(e) =>
+                    setMaxItems(e.target.value ? Number(e.target.value) : "")
+                  }
+                  placeholder="e.g. 10"
+                />
               </div>
             )}
           </Tabs.Content>
