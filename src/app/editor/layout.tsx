@@ -27,12 +27,11 @@ function RecordDetailsSidebarWrapper() {
   const { accessToken } = useAuth()
   const { models } = useModels()
   const activeRecord = useAtomValue(activeRecordAtom)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _version = useAtomValue(editorVersionAtom)
   const [fetchedRecord, setFetchedRecord] = React.useState<RecordBase | null>(
     null
   )
-  const [loading, setLoading] = React.useState(false)
+  const [_loading, setLoading] = React.useState(false)
   const model = params?.model as string
   const id = params?.id as string
 
@@ -49,7 +48,7 @@ function RecordDetailsSidebarWrapper() {
       return
     }
 
-    if (accessToken && model && id) {
+    if (accessToken && model && id && id !== "new") {
       const isUuid =
         /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
           id
@@ -74,7 +73,7 @@ function RecordDetailsSidebarWrapper() {
 
       fetchRecord()
     }
-  }, [accessToken, model, id])
+  }, [accessToken, model, id, activeRecord])
 
   if (!record) return null
 

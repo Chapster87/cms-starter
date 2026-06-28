@@ -5,13 +5,7 @@ import { CMSField } from "@/types/fields"
 import { ModelRegistryEntry } from "@/hooks/use-models"
 import Button from "@/components/button"
 import * as Popover from "@radix-ui/react-popover"
-import {
-  Settings,
-  Check,
-  GripVertical,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react"
+import { Settings, Check, ChevronUp, ChevronDown } from "lucide-react"
 import s from "./style.module.css"
 
 interface ColumnSettingsProps {

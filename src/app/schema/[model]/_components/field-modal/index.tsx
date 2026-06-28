@@ -1,15 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import clsx from "clsx"
-import {
-  FileText,
-  Type,
-  Layers,
-  Database,
-  ExternalLink,
-  Plus,
-} from "lucide-react"
+import { FileText, Type, Layers, Database, ExternalLink } from "lucide-react"
 
 import Button from "@/components/button"
 import { TextField, SelectField, CheckboxField } from "@/components/fields"

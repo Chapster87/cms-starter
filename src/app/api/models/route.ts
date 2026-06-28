@@ -39,7 +39,7 @@ async function getAuthenticatedSupabaseClient() {
  * Handles GET requests to list all models from the registry.
  * @returns {NextResponse} A JSON response containing the list of model objects.
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const authenticatedSupabase = await getAuthenticatedSupabaseClient()
     const {
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
     const sanitizedName = name.replace(/[^a-zA-Z0-9_]/g, "")
 
     // 1. Create the physical Postgres table
-    const { error: tableError } = await authenticatedSupabase.rpc(
+    const { error: _tableError } = await authenticatedSupabase.rpc(
       "create_table_with_uuid_and_timestamp",
       { table_name: sanitizedName }
     )

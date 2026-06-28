@@ -8,7 +8,6 @@ import { dataService, RecordBase } from "@/client/data-service"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
-import { getRecordDisplayName } from "@/helpers/record-helpers"
 import ContextMenu from "@/components/context-menu"
 import { useUsers } from "@/hooks/use-users"
 import {
@@ -178,15 +177,6 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to delete record")
     }
-  }
-
-  const getDisplayName = (record: RecordBase) => {
-    return getRecordDisplayName(
-      record,
-      modelData?.friendly_name,
-      modelData?.is_singleton,
-      modelData?.list_columns
-    )
   }
 
   const handleUpdateColumns = async (newColumns: string[]) => {

@@ -27,12 +27,6 @@ interface ReferenceFieldProps {
   triggerRef?: React.RefObject<HTMLDivElement | null>
 }
 
-interface RecordMedia {
-  url: string
-  type: string
-  [key: string]: unknown
-}
-
 interface RecordPreview {
   id: string
   display_name: string
@@ -148,7 +142,7 @@ export default function ReferenceField({
     } finally {
       setIsLoading(false)
     }
-  }, [accessToken, allowedModels])
+  }, [accessToken, allowedModels, filters, excludeIds])
 
   useEffect(() => {
     if (isModalOpen) {

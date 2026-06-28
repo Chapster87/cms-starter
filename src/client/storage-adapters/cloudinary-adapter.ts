@@ -67,7 +67,7 @@ export const cloudinaryAdapter: StorageAdapter = {
     }
   },
 
-  async delete(asset: MediaAsset): Promise<void> {
+  async delete(_asset: MediaAsset): Promise<void> {
     // Note: Deleting from Cloudinary usually requires an admin API call (server-side)
     // For now, we'll implement the registry deletion and leave provider deletion for a server-side helper if needed
     console.warn("Provider-side deletion not yet implemented for Cloudinary")

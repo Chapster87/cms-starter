@@ -109,16 +109,6 @@ export default function DateField({
 
         // Use Intl to find the offset for this specific naive time in that timezone
         const naiveDate = new Date(Date.UTC(year, month - 1, day, hour, minute))
-        const tzFormat = new Intl.DateTimeFormat("en-US", {
-          timeZone: targetTz,
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        })
 
         // Simple but effective: find the UTC date that matches this naive time in targetTz
         const utcDate = new Date(

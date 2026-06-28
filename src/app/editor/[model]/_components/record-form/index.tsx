@@ -62,7 +62,7 @@ export default function RecordForm<T extends CMSModelName>({
   onSubmit,
   onAutoSave,
   isLoading,
-  hasDraftMode,
+  hasDraftMode: _,
 }: RecordFormProps<T>) {
   const { accessToken } = useAuth()
   const { users } = useUsers()
@@ -115,7 +115,7 @@ export default function RecordForm<T extends CMSModelName>({
         ) {
           try {
             unwrappedData[key] = JSON.parse(val)
-          } catch (e) {
+          } catch (_e) {
             /* ignore */
           }
         }
@@ -322,7 +322,7 @@ export default function RecordForm<T extends CMSModelName>({
       ) {
         try {
           cleanData[field.field_name] = JSON.parse(val)
-        } catch (e) {
+        } catch (_e) {
           // Not valid JSON, leave as is
         }
       }

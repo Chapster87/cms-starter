@@ -170,7 +170,7 @@ export default function ModalModel({
     }
   }
 
-  const { groups, models: allModels } = useModels()
+  const { models: allModels } = useModels()
   const [availableFields, setAvailableFields] = useState<
     { field_name: string; field_label: string }[]
   >([])

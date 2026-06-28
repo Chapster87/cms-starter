@@ -171,6 +171,7 @@ export default function SchemaModal() {
   }, [
     action,
     modelSlug,
+    groupId,
     fieldId,
     fieldType,
     resolvedModelId,

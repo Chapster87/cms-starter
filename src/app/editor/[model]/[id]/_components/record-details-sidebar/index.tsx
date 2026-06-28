@@ -1,7 +1,7 @@
 "use client"
 
 import * as Accordion from "@radix-ui/react-accordion"
-import { RecordBase, dataService } from "@/client/data-service"
+import { RecordBase } from "@/client/data-service"
 import SvgIcon from "@/components/svg-icon"
 import { RecordStatus } from "@/app/editor/[model]/_components/status-badge"
 import { useAuthors } from "@/hooks/use-authors"
@@ -30,8 +30,8 @@ export default function RecordDetailsSidebar({
   if (!record) return null
 
   const handleUpdateAttribution = async (
-    field: "created_by" | "updated_by" | "author_id",
-    value: string
+    _field: "created_by" | "updated_by" | "author_id",
+    _value: string
   ) => {
     try {
       // Note: we need the model slug to update the record.
@@ -41,7 +41,7 @@ export default function RecordDetailsSidebar({
 
       // @TODO: Implement attribution update logic once model slug is available here
       toast.info("Attribution update coming soon")
-    } catch (err) {
+    } catch (_err) {
       toast.error("Failed to update attribution")
     }
   }

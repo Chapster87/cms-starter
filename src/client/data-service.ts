@@ -148,7 +148,7 @@ export const dataService = {
       }
 
       return record
-    } catch (err) {
+    } catch (_err) {
       // Column might not exist
       return null
     }

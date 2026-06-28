@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useCallback, useEffect, useState } from "react"
-import { Image as ImageIcon, Loader2, Search, Upload, X } from "lucide-react"
+import Image from "next/image"
+import { Image as ImageIcon, Loader2, Search, Upload } from "lucide-react"
 import { clsx } from "clsx"
 
 import Button from "@/components/button"
@@ -273,7 +274,13 @@ export default function MediaBrowser({
               title="Double click to edit metadata"
             >
               <div className={s.preview}>
-                <img src={asset.url} alt={asset.name} />
+                <Image
+                  src={asset.url}
+                  alt={asset.name}
+                  fill
+                  className={s.previewImage}
+                  unoptimized
+                />
               </div>
               <div className={s.assetInfo}>
                 <span className={s.assetName}>{asset.name}</span>

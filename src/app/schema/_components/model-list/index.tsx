@@ -11,7 +11,7 @@ import { useModels, ModelRegistryEntry, ModelGroup } from "@/hooks/use-models"
 import { toast } from "@/client/toast-store"
 import { useAuth } from "@/hooks/use-auth"
 import { useTreeDnd } from "@/hooks/use-tree-dnd"
-import { INDENTATION_WIDTH, flattenTree } from "@/helpers/tree-helpers"
+import { flattenTree } from "@/helpers/tree-helpers"
 import {
   buildTree,
   TreeItem,
@@ -91,7 +91,6 @@ export default function ModelList({ models, groups }: ModelListProps) {
 
   const {
     activeId,
-    overId,
     sensors,
     handleDragStart,
     handleDragMove,
@@ -176,7 +175,7 @@ export default function ModelList({ models, groups }: ModelListProps) {
         })
         refresh()
         toast.success("Group deleted")
-      } catch (err) {
+      } catch (_err) {
         toast.error("Delete failed", "Failed to delete group")
       }
     },

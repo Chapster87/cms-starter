@@ -11,9 +11,7 @@ import { dataService, RecordBase } from "@/client/data-service"
 import Button from "@/components/button"
 import ContextMenu from "@/components/context-menu"
 import SvgIcon from "@/components/svg-icon"
-import { useAuth } from "@/hooks/use-auth"
 import { ModelRegistryEntry } from "@/hooks/use-models"
-import { getRecordDisplayName } from "@/helpers/record-helpers"
 import { CMSModelName } from "@/types/cms-generated"
 import RecordForm from "@/app/editor/[model]/_components/record-form"
 import StatusBadge, {
@@ -38,9 +36,8 @@ export default function EditRecordClient({
 }: EditRecordClientProps) {
   const router = useRouter()
   const model = modelSlug as CMSModelName
-  const { accessToken, loading: authLoading } = useAuth()
 
-  const [record, setRecord] = useAtom(activeRecordAtom)
+  const [record] = useAtom(activeRecordAtom)
   const [loading, setLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -223,13 +220,14 @@ export default function EditRecordClient({
     }
   }
 
-  const currentStatus: RecordStatus = !modelData?.has_draft_mode
-    ? "published"
-    : record?.status === "published"
-      ? record?._draft
-        ? "changed"
-        : "published"
-      : "draft"
+  const currentStatus: RecordStatus = useMemo(() => {
+    if (!modelData?.has_draft_mode) return "published"
+    const recordToEvaluate = record || initialRecord
+    if (recordToEvaluate.status === "published") {
+      return recordToEvaluate._draft ? "changed" : "published"
+    }
+    return "draft"
+  }, [modelData?.has_draft_mode, record, initialRecord])
 
   const workingData =
     modelData?.has_draft_mode && record?._draft

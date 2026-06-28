@@ -8,8 +8,8 @@ import AuthForm from "./_components/auth-form"
  * This page allows users to sign in or sign up.
  */
 export default function AuthPage() {
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [loading, _setLoading] = useState(false)
+  const [error, _setError] = useState<string | null>(null)
 
   // @TODO: Implement email/password login, if desired, in AuthForm
   // For now, focus on Google OAuth

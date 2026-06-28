@@ -9,7 +9,7 @@ export async function resolveReferences(
   record: Record<string, unknown>,
   fields: CMSField[]
 ): Promise<Record<string, unknown>> {
-  const supabase = createClient()
+  const _supabase = createClient()
   const resolved = { ...record }
 
   // Filter for reference-type fields that have values (checking both field name and common DB column variations)

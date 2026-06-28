@@ -46,21 +46,23 @@ export default function SlugField({
   const isTouched = controlledIsTouched ?? internalIsTouched
 
   // Helper to sanitize string into a slug
-  const slugify = (text: string) => {
-    const escapedSeparator = separator === "-" ? "-" : "_"
-    const regex = new RegExp(`[^a-z0-9${escapedSeparator}]`, "g")
-    const repeatRegex = new RegExp(`[${escapedSeparator}]+`, "g")
-    const trimRegex = new RegExp(
-      `^[${escapedSeparator}]+|[${escapedSeparator}]+$`,
-      "g"
-    )
+  const slugify = React.useCallback(
+    (text: string) => {
+      const escapedSeparator = separator === "-" ? "-" : "_"
+      const repeatRegex = new RegExp(`[${escapedSeparator}]+`, "g")
+      const trimRegex = new RegExp(
+        `^[${escapedSeparator}]+|[${escapedSeparator}]+$`,
+        "g"
+      )
 
-    return text
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, separator) // Replace non-alphanumeric with separator
-      .replace(repeatRegex, separator) // Replace multiple separators with single
-      .replace(trimRegex, "") // Trim separators from ends
-  }
+      return text
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, separator) // Replace non-alphanumeric with separator
+        .replace(repeatRegex, separator) // Replace multiple separators with single
+        .replace(trimRegex, "") // Trim separators from ends
+    },
+    [separator]
+  )
 
   // Sync with sourceValue if not touched.
   // We remove the !value check so it continues to sync as the user types in the source field.
@@ -71,7 +73,7 @@ export default function SlugField({
         onChange(newSlug)
       }
     }
-  }, [sourceValue, isTouched, onChange, value])
+  }, [sourceValue, isTouched, onChange, value, slugify])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const escapedSeparator = separator === "-" ? "-" : "_"

@@ -42,7 +42,7 @@ export default function JsonField({
     try {
       JSON.parse(val)
       setError(undefined)
-    } catch (err) {
+    } catch (_err) {
       setError("Invalid JSON format")
     }
   }

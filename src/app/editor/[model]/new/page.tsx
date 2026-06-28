@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { dataService } from "@/client/data-service"
 import Button from "@/components/button"
-import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
+import { CMSModelName } from "@/types/cms-generated"
 import RecordForm from "@/app/editor/[model]/_components/record-form"
 import s from "./style.module.css"
 
@@ -22,7 +22,6 @@ interface NewRecordPageProps {
 export default function NewRecordPage({ params }: NewRecordPageProps) {
   const router = useRouter()
   const { model } = use(params)
-  const { accessToken, loading: authLoading } = useAuth()
   const { models } = useModels()
 
   const modelData = models.find((m) => m.slug === model)
@@ -53,8 +52,8 @@ export default function NewRecordPage({ params }: NewRecordPageProps) {
     }
   }
 
-  if (authLoading) return <p>Loading...</p>
   if (!model) return <p>Invalid model specified.</p>
+  const modelName = model as CMSModelName
 
   return (
     <div className={s.container}>
@@ -69,7 +68,7 @@ export default function NewRecordPage({ params }: NewRecordPageProps) {
       {success && <p className={s.success}>{success}</p>}
 
       <RecordForm
-        model={model}
+        model={modelName}
         onSubmit={handleSubmit}
         isLoading={loading}
         hasDraftMode={modelData?.has_draft_mode}

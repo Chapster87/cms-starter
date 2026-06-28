@@ -3,8 +3,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import {
   DndContext,
-  closestCenter,
-  rectIntersection,
   closestCorners,
   KeyboardSensor,
   PointerSensor,
@@ -21,7 +19,6 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import Link from "next/link"
 import clsx from "clsx"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
@@ -409,14 +406,6 @@ export default function FieldList({ modelId }: FieldListProps) {
     const overId = over.id as string
 
     if (activeId === overId) return
-
-    // Find the item being dragged
-    const activeField = fields.find((f) => f.id === activeId)
-    const activeFieldset = fieldsets.find((fs) => fs.id === activeId)
-
-    // Find what it was dropped over
-    const overField = fields.find((f) => f.id === overId)
-    const overFieldset = fieldsets.find((fs) => fs.id === overId)
 
     // Use the latest fields state which already has the updated fieldset_id from handleDragOver
     const nextFields = [...fields]

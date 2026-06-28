@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import Image from "next/image"
 import { Loader2 } from "lucide-react"
 
 import Button from "@/components/button"
@@ -92,7 +93,13 @@ export default function MediaDetailsModal({
     >
       <div className={s.modalContent}>
         <div className={s.preview}>
-          <img src={asset.url} alt={asset.name} />
+          <Image
+            src={asset.url}
+            alt={asset.alt_text || asset.name}
+            fill
+            className={s.previewImage}
+            unoptimized
+          />
         </div>
 
         <div className={s.details}>

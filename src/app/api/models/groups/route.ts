@@ -13,7 +13,7 @@ async function getAuthenticatedSupabaseClient() {
  * GET /api/models/groups
  * Lists all model groups.
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const authenticatedSupabase = await getAuthenticatedSupabaseClient()
     const {

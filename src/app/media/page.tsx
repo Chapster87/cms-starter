@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useCallback, useEffect, useState } from "react"
+import Image from "next/image"
 import {
   Image as ImageIcon,
   Loader2,
@@ -398,7 +399,13 @@ export default function MediaGalleryPage() {
                     onClick={() => setEditingAsset(asset)}
                   >
                     <div className={s.preview}>
-                      <img src={asset.url} alt={asset.name} />
+                      <Image
+                        src={asset.url}
+                        alt={asset.name}
+                        fill
+                        className={s.previewImage}
+                        unoptimized
+                      />
                     </div>
                     <div className={s.info}>
                       <div className={s.meta}>

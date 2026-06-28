@@ -453,7 +453,6 @@ export default function RichTextField({
   required,
   disabled,
   enabledTools,
-  placeholder,
 }: RichTextFieldProps) {
   const id = React.useId()
   // Trigger re-renders on selection changes to update the toolbar state

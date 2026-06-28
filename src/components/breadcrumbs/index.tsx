@@ -107,7 +107,7 @@ export default function Breadcrumbs({
       .filter((crumb): crumb is BreadcrumbItem => crumb !== null)
 
     return [homeBreadcrumb, ...dynamicBreadcrumbs]
-  }, [pathname, dynamicSegments, models])
+  }, [pathname, dynamicSegments, models, activeRecord])
 
   if (hideOnRoot && pathname === "/") {
     return <></>

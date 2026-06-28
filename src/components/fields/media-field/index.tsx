@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import Image from "next/image"
 
 import Button from "@/components/button"
 import { MediaAsset } from "@/types/cms-generated"
@@ -33,7 +34,6 @@ export default function MediaField({
   fieldNote,
   required,
   disabled,
-  name,
   multiple = false,
 }: MediaFieldProps) {
   const id = React.useId()
@@ -83,7 +83,13 @@ export default function MediaField({
               <div className={s.preview}>
                 {asset.url &&
                 asset.url.match(/\.(jpeg|jpg|gif|png|webp|avif|svg)/i) ? (
-                  <img src={asset.url} alt={asset.name} />
+                  <Image
+                    src={asset.url}
+                    alt={asset.name}
+                    fill
+                    className={s.previewImage}
+                    unoptimized
+                  />
                 ) : (
                   <div className={s.fileIcon}>📄</div>
                 )}
