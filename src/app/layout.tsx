@@ -20,7 +20,10 @@ const merriweatherSans = Merriweather_Sans({
 })
 
 export const metadata: Metadata = {
-  title: "CMS Starter",
+  title: {
+    default: "Forge CMS",
+    template: "%s | Forge CMS",
+  },
   description: "Custom CMS developed by: Andy Chapman",
 }
 

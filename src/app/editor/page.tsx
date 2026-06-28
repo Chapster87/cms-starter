@@ -1,25 +1,22 @@
-"use client"
-
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useModels } from "@/hooks/use-models"
+import { Metadata } from "next"
+import { redirect } from "next/navigation"
+import { getModels } from "@/server/models"
 import s from "./style.module.css"
+
+export const metadata: Metadata = {
+  title: "Content Editor",
+}
 
 /**
  * Renders the Editor landing page.
- * Redirects to the first model in the list.
+ * Redirects to the first model in the list on the server.
  */
-export default function EditorLandingPage() {
-  const { models, loading } = useModels()
-  const router = useRouter()
+export default async function EditorLandingPage() {
+  const models = await getModels()
 
-  useEffect(() => {
-    if (!loading && models.length > 0) {
-      router.push(`/editor/${models[0].slug}`)
-    }
-  }, [models, loading, router])
-
-  if (loading) return null
+  if (models.length > 0) {
+    redirect(`/editor/${models[0].slug}`)
+  }
 
   return (
     <div className={s.placeholder}>

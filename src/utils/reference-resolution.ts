@@ -33,7 +33,11 @@ export async function resolveRecordReferences(
   const cache: ReferenceCache = {}
 
   for (const field of fields) {
-    const val = record[field.field_name]
+    const fieldName = field.field_name
+    const val =
+      record[fieldName] ??
+      record[`${fieldName}_id`] ??
+      record[`${fieldName}_uuid`]
     if (!val) continue
 
     // Handle single UUID or array of UUIDs
@@ -72,9 +76,13 @@ export async function resolveRecordReferences(
       }
     }
 
-    resolved[field.field_name] = Array.isArray(val)
-      ? resolvedValues
-      : resolvedValues[0]
+    // Store resolved preview data in a separate _resolved property
+    // This prevents overwriting the raw UUID values needed by the form
+    if (!resolved._resolved) {
+      resolved._resolved = {}
+    }
+    ;(resolved._resolved as Record<string, unknown>)[field.field_name] =
+      Array.isArray(val) ? resolvedValues : resolvedValues[0]
   }
 
   return resolved

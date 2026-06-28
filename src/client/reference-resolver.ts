@@ -12,10 +12,16 @@ export async function resolveReferences(
   const supabase = createClient()
   const resolved = { ...record }
 
-  // Filter for reference-type fields that have values
-  const referenceFields = fields.filter(
-    (f) => f.field_type === "reference" && record[f.field_name]
-  )
+  // Filter for reference-type fields that have values (checking both field name and common DB column variations)
+  const referenceFields = fields.filter((f) => {
+    if (f.field_type !== "reference") return false
+    const name = f.field_name
+    return (
+      record[name] !== undefined ||
+      record[`${name}_id`] !== undefined ||
+      record[`${name}_uuid`] !== undefined
+    )
+  })
 
   if (referenceFields.length === 0) return record
 
@@ -23,7 +29,12 @@ export async function resolveReferences(
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
   for (const field of referenceFields) {
-    const val = record[field.field_name]
+    // Find the actual value in the record, checking variations
+    const name = field.field_name
+    const val = record[name] ?? record[`${name}_id`] ?? record[`${name}_uuid`]
+
+    if (val === undefined || val === null) continue
+
     const ids = Array.isArray(val) ? val : [val]
 
     // Only process valid UUIDs
@@ -54,9 +65,15 @@ export async function resolveReferences(
         const previews = await response.json()
         if (Array.isArray(previews) && previews.length > 0) {
           // If the original was an array, return array of previews, else return single preview
-          resolved[field.field_name] = Array.isArray(val)
-            ? previews
-            : previews[0]
+          const resolvedVal = Array.isArray(val) ? previews : previews[0]
+
+          // Write to the field name (e.g. 'season')
+          resolved[field.field_name] = resolvedVal
+
+          // Also write to common database column variations (e.g. 'season_id')
+          // to ensure display logic finds it regardless of which key it checks
+          resolved[`${field.field_name}_id`] = resolvedVal
+          resolved[`${field.field_name}_uuid`] = resolvedVal
         }
       }
     } catch (err) {

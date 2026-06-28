@@ -1,8 +1,10 @@
-"use client"
-
-import React from "react"
+import { Metadata } from "next"
 import Link from "next/link"
 import s from "./style.module.css"
+
+export const metadata: Metadata = {
+  title: "Settings",
+}
 
 /**
  * Renders the Settings Dashboard.

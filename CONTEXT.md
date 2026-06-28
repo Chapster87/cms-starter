@@ -52,6 +52,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 - [ ] **Modular Content Field:** Expand current field type to include options for a single or multiple block inclusion. Also include configurabtion setting for which blocks should be allowed to include
 - [ ] **Structured Text:** Dato inspired (DAST type content) that basically mixes something like a rich-text field with the ability to include blocks within. Used mainly for blog type pages rather than landing pages.
+- [ ] **Convert Standings Table model to a Block** This model is highly specific and shouldn't be part of our core CMS, it's a good candidate for conversion to a block. We will need to ensure all custom functionality is generalized so it could function a any sort of block needed. resolving references correctly and such.
 
 ### 3. Future Roadmap
 

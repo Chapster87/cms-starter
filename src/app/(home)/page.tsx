@@ -1,46 +1,37 @@
-"use client"
-
-import { useEffect } from "react"
+import { Metadata } from "next"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
+import { redirect } from "next/navigation"
 import Card from "@/components/card"
+import { createClient } from "@/utils/supabase-server"
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+}
 
 /**
- * Renders the main dashboard page, now acting as the homepage.
- * This page will display a welcome message and potentially user information.
- * It will also redirect unauthenticated users to the login page.
+ * Renders the main dashboard page.
+ * Handles authentication and metadata on the server.
  */
-export default function Home() {
-  const router = useRouter()
-  const { user, loading } = useAuth()
-
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/auth")
-    }
-  }, [user, loading, router])
-
-  if (loading) {
-    return <p>Loading homepage...</p> // Updated loading message
-  }
+export default async function Home() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   if (!user) {
-    return <p>Redirecting to login...</p>
+    redirect("/auth")
   }
 
   return (
     <div>
       <Card>
-        <h1>Welcome to the Homepage, {user.email}!</h1>{" "}
+        <h1>Welcome to the Homepage, {user.email}!</h1>
         <p>
           This is your main dashboard. You can navigate to other sections from
           here.
         </p>
-        {/* Add links to other dashboard sections, e.g., /dashboard/pages */}
         <p>
-          Go to <Link href="/schema">Models Management</Link>{" "}
-          {/* Updated link to be relative to root for now */}
+          Go to <Link href="/schema">Models Management</Link>
         </p>
       </Card>
     </div>

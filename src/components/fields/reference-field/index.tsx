@@ -93,6 +93,9 @@ export default function ReferenceField({
         return
       }
 
+      // Check if we already have the previews passed down in some context or state
+      // (This is a placeholder for future optimization if needed)
+
       try {
         const response = await fetch(`/api/records/previews`, {
           method: "POST",
@@ -114,7 +117,7 @@ export default function ReferenceField({
       }
     }
     fetchSelectedPreviews()
-  }, [accessToken, selectedIds])
+  }, [accessToken, selectedIds, allowedModels])
 
   // Fetch all available records for the browser
   const fetchRecords = useCallback(async () => {

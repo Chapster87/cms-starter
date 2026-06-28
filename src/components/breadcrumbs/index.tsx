@@ -2,7 +2,10 @@
 
 import React, { useMemo } from "react"
 import { usePathname } from "next/navigation"
+import { useAtomValue } from "jotai"
+import { activeRecordAtom } from "@/client/editor-store"
 import { useModels } from "@/hooks/use-models"
+import { getRecordDisplayName } from "@/helpers/record-helpers"
 import Link from "@components/link"
 import Text from "@components/typography/text"
 import s from "./style.module.css"
@@ -35,6 +38,12 @@ export default function Breadcrumbs({
 }: BreadcrumbsProps): React.ReactElement {
   const pathname = usePathname()
   const { models } = useModels()
+  const activeRecord = useAtomValue(activeRecordAtom)
+
+  // On a record editor page, the breadcrumb might need to show the display name
+  // even before the activeRecordAtom is hydrated (e.g. on hard refresh).
+  // We can try to infer it from the document title or meta if available,
+  // but better to check if we're on the ID segment and use the same logic.
 
   const breadcrumbs: BreadcrumbItem[] = useMemo(() => {
     if (!pathname) {
@@ -61,7 +70,7 @@ export default function Breadcrumbs({
           return null // Skip the ID segment for singletons
         }
 
-        const label =
+        let label =
           dynamicSegments && dynamicSegments[segment]
             ? dynamicSegments[segment]
             : model
@@ -71,6 +80,26 @@ export default function Breadcrumbs({
                   .split(" ")
                   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                   .join(" ")
+
+        // If this is an editor path and we're at the ID segment, try to use the active record's display name
+        if (pathSegments[0] === "editor" && index === 2 && prevModel) {
+          if (activeRecord) {
+            label = getRecordDisplayName(
+              activeRecord,
+              prevModel.friendly_name,
+              prevModel.is_singleton,
+              prevModel.list_columns
+            )
+          } else if (typeof document !== "undefined" && document.title) {
+            // Fallback: Use page title minus "Edit " prefix if atom not yet hydrated
+            const title = document.title.split(" | ")[0]
+            if (title.startsWith("Edit ")) {
+              label = title.replace("Edit ", "")
+            } else if (title !== prevModel.friendly_name) {
+              label = title
+            }
+          }
+        }
 
         const item: BreadcrumbItem = { label, href }
         return item

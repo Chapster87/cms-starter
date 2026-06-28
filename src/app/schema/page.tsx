@@ -1,27 +1,24 @@
-"use client"
-
-import { useEffect } from "react"
+import { Metadata } from "next"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { redirect } from "next/navigation"
 import Button from "@/components/button"
-import { useModels } from "@/hooks/use-models"
+import { getModels } from "@/server/models"
+
+export const metadata: Metadata = {
+  title: "Schema Management",
+}
 
 /**
  * Renders the models management dashboard.
- * If models exist, redirects to the first model's schema page.
+ * If models exist, redirects to the first model's schema page on the server.
  * Otherwise, displays a message and an option to create a new model.
  */
-export default function ModelsDashboard() {
-  const { models, loading } = useModels()
-  const router = useRouter()
+export default async function ModelsDashboard() {
+  const models = await getModels()
 
-  useEffect(() => {
-    if (!loading && models.length > 0) {
-      router.push(`/schema/${models[0].slug}`)
-    }
-  }, [models, loading, router])
-
-  if (loading) return null // Handled by layout loading state mostly
+  if (models.length > 0) {
+    redirect(`/schema/${models[0].slug}`)
+  }
 
   return (
     <div>
