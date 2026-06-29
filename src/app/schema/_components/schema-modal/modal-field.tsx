@@ -163,7 +163,7 @@ export default function ModalField({
 
           if (mode === "edit") {
             setLabel(field.field_label)
-            setName(field.field_name)
+            setName(field.slug)
             setType(field.field_type)
             setIsRequired(field.is_required)
             setIsUnique(field.is_unique)
@@ -219,7 +219,7 @@ export default function ModalField({
           } else {
             // Duplicate mode: Pre-fill with _copy and (copy)
             setLabel(`${field.field_label} (copy)`)
-            setName(`${field.field_name}_copy`)
+            setName(`${field.slug}_copy`)
             setType(field.field_type)
             setIsRequired(field.is_required)
             setIsUnique(field.is_unique)
@@ -417,7 +417,7 @@ export default function ModalField({
         : {
             model_id: blockId ? null : modelId,
             block_id: blockId || null,
-            field_name: name || label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
+            slug: name || label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
             field_label: label,
             field_type: type,
             is_required: isRequired,
@@ -502,7 +502,7 @@ export default function ModalField({
                 description="The unique database identifier for this field."
               />
               <TextField
-                label="Field Name (Database Column)"
+                label="Slug"
                 value={name}
                 disabled
                 description="The physical column name in your database."
@@ -522,12 +522,13 @@ export default function ModalField({
           {mode !== "edit" && (
             <>
               <SlugField
-                label="Field Name (Database Column)"
+                label="Slug"
                 placeholder="e.g. featured_image"
                 value={name}
                 sourceValue={label}
                 onChange={setName}
                 separator="_"
+                showUrlPrefix={false}
                 isTouched={isIdTouched}
                 onToggleTouched={setIsIdTouched}
                 description="The physical column name in your database."

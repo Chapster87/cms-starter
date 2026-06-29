@@ -32,7 +32,7 @@ export default function ColumnSettings({
     // Fallback default: first non-system field
     const firstField = fields.find((f) => !f.is_system)
     if (firstField) {
-      return [firstField.field_name]
+      return [firstField.slug]
     }
     return []
   }, [model.list_columns, fields])
@@ -98,7 +98,7 @@ export default function ColumnSettings({
           <div className={s.fieldList}>
             {/* Display active columns first in their actual order */}
             {currentColumns.map((colName) => {
-              const field = fields.find((f) => f.field_name === colName)
+              const field = fields.find((f) => f.slug === colName)
               if (!field) return null
               const colIdx = currentColumns.indexOf(colName)
 
@@ -106,7 +106,7 @@ export default function ColumnSettings({
                 <div key={field.id} className={s.fieldItemWrapper}>
                   <button
                     className={`${s.fieldItem} ${s.active}`}
-                    onClick={() => toggleColumn(field.field_name)}
+                    onClick={() => toggleColumn(field.slug)}
                     disabled={isSaving}
                   >
                     <div className={s.fieldCheck}>
@@ -118,7 +118,7 @@ export default function ColumnSettings({
                   <div className={s.orderActions}>
                     <button
                       className={s.orderButton}
-                      onClick={() => moveColumn(field.field_name, "up")}
+                      onClick={() => moveColumn(field.slug, "up")}
                       disabled={isSaving || colIdx === 0}
                       title="Move Up"
                     >
@@ -126,7 +126,7 @@ export default function ColumnSettings({
                     </button>
                     <button
                       className={s.orderButton}
-                      onClick={() => moveColumn(field.field_name, "down")}
+                      onClick={() => moveColumn(field.slug, "down")}
                       disabled={
                         isSaving || colIdx === currentColumns.length - 1
                       }
@@ -141,19 +141,17 @@ export default function ColumnSettings({
 
             {/* Separator if we have inactive fields */}
             {fields.some(
-              (f) => !f.is_system && !currentColumns.includes(f.field_name)
+              (f) => !f.is_system && !currentColumns.includes(f.slug)
             ) && <div className={s.separator} />}
 
             {/* Display inactive fields */}
             {fields
-              .filter(
-                (f) => !f.is_system && !currentColumns.includes(f.field_name)
-              )
+              .filter((f) => !f.is_system && !currentColumns.includes(f.slug))
               .map((field) => (
                 <div key={field.id} className={s.fieldItemWrapper}>
                   <button
                     className={s.fieldItem}
-                    onClick={() => toggleColumn(field.field_name)}
+                    onClick={() => toggleColumn(field.slug)}
                     disabled={isSaving}
                   >
                     <div className={s.fieldCheck} />

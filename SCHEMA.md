@@ -41,7 +41,7 @@ Stores field configurations for each model.
 | `model_id`    | uuid        | Optional reference to `models.id`.                         |
 | `block_id`    | uuid        | Optional reference to `blocks.id`.                         |
 | `fieldset_id` | uuid        | Optional reference to `fieldsets.id`.                      |
-| `field_name`  | text        | Name of the column in the physical table.                  |
+| `slug`        | text        | Name of the column in the physical table.                  |
 | `field_label` | text        | Human-readable label.                                      |
 | `field_type`  | text        | CMS field type (e.g., `text_single`, `reference`).         |
 | `is_required` | boolean     | Validation: cannot be null (except in drafts).             |

@@ -171,9 +171,9 @@ export const generateSchema = async () => {
 
             const linkedFilterType = filterInputTypes[linkedModelId || ""]
             if (linkedFilterType) {
-              filterFields[field.field_name] = { type: linkedFilterType }
+              filterFields[field.slug] = { type: linkedFilterType }
             } else {
-              filterFields[field.field_name] = { type: GraphQLString }
+              filterFields[field.slug] = { type: GraphQLString }
             }
           } else {
             const inputType = getGraphQLType(field, true)
@@ -182,12 +182,12 @@ export const generateSchema = async () => {
               inputType instanceof GraphQLScalarType ||
               inputType instanceof GraphQLInputObjectType
             ) {
-              filterFields[field.field_name] = { type: inputType }
+              filterFields[field.slug] = { type: inputType }
             } else if (inputType instanceof GraphQLList) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              filterFields[field.field_name] = { type: inputType as any }
+              filterFields[field.slug] = { type: inputType as any }
             } else {
-              filterFields[field.field_name] = { type: GraphQLString }
+              filterFields[field.slug] = { type: GraphQLString }
             }
           }
         })
@@ -231,10 +231,10 @@ export const generateSchema = async () => {
 
               if (linkedType && linkedModel) {
                 const isMultiple = field.settings?.allow_multiple === true
-                fieldsConfig[field.field_name] = {
+                fieldsConfig[field.slug] = {
                   type: isMultiple ? new GraphQLList(linkedType) : linkedType,
                   resolve: async (parent: Record<string, unknown>) => {
-                    const rawValue = parent[field.field_name]
+                    const rawValue = parent[field.slug]
                     if (!rawValue) return isMultiple ? [] : null
 
                     const ids = parseJsonValue(rawValue)
@@ -262,17 +262,17 @@ export const generateSchema = async () => {
                   },
                 }
               } else {
-                fieldsConfig[field.field_name] = { type: GraphQLString }
+                fieldsConfig[field.slug] = { type: GraphQLString }
               }
             } else if (field.field_type === "media") {
-              fieldsConfig[field.field_name] = {
+              fieldsConfig[field.slug] = {
                 type: getGraphQLType(field),
                 resolve: async (parent: Record<string, unknown>) => {
                   const draft = parent._draft as Record<string, unknown> | null
                   const val =
-                    draft && draft[field.field_name] !== undefined
-                      ? draft[field.field_name]
-                      : parent[field.field_name]
+                    draft && draft[field.slug] !== undefined
+                      ? draft[field.slug]
+                      : parent[field.slug]
 
                   const parsedValue = parseJsonValue(val)
                   if (!parsedValue) return null
@@ -304,14 +304,14 @@ export const generateSchema = async () => {
                 },
               }
             } else {
-              fieldsConfig[field.field_name] = {
+              fieldsConfig[field.slug] = {
                 type: getGraphQLType(field),
                 resolve: (parent: Record<string, unknown>) => {
                   const draft = parent._draft as Record<string, unknown> | null
                   const val =
-                    draft && draft[field.field_name] !== undefined
-                      ? draft[field.field_name]
-                      : parent[field.field_name]
+                    draft && draft[field.slug] !== undefined
+                      ? draft[field.slug]
+                      : parent[field.slug]
 
                   const parsed = [
                     "tags",
@@ -329,7 +329,7 @@ export const generateSchema = async () => {
                     field.field_type === "standings_table" ||
                     field.field_type === "json" ||
                     field.field_type === "modular_content" ||
-                    field.field_name === "league_standings"
+                    field.slug === "league_standings"
 
                   if (isDeepResolvable && Array.isArray(parsed)) {
                     return Promise.all(
@@ -490,7 +490,7 @@ export const generateSchema = async () => {
                 ).find(
                   (f) =>
                     f.model_id === (currentModel.id || currentModel.model_id) &&
-                    f.field_name === key
+                    f.slug === key
                 )
 
                 if (

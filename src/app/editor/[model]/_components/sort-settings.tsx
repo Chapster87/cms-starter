@@ -23,13 +23,13 @@ export default function SortSettings({
   onSortChange,
 }: SortSettingsProps) {
   // We include system fields like created_at and updated_at for sorting
-  const sortableFields = [
+  const sortableFields: Partial<CMSField>[] = [
     ...fields.filter((f) => f.field_type !== "media"), // Media usually isn't sortable
-    { field_name: "created_at", field_label: "Created At" },
-    { field_name: "updated_at", field_label: "Updated At" },
+    { slug: "created_at", field_label: "Created At" },
+    { slug: "updated_at", field_label: "Updated At" },
   ]
 
-  const activeField = sortableFields.find((f) => f.field_name === sortColumn)
+  const activeField = sortableFields.find((f) => f.slug === sortColumn)
 
   return (
     <Popover.Root>
@@ -61,15 +61,14 @@ export default function SortSettings({
           </div>
           <div className={s.fieldList}>
             {sortableFields.map((field) => {
-              const isActive = sortColumn === field.field_name
+              const fieldSlug = field.slug || ""
+              const isActive = sortColumn === fieldSlug
 
               return (
-                <div key={field.field_name} className={s.sortItemWrapper}>
+                <div key={fieldSlug} className={s.sortItemWrapper}>
                   <button
                     className={`${s.fieldItem} ${isActive ? s.active : ""}`}
-                    onClick={() =>
-                      onSortChange(field.field_name, sortDirection)
-                    }
+                    onClick={() => onSortChange(fieldSlug, sortDirection)}
                   >
                     <span className={s.fieldName}>{field.field_label}</span>
                   </button>
@@ -79,7 +78,7 @@ export default function SortSettings({
                         className={`${s.dirButton} ${
                           sortDirection === "asc" ? s.activeDir : ""
                         }`}
-                        onClick={() => onSortChange(field.field_name, "asc")}
+                        onClick={() => onSortChange(fieldSlug, "asc")}
                         title="Ascending"
                       >
                         <ArrowUpAZ size={14} />
@@ -88,7 +87,7 @@ export default function SortSettings({
                         className={`${s.dirButton} ${
                           sortDirection === "desc" ? s.activeDir : ""
                         }`}
-                        onClick={() => onSortChange(field.field_name, "desc")}
+                        onClick={() => onSortChange(fieldSlug, "desc")}
                         title="Descending"
                       >
                         <ArrowDownAZ size={14} />

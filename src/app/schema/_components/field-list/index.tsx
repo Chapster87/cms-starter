@@ -224,9 +224,7 @@ export default function FieldList({ modelId, blockId }: FieldListProps) {
       // Filter out system-level fields from the management list
       const filteredFields = (data || []).filter(
         (f: CMSField) =>
-          !["status", "_draft", "created_by", "updated_by"].includes(
-            f.field_name
-          )
+          !["status", "_draft", "created_by", "updated_by"].includes(f.slug)
       )
       setFields(filteredFields)
 
@@ -261,9 +259,7 @@ export default function FieldList({ modelId, blockId }: FieldListProps) {
             const physicalCols = (await schemaRes.json()) as Array<{
               column_name: string
             }>
-            const registeredNames = new Set(
-              data.map((f: CMSField) => f.field_name)
-            )
+            const registeredNames = new Set(data.map((f: CMSField) => f.slug))
             const systemFields = [
               "id",
               "created_at",

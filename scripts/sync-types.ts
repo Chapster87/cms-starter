@@ -32,7 +32,7 @@ interface CMSField {
   id: string
   model_id: string | null
   block_id: string | null
-  field_name: string
+  slug: string
   field_type: string
   is_required: boolean
   settings?: Record<string, unknown>
@@ -242,10 +242,10 @@ export type StandingsData = StandingsRow[];
     const baseFields = ["id", "created_at", "updated_at", "status", "_draft"]
 
     for (const field of modelFields) {
-      if (baseFields.includes(field.field_name)) continue
+      if (baseFields.includes(field.slug)) continue
       const tsType = mapFieldTypeToTs(field, validModels)
       const optional = field.is_required ? "" : "?"
-      content += `  ${field.field_name}${optional}: ${tsType};\n`
+      content += `  ${field.slug}${optional}: ${tsType};\n`
     }
 
     content += `}\n\n`
@@ -280,10 +280,10 @@ export type StandingsData = StandingsRow[];
     const baseFields = ["id", "created_at", "updated_at"]
 
     for (const field of blockFields) {
-      if (baseFields.includes(field.field_name)) continue
+      if (baseFields.includes(field.slug)) continue
       const tsType = mapFieldTypeToTs(field, validModels)
       const optional = field.is_required ? "" : "?"
-      content += `  ${field.field_name}${optional}: ${tsType};\n`
+      content += `  ${field.slug}${optional}: ${tsType};\n`
     }
 
     content += `}\n\n`

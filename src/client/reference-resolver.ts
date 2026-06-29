@@ -15,7 +15,7 @@ export async function resolveReferences(
   // Filter for reference-type fields that have values (checking both field name and common DB column variations)
   const referenceFields = fields.filter((f) => {
     if (f.field_type !== "reference") return false
-    const name = f.field_name
+    const name = f.slug
     return (
       record[name] !== undefined ||
       record[`${name}_id`] !== undefined ||
@@ -30,7 +30,7 @@ export async function resolveReferences(
 
   for (const field of referenceFields) {
     // Find the actual value in the record, checking variations
-    const name = field.field_name
+    const name = field.slug
     const val = record[name] ?? record[`${name}_id`] ?? record[`${name}_uuid`]
 
     if (val === undefined || val === null) continue
@@ -68,19 +68,16 @@ export async function resolveReferences(
           const resolvedVal = Array.isArray(val) ? previews : previews[0]
 
           // Write to the field name (e.g. 'season')
-          resolved[field.field_name] = resolvedVal
+          resolved[field.slug] = resolvedVal
 
           // Also write to common database column variations (e.g. 'season_id')
           // to ensure display logic finds it regardless of which key it checks
-          resolved[`${field.field_name}_id`] = resolvedVal
-          resolved[`${field.field_name}_uuid`] = resolvedVal
+          resolved[`${field.slug}_id`] = resolvedVal
+          resolved[`${field.slug}_uuid`] = resolvedVal
         }
       }
     } catch (err) {
-      console.error(
-        `Error resolving reference for field ${field.field_name}:`,
-        err
-      )
+      console.error(`Error resolving reference for field ${field.slug}:`, err)
     }
   }
 

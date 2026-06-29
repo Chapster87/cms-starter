@@ -154,9 +154,7 @@ export default function RecordForm<T extends CMSModelName>({
           // but they are kept in the registry for data persistence and audit logging.
           const filteredData = data.filter(
             (f: CMSField) =>
-              !["_draft", "status", "created_by", "updated_by"].includes(
-                f.field_name
-              )
+              !["_draft", "status", "created_by", "updated_by"].includes(f.slug)
           )
           setSchema(filteredData)
 
@@ -201,7 +199,7 @@ export default function RecordForm<T extends CMSModelName>({
             )
             .map((f: FieldSchema) => ({
               id: f.column_name,
-              field_name: f.column_name,
+              slug: f.column_name,
               field_label: f.column_name.replace(/_/g, " "),
               field_type:
                 f.data_type === "boolean"
@@ -235,7 +233,7 @@ export default function RecordForm<T extends CMSModelName>({
       [columnName]: value,
     }
 
-    const field = schema.find((f) => f.field_name === columnName)
+    const field = schema.find((f) => f.slug === columnName)
     validateField(columnName, value, field?.is_required)
 
     // Auto-sync from user if linking for the first time
@@ -274,12 +272,12 @@ export default function RecordForm<T extends CMSModelName>({
     let hasErrors = false
 
     schema.forEach((field) => {
-      const val = formData[field.field_name]
+      const val = formData[field.slug]
       if (
         field.is_required &&
         (val === undefined || val === null || val === "")
       ) {
-        nextErrors[field.field_name] = "This field is required"
+        nextErrors[field.slug] = "This field is required"
         hasErrors = true
       }
     })
@@ -298,19 +296,19 @@ export default function RecordForm<T extends CMSModelName>({
     schema.forEach((field) => {
       // Remove computed fields from payload
       if (field.is_computed) {
-        delete cleanData[field.field_name]
+        delete cleanData[field.slug]
         return
       }
 
-      const val = cleanData[field.field_name]
+      const val = cleanData[field.slug]
 
       // Force relationship fields on 'teams' model to stay as arrays for jsonb compatibility
       if (
         (model as string) === "teams" &&
-        (field.field_name === "league" || field.field_name === "division")
+        (field.slug === "league" || field.slug === "division")
       ) {
         if (val && !Array.isArray(val)) {
-          cleanData[field.field_name] = [val]
+          cleanData[field.slug] = [val]
         }
       }
 
@@ -321,7 +319,7 @@ export default function RecordForm<T extends CMSModelName>({
         (val.startsWith("{") || val.startsWith("["))
       ) {
         try {
-          cleanData[field.field_name] = JSON.parse(val)
+          cleanData[field.slug] = JSON.parse(val)
         } catch (_e) {
           // Not valid JSON, leave as is
         }
@@ -336,7 +334,7 @@ export default function RecordForm<T extends CMSModelName>({
 
         const isTeamsSpecialField =
           (model as string) === "teams" &&
-          (field.field_name === "league" || field.field_name === "division")
+          (field.slug === "league" || field.slug === "division")
 
         if (
           !isMultiple &&
@@ -344,7 +342,7 @@ export default function RecordForm<T extends CMSModelName>({
           Array.isArray(val) &&
           val.length > 0
         ) {
-          cleanData[field.field_name] = val[0]
+          cleanData[field.slug] = val[0]
         }
       }
     })
@@ -411,19 +409,19 @@ export default function RecordForm<T extends CMSModelName>({
       fieldNote: (field.field_note as string) || undefined,
       required: field.is_required,
       disabled: isLoading || isComputed,
-      name: field.field_name,
-      error: errors[field.field_name],
+      name: field.slug,
+      error: errors[field.slug],
     }
 
-    const value = getFieldValue(field.field_name)
+    const value = getFieldValue(field.slug)
 
     if (field.field_type === "boolean") {
       return (
         <CheckboxField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           checked={!!value}
-          onChange={(checked) => handleChange(field.field_name, checked)}
+          onChange={(checked) => handleChange(field.slug, checked)}
         />
       )
     }
@@ -431,10 +429,10 @@ export default function RecordForm<T extends CMSModelName>({
     if (field.field_type === "number") {
       return (
         <NumberField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as number) ?? ""}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
           min={field.settings?.min}
           max={field.settings?.max}
           step={field.settings?.step}
@@ -446,10 +444,10 @@ export default function RecordForm<T extends CMSModelName>({
     if (field.field_type === "text_multi") {
       return (
         <MarkdownField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as string) || ""}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
           rows={6}
           placeholder={field.settings?.placeholder}
         />
@@ -459,10 +457,10 @@ export default function RecordForm<T extends CMSModelName>({
     if (field.field_type === "rich_text") {
       return (
         <RichTextField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as string) || ""}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
           enabledTools={field.settings?.enabled_tools}
           placeholder={field.settings?.placeholder}
         />
@@ -472,10 +470,10 @@ export default function RecordForm<T extends CMSModelName>({
     if (field.field_type === "select") {
       return (
         <SelectField
-          key={field.field_name}
+          key={field.slug}
           field={field}
           value={(value as string) || ""}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
         />
       )
     }
@@ -483,34 +481,34 @@ export default function RecordForm<T extends CMSModelName>({
     if (field.field_type === "color") {
       return (
         <ColorField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as string) || ""}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
         />
       )
     }
 
-    if (field.field_type === "seo_slug" || field.field_name === "slug") {
+    if (field.field_type === "seo_slug" || field.slug === "slug") {
       // Attempt to find a "source" field for the slug (like 'title' or 'name')
       const sourceField = schema.find(
         (f) =>
-          f.field_name === "title" ||
-          f.field_name === "name" ||
+          f.slug === "title" ||
+          f.slug === "name" ||
           f.field_label.toLowerCase() === "title" ||
           f.field_label.toLowerCase() === "name"
       )
       const sourceValue = sourceField
-        ? (getFieldValue(sourceField.field_name) as string)
+        ? (getFieldValue(sourceField.slug) as string)
         : ""
 
       return (
         <SlugField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as string) || ""}
           sourceValue={sourceValue}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
         />
       )
     }
@@ -522,10 +520,10 @@ export default function RecordForm<T extends CMSModelName>({
 
       return (
         <MediaField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={value as string | MediaAsset | MediaAsset[]}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
           multiple={isMultiple}
         />
       )
@@ -534,10 +532,10 @@ export default function RecordForm<T extends CMSModelName>({
     if (field.field_type === "seo_metadata") {
       return (
         <SeoField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as string) || ""}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
         />
       )
     }
@@ -545,10 +543,10 @@ export default function RecordForm<T extends CMSModelName>({
     if (field.field_type === "tags") {
       return (
         <TagField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as string) || []}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
           placeholder={field.settings?.placeholder}
         />
       )
@@ -562,10 +560,10 @@ export default function RecordForm<T extends CMSModelName>({
 
       return (
         <JsonField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={jsonValue}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
         />
       )
     }
@@ -576,11 +574,11 @@ export default function RecordForm<T extends CMSModelName>({
 
       return (
         <DateField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           showTime={showTime}
           value={(value as string) || ""}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
         />
       )
     }
@@ -589,12 +587,12 @@ export default function RecordForm<T extends CMSModelName>({
       const settings = (field.settings || {}) as Record<string, unknown>
       return (
         <ReferenceField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           allowedModels={(settings.allowed_models as string[]) || []}
           allowMultiple={!!settings.allow_multiple}
           value={(value as string | string[]) || null}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
         />
       )
     }
@@ -603,10 +601,10 @@ export default function RecordForm<T extends CMSModelName>({
       const settings = (field.settings || {}) as Record<string, unknown>
       return (
         <NavigationField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as NavigationData) || null}
-          onChange={(val) => handleChange(field.field_name, val)}
+          onChange={(val) => handleChange(field.slug, val)}
           settings={settings}
         />
       )
@@ -631,10 +629,10 @@ export default function RecordForm<T extends CMSModelName>({
 
       return (
         <StandingsField
-          key={field.field_name}
+          key={field.slug}
           {...commonProps}
           value={(value as string) || []}
-          onChange={(val: unknown) => handleChange(field.field_name, val)}
+          onChange={(val: unknown) => handleChange(field.slug, val)}
           leagueId={leagueId}
           divisionId={divisionId}
           seasonId={seasonId}
@@ -644,10 +642,10 @@ export default function RecordForm<T extends CMSModelName>({
 
     return (
       <TextField
-        key={field.field_name}
+        key={field.slug}
         {...commonProps}
         value={(value as string) || ""}
-        onChange={(e) => handleChange(field.field_name, e.target.value)}
+        onChange={(e) => handleChange(field.slug, e.target.value)}
         placeholder={field.settings?.placeholder}
         minLength={field.settings?.min_length}
         maxLength={field.settings?.max_length}

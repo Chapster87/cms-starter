@@ -5,7 +5,12 @@ import clsx from "clsx"
 import { FileText, Type, Layers, Database, ExternalLink } from "lucide-react"
 
 import Button from "@/components/button"
-import { TextField, SelectField, CheckboxField } from "@/components/fields"
+import {
+  TextField,
+  SelectField,
+  CheckboxField,
+  SlugField,
+} from "@/components/fields"
 import Modal from "@/components/modal"
 import Tabs from "@/components/tabs"
 import { CMSField, CMSFieldset } from "@/types/fields"
@@ -41,7 +46,7 @@ export default function FieldModal({
 }: FieldModalProps) {
   const [step, setStep] = useState<1 | 2>(mode === "create" ? 1 : 2)
   const [label, setLabel] = useState("")
-  const [name, setName] = useState("")
+  const [slug, setSlug] = useState("")
   const [type, setType] = useState(FIELD_DEFINITIONS[0].type)
   const [isRequired, setIsRequired] = useState(false)
   const [isUnique, setIsUnique] = useState(false)
@@ -61,7 +66,7 @@ export default function FieldModal({
         if (field) {
           if (mode === "edit") {
             setLabel(field.field_label)
-            setName(field.field_name)
+            setSlug(field.slug)
             setType(field.field_type)
             setIsRequired(field.is_required)
             setIsUnique(field.is_unique)
@@ -70,7 +75,7 @@ export default function FieldModal({
             setFieldsetId(field.fieldset_id || null)
           } else if (mode === "duplicate") {
             setLabel(`${field.field_label} (copy)`)
-            setName(`${field.field_name}_copy`)
+            setSlug(`${field.slug}_copy`)
             setType(field.field_type)
             setIsRequired(field.is_required)
             setIsUnique(field.is_unique)
@@ -81,7 +86,7 @@ export default function FieldModal({
         } else {
           // Reset for new field
           setLabel("")
-          setName("")
+          setSlug("")
           setType(FIELD_DEFINITIONS[0].type)
           setIsRequired(false)
           setIsUnique(false)
@@ -120,7 +125,7 @@ export default function FieldModal({
         : {
             model_id: blockId ? null : modelId,
             block_id: blockId || null,
-            field_name: name || label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
+            slug: slug || label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
             field_label: label,
             field_type: type,
             is_required: isRequired,
@@ -254,11 +259,13 @@ export default function FieldModal({
           />
 
           {mode !== "edit" && (
-            <TextField
-              label="Field Name (Database Column)"
+            <SlugField
+              label="Slug"
               placeholder="e.g. featured_image"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={slug}
+              onChange={setSlug}
+              sourceValue={label}
+              showUrlPrefix={false}
               description="The physical column name in your database."
             />
           )}

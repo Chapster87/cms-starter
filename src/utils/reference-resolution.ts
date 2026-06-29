@@ -33,7 +33,7 @@ export async function resolveRecordReferences(
   const cache: ReferenceCache = {}
 
   for (const field of fields) {
-    const fieldName = field.field_name
+    const fieldName = field.slug
     const val =
       record[fieldName] ??
       record[`${fieldName}_id`] ??
@@ -81,7 +81,7 @@ export async function resolveRecordReferences(
     if (!resolved._resolved) {
       resolved._resolved = {}
     }
-    ;(resolved._resolved as Record<string, unknown>)[field.field_name] =
+    ;(resolved._resolved as Record<string, unknown>)[field.slug] =
       Array.isArray(val) ? resolvedValues : resolvedValues[0]
   }
 

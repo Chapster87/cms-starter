@@ -35,12 +35,12 @@ export async function POST(req: NextRequest) {
     const { data: registeredFields, error: regError } =
       await authenticatedSupabase
         .from("fields")
-        .select("field_name")
+        .select("slug")
         .eq("model_id", model_id)
 
     if (regError) throw regError
 
-    const registeredNames = new Set(registeredFields.map((f) => f.field_name))
+    const registeredNames = new Set(registeredFields.map((f) => f.slug))
 
     // 3. Identify unregistered columns (excluding system fields)
     const systemFields = ["id", "created_at", "updated_at"]
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
 
         return {
           model_id,
-          field_name: col.column_name,
+          slug: col.column_name,
           field_label: col.column_name
             .replace(/_/g, " ")
             .replace(/\b\w/g, (l: string) => l.toUpperCase()),

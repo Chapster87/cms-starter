@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const {
       model_id,
-      field_name,
+      slug,
       field_label,
       field_type,
       is_required,
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     } = await req.json()
 
     // 1. Validation
-    if (!model_id || !field_name || !field_label || !field_type) {
+    if (!model_id || !slug || !field_label || !field_type) {
       return NextResponse.json(
         { error: "Missing required field parameters." },
         { status: 400 }
@@ -65,9 +65,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Sanitize field name to snake_case and prevent SQL injection
-    const sanitizedFieldName = field_name
-      .replace(/[^a-zA-Z0-9]/g, "_")
-      .toLowerCase()
+    const sanitizedSlug = slug.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase()
 
     // 2. Resolve DB type from field definitions
     const definition = getFieldDefinition(field_type)
@@ -83,7 +81,7 @@ export async function POST(req: NextRequest) {
       "create_model_field",
       {
         p_model_id: model_id,
-        p_field_name: sanitizedFieldName,
+        p_slug: sanitizedSlug,
         p_field_label: field_label,
         p_field_type: field_type,
         p_db_type: definition.dbType,
@@ -119,7 +117,7 @@ export async function POST(req: NextRequest) {
         .from("fields")
         .update(updatePayload)
         .eq("model_id", model_id)
-        .eq("field_name", sanitizedFieldName)
+        .eq("slug", sanitizedSlug)
     }
 
     // Trigger type sync in the background
@@ -128,7 +126,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         message: `Field '${field_label}' created successfully.`,
-        field_name: sanitizedFieldName,
+        slug: sanitizedSlug,
       },
       { status: 201 }
     )

@@ -39,7 +39,7 @@ async function main() {
 
   console.log(`🚀 Executing migration: ${filePath}...`)
 
-  const { error } = await supabase.rpc("exec_sql", { sql })
+  const { data, error } = await supabase.rpc("exec_sql", { sql })
 
   if (error) {
     console.error("❌ Migration failed!")
@@ -48,6 +48,9 @@ async function main() {
   }
 
   console.log("✅ Migration executed successfully!")
+  if (data) {
+    console.log(JSON.stringify(data, null, 2))
+  }
 }
 
 main().catch((err) => {

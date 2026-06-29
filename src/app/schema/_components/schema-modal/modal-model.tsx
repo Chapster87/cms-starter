@@ -172,7 +172,7 @@ export default function ModalModel({
 
   const { models: allModels } = useModels()
   const [availableFields, setAvailableFields] = useState<
-    { field_name: string; field_label: string }[]
+    { slug: string; field_label: string }[]
   >([])
 
   useEffect(() => {
@@ -311,17 +311,14 @@ export default function ModalModel({
                         "updated_at",
                         "status",
                         "_draft",
-                      ].includes(f.field_name)
+                      ].includes(f.slug)
                   )
                   .map((field) => (
-                    <div
-                      key={field.field_name}
-                      className={s.previewColumnCheck}
-                    >
+                    <div key={field.slug} className={s.previewColumnCheck}>
                       <CheckboxField
                         label={`${field.field_label}`}
-                        checked={previewColumns.includes(field.field_name)}
-                        onChange={() => togglePreviewColumn(field.field_name)}
+                        checked={previewColumns.includes(field.slug)}
+                        onChange={() => togglePreviewColumn(field.slug)}
                         disabled={isSaving}
                       />
                     </div>
@@ -352,11 +349,11 @@ export default function ModalModel({
                           "updated_at",
                           "status",
                           "_draft",
-                        ].includes(f.field_name)
+                        ].includes(f.slug)
                     )
                     .map((field) => ({
                       label: `${field.field_label}`,
-                      value: field.field_name,
+                      value: field.slug,
                     })),
                 ]}
                 description="Pick a field to show as a second line (subtitle) in selection modals."

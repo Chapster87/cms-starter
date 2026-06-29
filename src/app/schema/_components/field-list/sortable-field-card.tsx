@@ -86,7 +86,7 @@ export function SortableFieldCard({
           >
             {field.field_label}
           </span>
-          <span className={s.fieldName}>{field.field_name}</span>
+          <span className={s.fieldName}>{field.slug}</span>
         </div>
         <div className={s.fieldTypeLabel}>
           {definition?.label || field.field_type}

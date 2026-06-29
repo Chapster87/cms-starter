@@ -29,10 +29,6 @@ Phase 1 of the Blocks & Structured Text implementation is complete. The database
 
 You can now create Blocks in the Schema Builder and add any existing CMS fields to them. These blocks are ready to be consumed by the upcoming `ModularContent` and `StructuredText` field types.
 
-## Phase 1 - Post-Handoff Followups
-
-- [ ] .
-
 ## Next Steps (Phase 2)
 
 - Implement `ModularContentField` for record editing.

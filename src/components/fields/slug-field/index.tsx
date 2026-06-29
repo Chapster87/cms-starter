@@ -20,6 +20,8 @@ interface SlugFieldProps {
   /** Whether the field has been manually edited. If true, it stops syncing with sourceValue. */
   isTouched?: boolean
   onToggleTouched?: (touched: boolean) => void
+  /** Whether to show the URL preview prefix. Defaults to true. */
+  showUrlPrefix?: boolean
 }
 
 /**
@@ -39,6 +41,7 @@ export default function SlugField({
   separator = "-",
   isTouched: controlledIsTouched,
   onToggleTouched,
+  showUrlPrefix = true,
 }: SlugFieldProps) {
   const { settings } = useSiteSettings()
   const [internalIsTouched, setInternalIsTouched] = useState(false)
@@ -104,7 +107,11 @@ export default function SlugField({
         description={description}
         required={required}
         disabled={disabled}
-        leftElement={<div className={s.urlPrefix}>{siteUrl}/</div>}
+        leftElement={
+          showUrlPrefix ? (
+            <div className={s.urlPrefix}>{siteUrl}/</div>
+          ) : undefined
+        }
       />
     </div>
   )

@@ -51,7 +51,7 @@ export default function SelectField({
   const displayDescription = description || field?.field_description || ""
   const displayFieldNote = fieldNote || field?.field_note || ""
   const displayRequired = required || field?.is_required || false
-  const displayName = name || field?.field_name || ""
+  const displayName = name || field?.slug || ""
   const displayOptions: CMSFieldOption[] =
     optionsProp || (field?.settings?.choices as CMSFieldOption[]) || []
   const displayPlaceholder =

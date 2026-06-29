@@ -84,7 +84,7 @@ export interface CMSField {
   model_id: string | null
   block_id?: string | null
   fieldset_id?: string | null
-  field_name: string
+  slug: string
   field_label: string
   field_description?: string
   field_type: CMSFieldType

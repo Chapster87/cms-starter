@@ -86,7 +86,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
 
           fetchedRecords.forEach((rec) => {
             referenceFields.forEach((f) => {
-              const val = rec[f.field_name]
+              const val = rec[f.slug]
               if (val) {
                 // If it's a string, use it directly as the ID
                 // If it's an object with id (rare for this CMS but good for safety), use .id
@@ -211,7 +211,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     const listColumns = modelData?.list_columns
     if (listColumns && listColumns.length > 0) {
       return listColumns.map((colName) => {
-        const field = fields.find((f) => f.field_name === colName)
+        const field = fields.find((f) => f.slug === colName)
         return {
           name: colName,
           label: field?.field_label || colName,
@@ -226,7 +226,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     const cols = []
     if (firstField) {
       cols.push({
-        name: firstField.field_name,
+        name: firstField.slug,
         label: firstField.field_label,
         isReference: firstField.field_type === "reference",
         isSortable: firstField.field_type !== "media",
@@ -489,7 +489,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                 <tr key={record.id}>
                   {activeColumns.map((col, idx: number) => {
                     const val = record[col.name]
-                    const field = fields.find((f) => f.field_name === col.name)
+                    const field = fields.find((f) => f.slug === col.name)
                     const isMedia = field?.field_type === "media"
 
                     const cellContent = (
