@@ -18,6 +18,7 @@ interface FieldModalProps {
   onOpenChange: (open: boolean) => void
   onSuccess: () => void
   modelId: string
+  blockId?: string
   accessToken: string | null
   field?: CMSField | null // If present, we are in edit or duplicate mode
   mode?: "create" | "edit" | "duplicate"
@@ -32,6 +33,7 @@ export default function FieldModal({
   onOpenChange,
   onSuccess,
   modelId,
+  blockId,
   accessToken,
   field,
   mode = "create",
@@ -116,7 +118,8 @@ export default function FieldModal({
             fieldset_id: fieldsetId,
           }
         : {
-            model_id: modelId,
+            model_id: blockId ? null : modelId,
+            block_id: blockId || null,
             field_name: name || label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
             field_label: label,
             field_type: type,

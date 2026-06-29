@@ -1,11 +1,15 @@
 "use client"
 
 import React, { Suspense } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
+import BlockList from "./_components/block-list"
 import ModelList from "./_components/model-list"
 import SchemaModal from "./_components/schema-modal"
 import Tabs from "@/components/tabs"
 
+import { useBlocks } from "@/hooks/use-blocks"
 import { useModels } from "@/hooks/use-models"
 
 import s from "./style.module.css"
@@ -19,38 +23,54 @@ export default function SchemaLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { models, groups, loading, error } = useModels()
+  const {
+    models,
+    groups: modelGroups,
+    loading: modelsLoading,
+    error: modelsError,
+  } = useModels()
+  const {
+    blocks,
+    groups: blockGroups,
+    loading: blocksLoading,
+    error: blocksError,
+  } = useBlocks()
+  const pathname = usePathname()
 
-  if (loading)
+  const activeTab = pathname.startsWith("/schema/block") ? "blocks" : "models"
+
+  if (modelsLoading || blocksLoading)
     return (
       <div className={s.schemaContent}>
-        <p>Loading models...</p>
+        <p>Loading schema...</p>
       </div>
     )
-  if (error)
+  if (modelsError || blocksError)
     return (
       <div className={s.schemaContent}>
-        <p style={{ color: "red" }}>Error: {error}</p>
+        <p style={{ color: "red" }}>Error: {modelsError || blocksError}</p>
       </div>
     )
 
   return (
     <div className={s.schemaContent}>
       <div className={s.sidebar}>
-        <Tabs defaultValue="models" className={s.schemaTabs}>
+        <Tabs value={activeTab} className={s.schemaTabs}>
           <Tabs.List>
-            <Tabs.Trigger value="models">Models</Tabs.Trigger>
-            <Tabs.Trigger value="blocks">Blocks</Tabs.Trigger>
+            <Link href="/schema/model" className={s.tabLink}>
+              <Tabs.Trigger value="models">Models</Tabs.Trigger>
+            </Link>
+            <Link href="/schema/block" className={s.tabLink}>
+              <Tabs.Trigger value="blocks">Blocks</Tabs.Trigger>
+            </Link>
           </Tabs.List>
 
           <Tabs.Content value="models" className={s.schemaTabsContent}>
-            <ModelList models={models} groups={groups} />
+            <ModelList models={models} groups={modelGroups} />
           </Tabs.Content>
 
           <Tabs.Content value="blocks" className={s.schemaTabsContent}>
-            <div className={s.placeholder}>
-              <p>Blocks content coming soon...</p>
-            </div>
+            <BlockList blocks={blocks} groups={blockGroups} />
           </Tabs.Content>
         </Tabs>
       </div>

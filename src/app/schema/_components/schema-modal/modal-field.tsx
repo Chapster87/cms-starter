@@ -56,6 +56,7 @@ interface ModalFieldProps {
   mode: "create" | "edit" | "duplicate"
   fieldId?: string | null
   modelId: string
+  blockId?: string | null
   onSuccess: () => void
   onCancel: () => void
 }
@@ -67,6 +68,7 @@ export default function ModalField({
   mode,
   fieldId,
   modelId,
+  blockId,
   onSuccess,
   onCancel,
 }: ModalFieldProps) {
@@ -134,17 +136,18 @@ export default function ModalField({
   // Fetch field data
   useEffect(() => {
     const fetchFieldData = async () => {
-      if (!accessToken || !modelId) return
+      if (!accessToken || (!modelId && !blockId)) return
 
       try {
-        const response = await fetch(
-          `/api/models/schema/fields?model_id=${modelId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        )
+        const url = blockId
+          ? `/api/blocks/fields?blockId=${blockId}`
+          : `/api/models/schema/fields?model_id=${modelId}`
+
+        const response = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
         if (!response.ok) throw new Error("Failed to fetch field data")
 
         const data = (await response.json()) as CMSField[]
@@ -292,7 +295,7 @@ export default function ModalField({
       setError(null)
     }, 0)
     return () => clearTimeout(timer)
-  }, [mode, fieldId, accessToken, modelId, fieldTypeFromUrl])
+  }, [mode, fieldId, accessToken, modelId, blockId, fieldTypeFromUrl])
 
   const handleLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLabel(e.target.value)
@@ -412,7 +415,8 @@ export default function ModalField({
             settings,
           }
         : {
-            model_id: modelId,
+            model_id: blockId ? null : modelId,
+            block_id: blockId || null,
             field_name: name || label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
             field_label: label,
             field_type: type,

@@ -1,0 +1,211 @@
+.blockListContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  padding: 24px 0 0;
+}
+
+.blockList {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.itemRow {
+  position: relative;
+  list-style: none;
+  transition: margin-left 0.2s ease-out;
+}
+
+.itemCard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 12px;
+  background-color: var(--color-white);
+  border: 1px solid transparent;
+  transition:
+    background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+/* Regular row hover */
+.itemRow:not(.dragging) .itemCard:hover {
+  background-color: var(--color-grey-100);
+}
+
+/* Active state */
+.itemRow.isActive .itemCard {
+  background-color: rgb(from var(--color-green) r g b / 0.15);
+}
+
+/* Dragging state (Placeholder) */
+.itemRow.dragging .itemCard {
+  border: 1px dashed var(--color-grey-300);
+  background-color: var(--color-grey-50);
+  box-shadow: none;
+}
+
+.itemRow.dragging .itemCard > * {
+  opacity: 0;
+}
+
+/* Overlay state (Floating item) */
+.itemRow.overlay .itemCard {
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--color-primary, #3b82f6);
+  transform: scale(1.02);
+  background-color: var(--color-white);
+  opacity: 1;
+}
+
+/* Drop target state (Hovering over) */
+.itemRow.isOver .itemCard {
+  background-color: var(--color-grey-50);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-100);
+}
+
+/* Indentation Guides */
+.guidesContainer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.guidePath {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-grey-200);
+  border-left: 1px dotted var(--color-grey-400);
+  opacity: 0.5;
+}
+
+.itemMain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.expandButton {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  margin-left: -4px;
+}
+
+.expandButton:hover {
+  background-color: var(--color-grey-200);
+}
+
+.dragHandle {
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.dragHandle:hover {
+  background-color: var(--color-grey-200);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+.itemContent {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+}
+
+.itemLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--color-black);
+  font-size: 14px;
+}
+
+.itemName {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emoji {
+  font-size: 16px;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.itemSlug {
+  font-size: 12px;
+  color: var(--color-grey-700);
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.menuTrigger {
+  background: none;
+  border: none;
+  color: #6b7280;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.menuTrigger:hover {
+  background-color: #f3f4f6;
+  color: #111;
+}
+
+.footer {
+  padding: 16px;
+  border-top: 1px solid var(--color-grey-300);
+}
+
+.footerActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.empty {
+  padding: 0 16px;
+  font-size: 14px;
+  color: var(--color-grey-500);
+  text-align: center;
+}

@@ -17,7 +17,7 @@ export default async function ModelsDashboard() {
   const models = await getModels()
 
   if (models.length > 0) {
-    redirect(`/schema/${models[0].slug}`)
+    redirect(`/schema/model/${models[0].slug}`)
   }
 
   return (
@@ -27,7 +27,7 @@ export default async function ModelsDashboard() {
       {models.length === 0 && (
         <div>
           <p>No models found. Get started by creating your first one.</p>
-          <Link href="/schema/new">
+          <Link href="/schema?action=new-model">
             <Button>Create New Model</Button>
           </Link>
         </div>

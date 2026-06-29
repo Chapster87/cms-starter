@@ -38,7 +38,8 @@ Stores field configurations for each model.
 | Column        | Type        | Description                                                |
 | ------------- | ----------- | ---------------------------------------------------------- |
 | `id`          | uuid        | Primary key.                                               |
-| `model_id`    | uuid        | Reference to `models.id`.                                  |
+| `model_id`    | uuid        | Optional reference to `models.id`.                         |
+| `block_id`    | uuid        | Optional reference to `blocks.id`.                         |
 | `fieldset_id` | uuid        | Optional reference to `fieldsets.id`.                      |
 | `field_name`  | text        | Name of the column in the physical table.                  |
 | `field_label` | text        | Human-readable label.                                      |
@@ -46,6 +47,7 @@ Stores field configurations for each model.
 | `is_required` | boolean     | Validation: cannot be null (except in drafts).             |
 | `is_unique`   | boolean     | Validation: unique constraint.                             |
 | `is_system`   | boolean     | True for system-managed fields (id, created_at, etc).      |
+| `is_computed` | boolean     | True for fields whose values are calculated by the system. |
 | `ui_order`    | integer     | Display order in the record form.                          |
 | `settings`    | jsonb       | Field-specific configurations (placeholder, choices, etc). |
 | `created_at`  | timestamptz | Timestamp of creation.                                     |
@@ -76,6 +78,35 @@ Folders for organizing models in the UI.
 | `emoji`         | text    | Folder emoji.         |
 | `display_order` | integer | Order in the tree.    |
 | `type`          | text    | `schema` or `editor`. |
+
+### `public.blocks` (Core)
+
+Stores metadata for reusable field groups (Blocks) used in Modular Content.
+
+| Column          | Type        | Description                              |
+| --------------- | ----------- | ---------------------------------------- |
+| `id`            | uuid        | Primary key.                             |
+| `api_id`        | text        | Technical identifier used in code.       |
+| `label`         | text        | Human-readable name for the UI.          |
+| `emoji`         | text        | UI icon/emoji.                           |
+| `description`   | text        | Optional description of the block.       |
+| `group_id`      | uuid        | Optional reference to `block_groups.id`. |
+| `display_order` | integer     | Vertical order in the sidebar/tree.      |
+| `created_at`    | timestamptz | Timestamp of creation.                   |
+| `updated_at`    | timestamptz | Timestamp of last update.                |
+
+### `public.block_groups` (Core)
+
+Folders for organizing blocks in the UI.
+
+| Column          | Type        | Description            |
+| --------------- | ----------- | ---------------------- |
+| `id`            | uuid        | Primary key.           |
+| `name`          | text        | Folder name.           |
+| `emoji`         | text        | Folder emoji.          |
+| `display_order` | integer     | Order in the tree.     |
+| `type`          | text        | Optional group type.   |
+| `created_at`    | timestamptz | Timestamp of creation. |
 
 ## Audit & System Tables
 

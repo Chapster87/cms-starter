@@ -34,7 +34,7 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - **Advanced Field Suite:**
   - **SlugField:** Auto-generating sanitized technical names until manually overridden.
   - **RichTextField:** High-fidelity WYSIWYG using **Tiptap** with custom alignment and heading controls.
-  - **Structured Text:** A ProseMirror-based (via Tiptap) JSON storage format that allows interleaving rich text with reusable Blocks, ensuring platform-agnostic content delivery.
+- **Structured Text:** A ProseMirror-based (via Tiptap) JSON storage format that allows interleaving rich text with reusable Blocks, ensuring platform-agnostic content delivery. Uses a custom `cmsBlock` node to embed CMS blocks within the document structure.
   - **SeoField:** Specialized composite field with collapsible Radix Accordion for Meta/OG data.
   - **Linked Records (Reference):** Pill-based selection UI with a Sanity-inspired browse modal.
   - **MediaField:** Visual grid for asset management, now integrated with a centralized Media Library and Cloudinary.

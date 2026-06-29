@@ -18,7 +18,8 @@ export type CMSFieldType =
   | "media" // jsonb (Array of references to uploaded assets)
   | "json" // jsonb (Raw Metadata block or custom data payload)
   | "tags" // jsonb (Collection of strings/keywords)
-  | "rich_text" // text (WYSIWYG HTML content)
+  | "rich_text" // text (WYSIWYG HTML content, ProseMirror)
+  | "structured_text" // jsonb (ProseMirror rich text with blocks)
   | "modular_content" // jsonb (Dynamic block layouts)
   | "seo_metadata" // jsonb (Grouped SEO metadata)
   | "reference" // jsonb (Link to other records)
@@ -66,6 +67,11 @@ export interface CMSFieldSettings {
   // Slug
   source_field?: string
 
+  // Modular Content / Structured Text
+  allowed_blocks?: string[]
+  min_blocks?: number
+  max_blocks?: number
+
   // Fallback for custom settings
   [key: string]: unknown
 }
@@ -75,7 +81,8 @@ export interface CMSFieldSettings {
  */
 export interface CMSField {
   id: string
-  model_id: string
+  model_id: string | null
+  block_id?: string | null
   fieldset_id?: string | null
   field_name: string
   field_label: string
@@ -117,4 +124,32 @@ export interface CMSFieldDefinition {
   description: string
   icon: string
   category: "basic" | "content" | "relational" | "advanced"
+}
+
+/**
+ * Represents a block group (folder).
+ */
+export interface CMSBlockGroup {
+  id: string
+  name: string
+  emoji?: string | null
+  display_order: number
+  created_at: string
+}
+
+/**
+ * Represents a reusable block of fields.
+ */
+export interface CMSBlock {
+  id: string
+  label: string
+  api_id: string
+  emoji?: string | null
+  description?: string | null
+  display_order?: number
+  group_id?: string | null
+  created_at: string
+  updated_at: string
+  // Virtual field for UI
+  fields?: CMSField[]
 }

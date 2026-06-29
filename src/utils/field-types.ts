@@ -72,6 +72,14 @@ export const FIELD_DEFINITIONS: CMSFieldDefinition[] = [
     category: "content",
   },
   {
+    type: "structured_text",
+    label: "Structured Text",
+    dbType: "jsonb",
+    description: "Rich text with embedded blocks.",
+    icon: "layout",
+    category: "content",
+  },
+  {
     type: "text_multi",
     label: "Multi-line Text",
     dbType: "text",

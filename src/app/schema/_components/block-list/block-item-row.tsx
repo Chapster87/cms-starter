@@ -4,37 +4,35 @@ import React from "react"
 import Link from "next/link"
 import { useSortable } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import {
-  ChevronDown,
-  ChevronRight,
-  Copy,
-  Edit2,
-  ExternalLink,
-  Trash2,
-} from "lucide-react"
+import { ChevronDown, ChevronRight, Edit2, Trash2 } from "lucide-react"
+import clsx from "clsx"
+
 import Button from "@/components/button"
 import ContextMenu from "@/components/context-menu"
 import SvgIcon from "@/components/svg-icon"
 import {
   TreeItem,
-  TreeItemModel,
+  TreeItemBlock,
   TreeItemGroup,
-} from "../../_helpers/model-tree-helpers"
-import clsx from "clsx"
+} from "../../_helpers/block-tree-helpers"
+import { CMSBlock } from "@/types/fields"
 import s from "./style.module.css"
 
-interface ModelItemRowProps {
+interface BlockItemRowProps {
   item: TreeItem
   depth: number
   isActive: boolean
   isExpanded?: boolean
   onToggle?: () => void
-  onDelete: (name: string) => void
+  onDelete: (block: CMSBlock) => void
   onDeleteGroup?: (id: string) => void
   isOverlay?: boolean
 }
 
-export default function ModelItemRow({
+/**
+ * A single row in the block list sidebar.
+ */
+export default function BlockItemRow({
   item,
   depth,
   isActive,
@@ -43,7 +41,7 @@ export default function ModelItemRow({
   onDelete,
   onDeleteGroup,
   isOverlay,
-}: ModelItemRowProps) {
+}: BlockItemRowProps) {
   const {
     attributes,
     listeners,
@@ -60,22 +58,21 @@ export default function ModelItemRow({
     marginLeft: `${depth * 24}px`,
   }
 
-  const isModel = item.type === "model"
+  const isBlock = item.type === "block"
 
   return (
     <li
       ref={setNodeRef}
       style={style}
       className={clsx(
-        s.modelListItem,
+        s.itemRow,
         isActive && s.isActive,
         isDragging && s.dragging,
         isOverlay && s.overlay,
-        isOver && s.isOver,
-        !isModel && s.isGroup
+        isOver && s.isOver
       )}
     >
-      {/* Indentation Guides - positioned relative to the list item but with negative offset to stay fixed */}
+      {/* Indentation Guides */}
       <div className={s.guidesContainer}>
         {Array.from({ length: depth }).map((_, i) => (
           <div
@@ -85,10 +82,9 @@ export default function ModelItemRow({
           />
         ))}
       </div>
-
       <div className={s.itemCard}>
         <div className={s.itemMain}>
-          {!isModel && (
+          {!isBlock && (
             <button
               type="button"
               className={s.expandButton}
@@ -107,32 +103,25 @@ export default function ModelItemRow({
 
           <div className={s.dragHandle} {...attributes} {...listeners}>
             <span className={s.emoji}>
-              {item.emoji || (isModel ? "📄" : "📁")}
+              {item.emoji || (isBlock ? "📦" : "📁")}
             </span>
           </div>
 
           <div className={s.itemContent}>
-            {isModel ? (
-              <div className={s.modelInfo}>
-                <Link
-                  href={`/schema/model/${(item as TreeItemModel).slug}`}
-                  className={s.modelLink}
-                >
-                  <div className={s.modelName}>
-                    <span>{(item as TreeItemModel).friendly_name}</span>
-                  </div>
-                  <code className={s.modelSlug}>
-                    {(item as TreeItemModel).slug}
-                  </code>
-                </Link>
-                {(item as TreeItemModel).is_singleton && (
-                  <div className={s.badgeRow}>
-                    <span className={s.singletonBadge}>Singleton</span>
-                  </div>
-                )}
-              </div>
+            {isBlock ? (
+              <Link
+                href={`/schema/block/${(item as TreeItemBlock).id}`}
+                className={s.itemLink}
+              >
+                <div className={s.itemName}>
+                  <span>{(item as TreeItemBlock).label}</span>
+                </div>
+                <code className={s.itemSlug}>
+                  {(item as TreeItemBlock).api_id}
+                </code>
+              </Link>
             ) : (
-              <div className={s.groupName}>
+              <div className={s.itemName}>
                 <span>{(item as TreeItemGroup).name}</span>
               </div>
             )}
@@ -153,42 +142,27 @@ export default function ModelItemRow({
             </ContextMenu.Trigger>
 
             <ContextMenu.Content>
-              {isModel ? (
+              {isBlock ? (
                 <>
                   <ContextMenu.Link
-                    href={`?action=edit-model&modelSlug=${(item as TreeItemModel).slug}`}
+                    href={`?action=edit-block&blockId=${item.id}`}
                     icon={<Edit2 size={14} />}
                   >
-                    Edit
+                    Edit Settings
                   </ContextMenu.Link>
-                  <ContextMenu.Link
-                    href={`/editor/${(item as TreeItemModel).slug}`}
-                    icon={<ExternalLink size={14} />}
-                  >
-                    {(item as TreeItemModel).is_singleton
-                      ? "Edit Content"
-                      : "View Records"}
-                  </ContextMenu.Link>
-                  <ContextMenu.Link
-                    href={`?action=duplicate-model&modelSlug=${(item as TreeItemModel).slug}`}
-                    icon={<Copy size={14} />}
-                  >
-                    Duplicate
-                  </ContextMenu.Link>
+                  <ContextMenu.Separator />
                   <ContextMenu.Item
-                    onSelect={() =>
-                      onDelete((item as TreeItemModel).table_name)
-                    }
                     variant="danger"
+                    onSelect={() => onDelete(item as CMSBlock)}
                     icon={<Trash2 size={14} />}
                   >
-                    Delete
+                    Delete Block
                   </ContextMenu.Item>
                 </>
               ) : (
                 <>
                   <ContextMenu.Link
-                    href={`?action=edit-group&groupId=${item.id}`}
+                    href={`?action=edit-block-group&blockGroupId=${item.id}`}
                     icon={<Edit2 size={14} />}
                   >
                     Edit Group

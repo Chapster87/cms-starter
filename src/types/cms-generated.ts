@@ -124,33 +124,12 @@ export interface Teams {
   status: CMSStatus;
   _draft?: unknown;
   team_name: string;
+  league?: Leagues;
   team_logo?: MediaAsset;
-  league: Leagues;
   short_name?: string;
   slug: string;
-  division: Divisions[];
-  seasons: Seasons[];
-}
-
-export interface Pages {
-  id: string;
-  created_at: string;
-  updated_at: string;
-  status: CMSStatus;
-  _draft?: unknown;
-  media?: MediaAsset;
-  content_dynamic?: ModularContentData;
-  seo?: SeoMetadata;
-  tag_list?: string[];
-  title: string;
-  color?: string;
-  rich_text?: string;
-  slug: string;
-  author?: Authors;
-  navigation?: NavigationData;
-  page_link?: Pages;
-  long_text?: string;
-  standings_table?: StandingsData;
+  division?: Divisions[];
+  seasons?: Seasons[];
 }
 
 export interface Boom {
@@ -184,6 +163,27 @@ export interface SocialLinks {
   status: CMSStatus;
   _draft?: unknown;
   link_tree?: NavigationData;
+}
+
+export interface Pages {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  status: CMSStatus;
+  _draft?: unknown;
+  page_link?: Pages;
+  title: string;
+  color?: string;
+  seo?: SeoMetadata;
+  tag_list?: string[];
+  navigation?: NavigationData;
+  author?: Authors;
+  standings_table?: StandingsData;
+  long_text?: string;
+  rich_text?: string;
+  media?: MediaAsset;
+  content_dynamic?: ModularContentData;
+  slug: string;
 }
 
 export interface Authors {
@@ -246,11 +246,11 @@ export interface CMSModelMap {
   leagues: Leagues;
   seasons: Seasons;
   teams: Teams;
-  pages: Pages;
   boom: Boom;
   testing_copy: TestingCopy;
   testing: Testing;
   social_links: SocialLinks;
+  pages: Pages;
   authors: Authors;
   site_navigation: SiteNavigation;
   matches: Matches;
@@ -259,3 +259,26 @@ export interface CMSModelMap {
 
 export type CMSModelName = keyof CMSModelMap;
 export type AnyCMSModel = CMSModelMap[CMSModelName];
+
+/**
+ * BLOCK TYPES
+ */
+
+export interface Test2 {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Test {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CMSBlockMap {
+  test_2: Test2;
+  test: Test;
+}
+
+export type CMSBlockName = keyof CMSBlockMap;

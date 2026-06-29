@@ -30,11 +30,18 @@ interface CMSModel {
 
 interface CMSField {
   id: string
-  model_id: string
+  model_id: string | null
+  block_id: string | null
   field_name: string
   field_type: string
   is_required: boolean
   settings?: Record<string, unknown>
+}
+
+interface CMSBlock {
+  id: string
+  label: string
+  api_id: string
 }
 
 const toPascalCase = (str: string) => {
@@ -108,18 +115,25 @@ async function syncTypes() {
   const { data: models, error: modelsError } = await supabase
     .from("models")
     .select("*")
+  const { data: blocks, error: blocksError } = await supabase
+    .from("blocks")
+    .select("*")
   const { data: fields, error: fieldsError } = await supabase
     .from("fields")
     .select("*")
 
-  if (modelsError || fieldsError) {
-    console.error("Error fetching metadata:", modelsError || fieldsError)
+  if (modelsError || blocksError || fieldsError) {
+    console.error(
+      "Error fetching metadata:",
+      modelsError || blocksError || fieldsError
+    )
     return
   }
 
   const validModels = (models as CMSModel[]).filter(
     (m) => (m.friendly_name || m.model_id) && m.table_name
   )
+  const validBlocks = (blocks as CMSBlock[]).filter((b) => b.label && b.api_id)
   const allFields = (fields as Record<string, unknown>[]).map((f) => ({
     ...f,
     settings:
@@ -250,7 +264,39 @@ export type StandingsData = StandingsRow[];
   content += `}\n\n`
 
   content += `export type CMSModelName = keyof CMSModelMap;\n`
-  content += `export type AnyCMSModel = CMSModelMap[CMSModelName];\n`
+  content += `export type AnyCMSModel = CMSModelMap[CMSModelName];\n\n`
+
+  // 7. Add Block Interfaces
+  content += `/**\n * BLOCK TYPES\n */\n\n`
+  for (const block of validBlocks) {
+    const typeName = toPascalCase(block.label)
+    const blockFields = allFields.filter((f) => f.block_id === block.id)
+
+    content += `export interface ${typeName} {\n`
+    content += `  id: string;\n`
+    content += `  created_at: string;\n`
+    content += `  updated_at: string;\n`
+
+    const baseFields = ["id", "created_at", "updated_at"]
+
+    for (const field of blockFields) {
+      if (baseFields.includes(field.field_name)) continue
+      const tsType = mapFieldTypeToTs(field, validModels)
+      const optional = field.is_required ? "" : "?"
+      content += `  ${field.field_name}${optional}: ${tsType};\n`
+    }
+
+    content += `}\n\n`
+  }
+
+  // 8. Add Block Map
+  content += `export interface CMSBlockMap {\n`
+  validBlocks.forEach((block) => {
+    content += `  ${block.api_id}: ${toPascalCase(block.label)};\n`
+  })
+  content += `}\n\n`
+
+  content += `export type CMSBlockName = keyof CMSBlockMap;\n`
 
   const outputPath = path.join(process.cwd(), "src/types/cms-generated.ts")
   fs.writeFileSync(outputPath, content)

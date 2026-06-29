@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "sync-types": "tsx scripts/sync-types.ts",
+    "db:migrate": "tsx scripts/exec-sql.ts",
     "lint": "eslint"
   },
   "dependencies": {
@@ -57,7 +58,8 @@
     "marked": "^18.0.4",
     "next": "16.2.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-hook-form": "^7.80.0"
   },
   "devDependencies": {
     "@csstools/postcss-global-data": "^4.0.0",

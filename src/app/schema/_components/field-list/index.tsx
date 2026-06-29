@@ -86,13 +86,14 @@ function SortableFieldsetGroup({
 }
 
 interface FieldListProps {
-  modelId: string
+  modelId?: string
+  blockId?: string
 }
 
 /**
- * Manages the listing and creation of fields for a model.
+ * Manages the listing and creation of fields for a model or block.
  */
-export default function FieldList({ modelId }: FieldListProps) {
+export default function FieldList({ modelId, blockId }: FieldListProps) {
   const { accessToken } = useAuth()
   const [fields, setFields] = useState<CMSField[]>([])
   const [fieldsets, setFieldsets] = useState<CMSFieldset[]>([])
@@ -202,7 +203,7 @@ export default function FieldList({ modelId }: FieldListProps) {
   )
 
   const fetchFields = useCallback(async () => {
-    if (!modelId) return
+    if (!modelId && !blockId) return
 
     setLoading(true)
     try {
@@ -212,10 +213,11 @@ export default function FieldList({ modelId }: FieldListProps) {
       }
 
       // 1. Fetch registered fields
-      const response = await fetch(
-        `/api/models/schema/fields?model_id=${modelId}`,
-        { headers }
-      )
+      const url = blockId
+        ? `/api/blocks/fields?blockId=${blockId}`
+        : `/api/models/schema/fields?model_id=${modelId}`
+
+      const response = await fetch(url, { headers })
       if (!response.ok) throw new Error("Failed to fetch registered fields")
       const data = await response.json()
 
@@ -228,52 +230,56 @@ export default function FieldList({ modelId }: FieldListProps) {
       )
       setFields(filteredFields)
 
-      // 1.5 Fetch Fieldsets
-      const fsRes = await fetch(
-        `/api/models/schema/fieldsets?model_id=${modelId}`,
-        { headers }
-      )
-      if (fsRes.ok) {
-        const fsData = await fsRes.json()
-        setFieldsets(fsData || [])
-      }
-
-      // 2. Resolve table name to check for unregistered columns
-      const supabase = createClient()
-      const { data: modelData } = await supabase
-        .from("models")
-        .select("table_name")
-        .eq("id", modelId)
-        .single()
-
-      if (modelData) {
-        // Fetch physical columns (requires auth)
-        const schemaRes = await fetch(
-          `/api/models/schema?table=${modelData.table_name}`,
+      // 1.5 Fetch Fieldsets (Only for models, blocks don't support fieldsets yet)
+      if (modelId) {
+        const fsRes = await fetch(
+          `/api/models/schema/fieldsets?model_id=${modelId}`,
           { headers }
         )
-        if (schemaRes.ok) {
-          const physicalCols = (await schemaRes.json()) as Array<{
-            column_name: string
-          }>
-          const registeredNames = new Set(
-            data.map((f: CMSField) => f.field_name)
+        if (fsRes.ok) {
+          const fsData = await fsRes.json()
+          setFieldsets(fsData || [])
+        }
+      }
+
+      // 2. Resolve table name to check for unregistered columns (Only for models)
+      if (modelId) {
+        const supabase = createClient()
+        const { data: modelData } = await supabase
+          .from("models")
+          .select("table_name")
+          .eq("id", modelId)
+          .single()
+
+        if (modelData) {
+          // Fetch physical columns (requires auth)
+          const schemaRes = await fetch(
+            `/api/models/schema?table=${modelData.table_name}`,
+            { headers }
           )
-          const systemFields = [
-            "id",
-            "created_at",
-            "updated_at",
-            "status",
-            "_draft",
-            "created_by",
-            "updated_by",
-          ]
-          const missing = physicalCols.filter(
-            (c) =>
-              !registeredNames.has(c.column_name) &&
-              !systemFields.includes(c.column_name)
-          )
-          setUnregisteredCount(missing.length)
+          if (schemaRes.ok) {
+            const physicalCols = (await schemaRes.json()) as Array<{
+              column_name: string
+            }>
+            const registeredNames = new Set(
+              data.map((f: CMSField) => f.field_name)
+            )
+            const systemFields = [
+              "id",
+              "created_at",
+              "updated_at",
+              "status",
+              "_draft",
+              "created_by",
+              "updated_by",
+            ]
+            const missing = physicalCols.filter(
+              (c) =>
+                !registeredNames.has(c.column_name) &&
+                !systemFields.includes(c.column_name)
+            )
+            setUnregisteredCount(missing.length)
+          }
         }
       }
     } catch (err: unknown) {
@@ -281,7 +287,7 @@ export default function FieldList({ modelId }: FieldListProps) {
     } finally {
       setLoading(false)
     }
-  }, [modelId, accessToken])
+  }, [modelId, blockId, accessToken])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -546,7 +552,7 @@ export default function FieldList({ modelId }: FieldListProps) {
     <div className={s.fieldListContainer}>
       <div className={s.header}>
         <div className={s.headerTitleGroup}>
-          <h2>Model Fields & Groups</h2>
+          <h2>Fields</h2>
           {unregisteredCount > 0 && (
             <span className={s.syncHint}>
               {unregisteredCount} existing columns detected.
@@ -720,7 +726,8 @@ export default function FieldList({ modelId }: FieldListProps) {
         isOpen={isFieldModalOpen}
         onOpenChange={setIsFieldModalOpen}
         onSuccess={fetchFields}
-        modelId={modelId}
+        modelId={modelId || ""}
+        blockId={blockId}
         accessToken={accessToken}
         field={activeField}
         mode={fieldModalMode}
@@ -731,7 +738,7 @@ export default function FieldList({ modelId }: FieldListProps) {
         isOpen={isFieldsetModalOpen}
         onOpenChange={setIsFieldsetModalOpen}
         onSuccess={fetchFields}
-        modelId={modelId}
+        modelId={modelId || ""}
         accessToken={accessToken}
         fieldset={activeFieldset}
         mode={fieldsetModalMode}

@@ -160,10 +160,18 @@ function ContextMenuLink({
   )
 }
 
+/**
+ * Separator component for the context menu.
+ */
+function ContextMenuSeparator() {
+  return <DropdownMenu.Separator className={s.separator} />
+}
+
 // Assign sub-components to the main ContextMenu component
 ContextMenu.Trigger = ContextMenuTrigger
 ContextMenu.Content = ContextMenuContent
 ContextMenu.Item = ContextMenuItem
 ContextMenu.Link = ContextMenuLink
+ContextMenu.Separator = ContextMenuSeparator
 
 export default ContextMenu

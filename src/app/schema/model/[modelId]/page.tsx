@@ -4,12 +4,12 @@ import { use } from "react"
 import Link from "next/link"
 import Button from "@/components/button"
 import { useModels } from "@/hooks/use-models"
-import FieldList from "./_components/field-list"
+import FieldList from "../../_components/field-list"
 import s from "./style.module.css"
 
 interface ModelPageProps {
   params: Promise<{
-    model: string | undefined
+    modelId: string | undefined
   }>
 }
 
@@ -17,7 +17,7 @@ interface ModelPageProps {
  * Renders the schema management page for a specific model.
  */
 export default function ModelSchemaPage({ params }: ModelPageProps) {
-  const { model: modelSlug } = use(params)
+  const { modelId: modelSlug } = use(params)
   const { models, loading, error } = useModels()
 
   const modelData = models.find(
