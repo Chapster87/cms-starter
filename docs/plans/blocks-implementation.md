@@ -82,12 +82,12 @@ Structured Text will utilize a ProseMirror JSON schema via Tiptap.
 
 ### Phase 1: Infrastructure
 
-- [ ] Document ProseMirror decision in `CONTEXT.md`.
-- [ ] Execute SQL migrations for `blocks` and `fields`.
-- [ ] Update registry types and services.
-- [ ] Implement Sidebar & Block CRUD.
-- [ ] Update Field Modal to handle Block associations.
-- [ ] Develop `CollapsibleDndWrapper` component.
+- [x] Document ProseMirror decision in `CONTEXT.md`.
+- [x] Execute SQL migrations for `blocks` and `fields`.
+- [x] Update registry types and services.
+- [x] Implement Sidebar & Block CRUD.
+- [x] Update Field Modal to handle Block associations.
+- [x] Develop `CollapsibleDndWrapper` component.
 
 ### Phase 2: Content Types
 

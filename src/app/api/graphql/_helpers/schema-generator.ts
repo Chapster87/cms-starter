@@ -479,10 +479,12 @@ export const generateSchema = async () => {
               currentModel: CMSModel,
               isSubQuery = false
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ): Promise<any> => {
-              if (!currentWhere) return queryBuilder
+            ): Promise<{ query: any }> => {
+              if (!currentWhere || Object.keys(currentWhere).length === 0)
+                return { query: queryBuilder }
               let localQuery = queryBuilder
 
+              // IMPORTANT: Process reference filters sequentially to avoid concurrent query builder state mutation
               for (const key of Object.keys(currentWhere)) {
                 const val = currentWhere[key]
                 const field = (
@@ -534,20 +536,23 @@ export const generateSchema = async () => {
 
                   if (linkedModel) {
                     // 2. Build and execute a sub-query to find matching IDs in the linked table
-                    let subQuery = supabase
+                    const subQuery = supabase
                       .from(linkedModel.table_name)
                       .select("id")
 
                     // Recursive call to apply filters to the sub-query
                     // isSubQuery = true ensures we use standard .eq() for non-JSONB columns
-                    subQuery = await applyFilters(
+                    const { query: filteredSubQuery } = await applyFilters(
                       subQuery,
                       valObj,
                       linkedModel,
                       true
                     )
 
-                    const { data: matchedRecords } = await subQuery
+                    const { data: matchedRecords } =
+                      await (filteredSubQuery as {
+                        data: { id: string }[] | null
+                      })
                     const matchedIds = (matchedRecords || []).map(
                       (r) => `"${r.id}"`
                     )
@@ -567,7 +572,7 @@ export const generateSchema = async () => {
                       // For JSONB columns, PostgREST doesn't support the 'in' operator with quoted JSON values well in all versions.
                       // Using multiple .eq() inside an .or() is more reliable for JSONB string equality.
                       const orFilter = matchedIds
-                        .map((id) => `${key}.eq.${id}`)
+                        .map((id: string) => `${key}.eq.${id}`)
                         .join(",")
                       localQuery = localQuery.or(orFilter)
                     }
@@ -584,23 +589,29 @@ export const generateSchema = async () => {
                   }
                 }
               }
-              return localQuery
+              return { query: localQuery }
             }
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            let queryBuilder: any = supabase
+            const queryBuilder: any = supabase
               .from(model.table_name)
               .select("*", { count: "exact" })
 
             // Apply filters (now async)
-            queryBuilder = await applyFilters(queryBuilder, where, model, false)
+            const { query: filteredQuery } = await applyFilters(
+              queryBuilder,
+              where,
+              model,
+              false
+            )
 
+            let finalQuery = filteredQuery
             if (model.has_draft_mode && !includeDrafts && !preview) {
-              queryBuilder = queryBuilder.eq("status", "published")
+              finalQuery = finalQuery.eq("status", "published")
             }
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { data, error } = await (queryBuilder as any)
+            const { data, error } = await (finalQuery as any)
             if (error) {
               console.error("GraphQL Query Error:", error)
               throw new Error(error.message)

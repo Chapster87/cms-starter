@@ -13,7 +13,7 @@ import {
 } from "@/components/fields"
 import Modal from "@/components/modal"
 import Tabs from "@/components/tabs"
-import { CMSField, CMSFieldset } from "@/types/fields"
+import { CMSField, CMSFieldset, CMSBlock } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 
 import s from "./style.module.css"
@@ -55,6 +55,21 @@ export default function FieldModal({
   const [fieldsetId, setFieldsetId] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [availableBlocks, setAvailableBlocks] = useState<CMSBlock[]>([])
+
+  useEffect(() => {
+    async function fetchBlocks() {
+      try {
+        const response = await fetch("/api/blocks")
+        if (!response.ok) throw new Error("Failed to fetch blocks")
+        const data = await response.json()
+        setAvailableBlocks(data)
+      } catch (err) {
+        console.error("Error fetching blocks:", err)
+      }
+    }
+    fetchBlocks()
+  }, [])
 
   useEffect(() => {
     if (isOpen) {
@@ -127,9 +142,11 @@ export default function FieldModal({
             block_id: blockId || null,
             slug: slug || label.toLowerCase().replace(/[^a-z0-9]/g, "_"),
             field_label: label,
+            field_note: note,
             field_type: type,
             is_required: isRequired,
             is_unique: isUnique,
+            ui_order: field?.ui_order || 0,
             settings: settings,
             fieldset_id: fieldsetId,
           }
@@ -304,6 +321,43 @@ export default function FieldModal({
               description="Allow multiple images or files to be uploaded."
               variant="switch"
             />
+          )}
+
+          {["modular_content", "structured_text"].includes(type) && (
+            <div className={s.blockSelection}>
+              <label className={s.fieldLabel}>Allowed Blocks</label>
+              <div className={s.blockGrid}>
+                {availableBlocks.map((block) => (
+                  <button
+                    key={block.id}
+                    type="button"
+                    className={clsx(
+                      s.blockCard,
+                      (settings.allowed_blocks as string[])?.includes(
+                        block.id
+                      ) && s.active
+                    )}
+                    onClick={() => {
+                      const current =
+                        (settings.allowed_blocks as string[]) || []
+                      const next = current.includes(block.id)
+                        ? current.filter((id) => id !== block.id)
+                        : [...current, block.id]
+                      setSettings((prev) => ({
+                        ...prev,
+                        allowed_blocks: next,
+                      }))
+                    }}
+                  >
+                    <span className={s.blockEmoji}>{block.emoji || "📦"}</span>
+                    <span className={s.blockLabel}>{block.label}</span>
+                  </button>
+                ))}
+              </div>
+              {availableBlocks.length === 0 && (
+                <p className={s.emptyText}>No blocks defined yet.</p>
+              )}
+            </div>
           )}
 
           <SelectField

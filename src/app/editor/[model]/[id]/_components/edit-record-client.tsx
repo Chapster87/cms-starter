@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAtom } from "jotai"
-import { useHydrateAtoms } from "jotai/utils"
 import { activeRecordAtom, editorStore } from "@/client/editor-store"
 import { toast } from "@/client/toast-store"
 import { dataService, RecordBase } from "@/client/data-service"
@@ -45,9 +44,13 @@ export default function EditRecordClient({
   const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const targetTable = modelData?.table_name || modelSlug || ""
 
-  // Hydrate the store immediately with server-provided record
-  // This prevents the "flash" of UUIDs in breadcrumbs on hard refresh
-  useHydrateAtoms([[activeRecordAtom, initialRecord]])
+  // Hydrate the store with server-provided record
+  // We use useEffect to avoid "update during render" errors in React 18+
+  useEffect(() => {
+    if (initialRecord) {
+      editorStore.setRecord(initialRecord)
+    }
+  }, [initialRecord])
 
   useEffect(() => {
     return () => {
@@ -58,22 +61,37 @@ export default function EditRecordClient({
   const loadRecord = useCallback(async () => {
     if (!targetTable || !id) return
 
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await dataService.getRecordById(targetTable, id, {
-        resolve: true,
-      })
-      if (!data) {
-        setError("Record not found.")
-      } else {
-        editorStore.setRecord(data)
+    const executeLoad = async (isRetry = false) => {
+      setLoading(true)
+      if (!isRetry) setError(null)
+
+      try {
+        const data = await dataService.getRecordById(targetTable, id, {
+          resolve: true,
+        })
+        if (!data) {
+          // If this is a reload after save, maybe give it a moment
+          if (!isRetry) {
+            console.log(
+              "[EditRecordClient] Record not found on first attempt, retrying..."
+            )
+            setTimeout(() => executeLoad(true), 1000)
+            return
+          }
+          console.error("[EditRecordClient] Record not found after retry.")
+          setError("Record not found.")
+        } else {
+          editorStore.setRecord(data)
+          setError(null)
+        }
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Error loading record")
+      } finally {
+        setLoading(false)
       }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error loading record")
-    } finally {
-      setLoading(false)
     }
+
+    await executeLoad()
   }, [targetTable, id])
 
   const handleAutoSave = useCallback(

@@ -461,8 +461,12 @@ export default function RichTextField({
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // StarterKit includes Link by default in some versions,
-        // we'll be explicit to avoid duplicates if possible
+        // StarterKit includes history, dropcursor, gapcursor etc.
+        // We disable extensions that we are adding explicitly below
+        // to avoid duplicate extension name warnings.
+        codeBlock: false,
+        link: false,
+        underline: false,
       }),
       TextStyle,
       Color,

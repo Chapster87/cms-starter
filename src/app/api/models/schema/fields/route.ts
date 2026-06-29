@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
 
     const {
       model_id,
+      block_id,
       slug,
       field_label,
       field_type,
@@ -54,10 +55,12 @@ export async function POST(req: NextRequest) {
       is_unique,
       ui_order,
       settings,
+      fieldset_id,
+      field_note,
     } = await req.json()
 
-    // 1. Validation
-    if (!model_id || !slug || !field_label || !field_type) {
+    // 1. Validation: Either model_id OR block_id must be present
+    if ((!model_id && !block_id) || !slug || !field_label || !field_type) {
       return NextResponse.json(
         { error: "Missing required field parameters." },
         { status: 400 }
@@ -76,17 +79,23 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 3. Atomic RPC call: Adds physical column and registers metadata
+    // 3. Registry & Physical Schema Sync via RPC
+    // The RPC handles polymorphic creation (Model vs Block)
     const { error: rpcError } = await authenticatedSupabase.rpc(
       "create_model_field",
       {
-        p_model_id: model_id,
+        p_model_id: model_id || null,
         p_slug: sanitizedSlug,
         p_field_label: field_label,
         p_field_type: field_type,
         p_db_type: definition.dbType,
         p_is_required: !!is_required,
         p_is_unique: !!is_unique,
+        p_ui_order: ui_order || 0,
+        p_settings: settings || {},
+        p_block_id: block_id || null,
+        p_fieldset_id: fieldset_id || null,
+        p_field_note: field_note || null,
       }
     )
 
@@ -104,20 +113,6 @@ export async function POST(req: NextRequest) {
         )
       }
       return NextResponse.json({ error: rpcError.message }, { status: 500 })
-    }
-
-    // 4. Update metadata manually after creation since RPC doesn't support all CMS fields yet
-    const updatePayload: Record<string, unknown> = {}
-    if (ui_order !== undefined) updatePayload.ui_order = ui_order
-    if (settings !== undefined) updatePayload.settings = settings
-
-    if (Object.keys(updatePayload).length > 0) {
-      const systemClient = createSupabaseClient(supabaseUrl, supabaseServiceKey)
-      await systemClient
-        .from("fields")
-        .update(updatePayload)
-        .eq("model_id", model_id)
-        .eq("slug", sanitizedSlug)
     }
 
     // Trigger type sync in the background

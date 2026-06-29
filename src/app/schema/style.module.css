@@ -17,6 +17,10 @@
   height: 100%;
 }
 
+.tabLink {
+  text-decoration: none;
+}
+
 .schemaTabsContent {
   padding: 0;
 }

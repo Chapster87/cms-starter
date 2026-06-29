@@ -20,6 +20,7 @@ import {
   ReferenceField,
   NavigationField,
   StandingsField,
+  ModularContentField,
 } from "@/components/fields"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
@@ -105,8 +106,7 @@ export default function RecordForm<T extends CMSModelName>({
       // Proactively "unwrap" stringified JSON for media/json fields on load
       const unwrappedData = { ...initialData } as Record<string, unknown>
 
-      // We don't have schema yet in this effect usually, so we'll do a general check
-      // or rely on the fact that these strings look like JSON.
+      // Proactively unwrap JSON strings for complex field types (media, json, modular_content)
       Object.keys(unwrappedData).forEach((key) => {
         const val = (unwrappedData as Record<string, unknown>)[key]
         if (
@@ -293,6 +293,10 @@ export default function RecordForm<T extends CMSModelName>({
 
     // Clean data before submission
     const cleanData = { ...formData }
+
+    // Strip virtual fields added by the reference resolver
+    delete cleanData._resolved
+
     schema.forEach((field) => {
       // Remove computed fields from payload
       if (field.is_computed) {
@@ -312,9 +316,11 @@ export default function RecordForm<T extends CMSModelName>({
         }
       }
 
-      // 1. Unwrap stringified media/json fields
+      // 1. Unwrap stringified complex fields (media, json, modular_content)
       if (
-        (field.field_type === "media" || field.field_type === "json") &&
+        (field.field_type === "media" ||
+          field.field_type === "json" ||
+          field.field_type === "modular_content") &&
         typeof val === "string" &&
         (val.startsWith("{") || val.startsWith("["))
       ) {
@@ -552,7 +558,7 @@ export default function RecordForm<T extends CMSModelName>({
       )
     }
 
-    if (["json", "modular_content"].includes(field.field_type)) {
+    if (field.field_type === "json") {
       const jsonValue =
         typeof value === "object"
           ? JSON.stringify(value, null, 2)
@@ -564,6 +570,18 @@ export default function RecordForm<T extends CMSModelName>({
           {...commonProps}
           value={jsonValue}
           onChange={(val) => handleChange(field.slug, val)}
+        />
+      )
+    }
+
+    if (field.field_type === "modular_content") {
+      return (
+        <ModularContentField
+          key={field.slug}
+          {...commonProps}
+          value={value as never}
+          onChange={(val) => handleChange(field.slug, val)}
+          allowedBlocks={field.settings?.allowed_blocks}
         />
       )
     }

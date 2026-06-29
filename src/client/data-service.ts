@@ -76,17 +76,21 @@ export const dataService = {
   ): Promise<T | null> {
     const { fields = "*", resolve = false } = options
     const supabase = createClient()
-    // Basic UUID validation to prevent 400 errors from Supabase
+    // Basic UUID validation
     const isUuid =
       /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
-    if (!isUuid) return null
 
     const sanitizedFields = fields.replace(/\s+/g, ",")
-    const { data, error } = await supabase
-      .from(model)
-      .select(sanitizedFields)
-      .eq("id", id)
-      .single()
+    let query = supabase.from(model).select(sanitizedFields)
+
+    if (isUuid) {
+      query = query.eq("id", id)
+    } else {
+      // Fallback to slug if not a UUID
+      query = query.eq("slug", id)
+    }
+
+    const { data, error } = await query.single()
 
     if (error) {
       if (error.code === "PGRST116") return null // Record not found
@@ -282,6 +286,12 @@ export const dataService = {
 
     // Ensure we don't save stringified JSON into what should be native JSON columns
     const cleanChanges = { ...changes }
+
+    // Strip virtual and read-only system fields
+    delete cleanChanges._resolved
+    delete cleanChanges.created_at
+    delete cleanChanges.updated_at
+
     Object.keys(cleanChanges).forEach((key) => {
       const val = cleanChanges[key]
       if (
@@ -402,6 +412,12 @@ export const dataService = {
 
     // 1. Prepare clean data for main columns
     const cleanData = { ...data }
+
+    // Strip virtual and read-only system fields
+    delete cleanData._resolved
+    delete cleanData.created_at
+    delete cleanData.updated_at
+
     Object.keys(cleanData).forEach((key) => {
       const val = cleanData[key]
       if (
@@ -494,6 +510,10 @@ export const dataService = {
 
     // Ensure we don't save stringified JSON into what should be native JSON columns
     const cleanData = { ...recordData }
+
+    // Strip virtual fields
+    delete cleanData._resolved
+
     Object.keys(cleanData).forEach((key) => {
       const val = cleanData[key]
       if (

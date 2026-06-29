@@ -171,19 +171,20 @@ export interface Pages {
   updated_at: string;
   status: CMSStatus;
   _draft?: unknown;
-  page_link?: Pages;
-  title: string;
-  color?: string;
   seo?: SeoMetadata;
-  tag_list?: string[];
   navigation?: NavigationData;
-  author?: Authors;
+  color?: string;
+  page_link?: Pages;
+  tag_list?: string[];
+  title: string;
   standings_table?: StandingsData;
+  author?: Authors;
+  slug: string;
   long_text?: string;
   rich_text?: string;
   media?: MediaAsset;
+  modular_blocks?: ModularContentData;
   content_dynamic?: ModularContentData;
-  slug: string;
 }
 
 export interface Authors {
@@ -274,6 +275,7 @@ export interface Test {
   id: string;
   created_at: string;
   updated_at: string;
+  zxcv?: string;
 }
 
 export interface CMSBlockMap {
