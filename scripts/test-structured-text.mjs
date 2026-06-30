@@ -1,4 +1,3 @@
-// Using native fetch
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -12,31 +11,17 @@ const CMS_API_TOKEN = process.env.CMS_API_TOKEN
 const API_URL = "http://localhost:3000/api/graphql"
 
 async function test() {
-  console.log("Testing GraphQL filtering...")
+  console.log("Testing Structured Text in GraphQL...")
 
   const query = `
-    query StandingsQuery {
-      standingsCollection(
-        where: {league: {slug: "midwest_mens_rugby"}, division: {slug: "premiership-div-1"}, season: {year: 2025, season: "Fall"}}
-      ) {
+    query PagesQuery {
+      pagesCollection {
         edges {
           node {
-            league {
-              name
-              slug
-              short_name
-            }
-            season {
-              year
-              display_name
-              season
-            }
-            division {
-              short_name
-              name
-              slug
-            }
-            league_standings
+            id
+            title
+            slug
+            structured_text
           }
         }
       }

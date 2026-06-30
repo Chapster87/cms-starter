@@ -21,6 +21,7 @@ import {
   NavigationField,
   StandingsField,
   ModularContentField,
+  StructuredTextField,
 } from "@/components/fields"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
@@ -100,13 +101,14 @@ export default function RecordForm<T extends CMSModelName>({
     return true
   }
 
-  // Sync internal form data with initialData when it changes from above
+  // Sync internal form data with initialData ONLY on initial load or if the record ID changes.
+  // We avoid syncing on every initialData change to prevent "flashing" or reloads during auto-save.
   useEffect(() => {
     if (initialData) {
       // Proactively "unwrap" stringified JSON for media/json fields on load
       const unwrappedData = { ...initialData } as Record<string, unknown>
 
-      // Proactively unwrap JSON strings for complex field types (media, json, modular_content)
+      // Proactively unwrap JSON strings for complex field types (media, json, modular_content, structured_text)
       Object.keys(unwrappedData).forEach((key) => {
         const val = (unwrappedData as Record<string, unknown>)[key]
         if (
@@ -121,12 +123,16 @@ export default function RecordForm<T extends CMSModelName>({
         }
       })
 
+      // Defer state update to avoid cascading renders and "flashing"
       const timer = setTimeout(() => {
         setFormData(unwrappedData)
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [initialData])
+    // We intentionally only run this when the record ID changes.
+    // Subsequent updates to the same record should be managed by internal state (setFormData).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
 
   useEffect(() => {
     let isMounted = true
@@ -316,11 +322,12 @@ export default function RecordForm<T extends CMSModelName>({
         }
       }
 
-      // 1. Unwrap stringified complex fields (media, json, modular_content)
+      // 1. Unwrap stringified complex fields (media, json, modular_content, structured_text)
       if (
         (field.field_type === "media" ||
           field.field_type === "json" ||
-          field.field_type === "modular_content") &&
+          field.field_type === "modular_content" ||
+          field.field_type === "structured_text") &&
         typeof val === "string" &&
         (val.startsWith("{") || val.startsWith("["))
       ) {
@@ -581,6 +588,20 @@ export default function RecordForm<T extends CMSModelName>({
           {...commonProps}
           value={value as never}
           onChange={(val) => handleChange(field.slug, val)}
+          allowedBlocks={field.settings?.allowed_blocks}
+        />
+      )
+    }
+
+    if (field.field_type === "structured_text") {
+      return (
+        <StructuredTextField
+          key={field.slug}
+          {...commonProps}
+          value={value as Record<string, unknown>}
+          onChange={(val) => handleChange(field.slug, val)}
+          enabledTools={field.settings?.enabled_tools}
+          placeholder={field.settings?.placeholder}
           allowedBlocks={field.settings?.allowed_blocks}
         />
       )

@@ -177,6 +177,7 @@ export interface Pages {
   page_link?: Pages;
   tag_list?: string[];
   title: string;
+  structured_text?: string;
   standings_table?: StandingsData;
   author?: Authors;
   slug: string;

@@ -115,6 +115,7 @@ export const generateSchema = async () => {
       case "json":
       case "seo_metadata":
       case "modular_content":
+      case "structured_text":
       case "navigation":
       case "standings_table":
         return GraphQLJSON
@@ -128,7 +129,9 @@ export const generateSchema = async () => {
   const parseJsonValue = (val: unknown) => {
     if (typeof val === "string") {
       try {
-        return JSON.parse(val)
+        const parsed = JSON.parse(val)
+        // If it's the literal null (from string "null"), return literal null
+        return parsed
       } catch {
         return val
       }
@@ -306,7 +309,7 @@ export const generateSchema = async () => {
             } else {
               fieldsConfig[field.slug] = {
                 type: getGraphQLType(field),
-                resolve: (parent: Record<string, unknown>) => {
+                resolve: async (parent: Record<string, unknown>) => {
                   const draft = parent._draft as Record<string, unknown> | null
                   const val =
                     draft && draft[field.slug] !== undefined
@@ -318,85 +321,208 @@ export const generateSchema = async () => {
                     "json",
                     "seo_metadata",
                     "modular_content",
+                    "structured_text",
                     "navigation",
                     "standings_table",
                   ].includes(field.field_type)
                     ? parseJsonValue(val)
                     : val
 
-                  // Deep resolve media objects within complex JSON structures (like standings tables)
+                  // Deep resolve media objects within complex JSON structures
                   const isDeepResolvable =
                     field.field_type === "standings_table" ||
                     field.field_type === "json" ||
                     field.field_type === "modular_content" ||
+                    field.field_type === "structured_text" ||
                     field.slug === "league_standings"
 
-                  if (isDeepResolvable && Array.isArray(parsed)) {
-                    return Promise.all(
-                      parsed.map(async (row: Record<string, unknown>) => {
-                        let updatedRow = { ...row }
+                  if (isDeepResolvable && parsed) {
+                    const MAX_DEPTH = 3
+                    const resolveNode = async (
+                      node: unknown,
+                      depth = 0,
+                      visited = new Set<string>()
+                    ): Promise<unknown> => {
+                      if (
+                        !node ||
+                        typeof node !== "object" ||
+                        depth > MAX_DEPTH
+                      )
+                        return node
 
-                        // 1. Resolve explicit team_logo object if it exists
-                        if (
-                          row.team_logo &&
-                          typeof row.team_logo === "object"
-                        ) {
-                          const logoObj = row.team_logo as Record<
-                            string,
-                            unknown
-                          >
-                          const assetId = logoObj.id as string
-                          if (assetId) {
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      const nodeAny = node as any
+
+                      // Prevent circular references if the node has an ID
+                      if (nodeAny.id && typeof nodeAny.id === "string") {
+                        if (visited.has(nodeAny.id)) return node
+                        visited.add(nodeAny.id)
+                      }
+
+                      // Handle arrays
+                      if (Array.isArray(node)) {
+                        return Promise.all(
+                          node.map((item) =>
+                            resolveNode(item, depth + 1, visited)
+                          )
+                        )
+                      }
+
+                      const updatedNode = { ...nodeAny }
+
+                      // 1. Handle cmsBlock in Structured Text
+                      if (
+                        nodeAny.type === "cmsBlock" &&
+                        nodeAny.attrs &&
+                        nodeAny.attrs.data
+                      ) {
+                        // Recursively resolve data within the block's attributes
+                        updatedNode.attrs.data = await resolveNode(
+                          nodeAny.attrs.data,
+                          depth + 1,
+                          visited
+                        )
+                      }
+
+                      // 2. Resolve explicit team_logo object if it exists (Standings Table)
+                      if (
+                        nodeAny.team_logo &&
+                        typeof nodeAny.team_logo === "object"
+                      ) {
+                        const logoObj = nodeAny.team_logo as Record<
+                          string,
+                          unknown
+                        >
+                        const assetId = logoObj.id as string
+                        if (assetId) {
+                          const { data: mediaData } = await supabase
+                            .from("media_assets")
+                            .select("*")
+                            .eq("id", assetId)
+                            .single()
+                          if (mediaData) {
+                            updatedNode.team_logo = mediaData
+                          }
+                        }
+                      }
+
+                      // 3. Resolve team details (logo, etc) from team_id if missing (Standings Table)
+                      if (
+                        nodeAny.team_id &&
+                        typeof nodeAny.team_id === "string"
+                      ) {
+                        const { data: teamData } = await supabase
+                          .from("teams")
+                          .select("*")
+                          .eq("id", nodeAny.team_id)
+                          .single()
+
+                        if (teamData) {
+                          Object.assign(updatedNode, teamData)
+
+                          const teamLogoId = teamData.logo || teamData.team_logo
+                          if (
+                            teamLogoId &&
+                            (!updatedNode.team_logo ||
+                              typeof updatedNode.team_logo !== "object")
+                          ) {
                             const { data: mediaData } = await supabase
                               .from("media_assets")
                               .select("*")
-                              .eq("id", assetId)
+                              .eq("id", teamLogoId)
                               .single()
                             if (mediaData) {
-                              updatedRow.team_logo = mediaData
+                              updatedNode.team_logo = mediaData
                             }
                           }
                         }
+                      }
 
-                        // 2. Resolve team details (logo, etc) from team_id if missing
-                        if (row.team_id && typeof row.team_id === "string") {
-                          const { data: teamData } = await supabase
-                            .from("teams")
-                            .select("*")
-                            .eq("id", row.team_id)
-                            .single()
+                      // 4. Resolve UUID strings that represent references
+                      for (const key of Object.keys(updatedNode)) {
+                        const val = updatedNode[key]
 
-                          if (teamData) {
-                            // Merge team data into the row (e.g. logo, short_name)
-                            // We prefer the existing row data if it exists
-                            updatedRow = {
-                              ...teamData,
-                              ...updatedRow,
-                            }
+                        // If it's a UUID string or an array of UUID strings
+                        const isUuid = (s: unknown) =>
+                          typeof s === "string" &&
+                          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+                            s
+                          )
 
-                            // If team has a logo ID, resolve it to full media
-                            const teamLogoId =
-                              teamData.logo || teamData.team_logo
+                        const potentialIds = Array.isArray(val) ? val : [val]
+
+                        if (potentialIds.every(isUuid)) {
+                          // It's a potential reference. We need to find which model it belongs to.
+                          // This is expensive as we have to check multiple tables if we don't know the model.
+                          // However, we can use the 'models' we already fetched to try and find it.
+                          const idArray = potentialIds as string[]
+
+                          // Strategy: Try to find which table these IDs belong to
+                          // We only check models that are likely to be referenced
+                          for (const model of validModels) {
                             if (
-                              teamLogoId &&
-                              (!updatedRow.team_logo ||
-                                typeof updatedRow.team_logo !== "object")
-                            ) {
-                              const { data: mediaData } = await supabase
-                                .from("media_assets")
-                                .select("*")
-                                .eq("id", teamLogoId)
-                                .single()
-                              if (mediaData) {
-                                updatedRow.team_logo = mediaData
-                              }
+                              [
+                                "models",
+                                "fields",
+                                "groups",
+                                "media_assets",
+                              ].includes(model.table_name)
+                            )
+                              continue
+
+                            const { data: matched } = await supabase
+                              .from(model.table_name)
+                              .select("*")
+                              .in("id", idArray)
+
+                            if (matched && matched.length > 0) {
+                              const dataMap = new Map(
+                                (matched as Record<string, unknown>[]).map(
+                                  (m) => [m.id as string, m]
+                                )
+                              )
+                              const resolvedResults = await Promise.all(
+                                idArray.map(async (id) => {
+                                  const item = dataMap.get(id)
+                                  return item
+                                    ? await resolveNode(
+                                        item,
+                                        depth + 1,
+                                        new Set(visited)
+                                      )
+                                    : id
+                                })
+                              )
+
+                              updatedNode[key] = Array.isArray(val)
+                                ? resolvedResults
+                                : resolvedResults[0]
+                              break // Found the model, stop looking
                             }
                           }
                         }
+                      }
 
-                        return updatedRow
-                      })
-                    )
+                      // Recursively resolve other properties
+                      for (const key of Object.keys(updatedNode)) {
+                        if (
+                          key !== "team_logo" &&
+                          key !== "team_id" &&
+                          key !== "attrs" && // Skip attrs as we handled it above
+                          typeof updatedNode[key] === "object"
+                        ) {
+                          updatedNode[key] = await resolveNode(
+                            updatedNode[key],
+                            depth + 1,
+                            visited
+                          )
+                        }
+                      }
+
+                      return updatedNode
+                    }
+
+                    return resolveNode(parsed)
                   }
 
                   return parsed

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo } from "react"
 import dynamic from "next/dynamic"
 import { createGraphiQLFetcher } from "@graphiql/toolkit"
 import { createClient } from "@/utils/supabase"
@@ -27,6 +27,25 @@ const GraphiQL = dynamic(() => import("graphiql").then((mod) => mod.GraphiQL), {
  * allowing the editor to run in the main thread with zero configuration.
  */
 export default function GraphQLPlayground() {
+  useEffect(() => {
+    // Disable Monaco workers to prevent "toUrl" crash in Next.js environment.
+    // This forces the editor to run in the main thread.
+    if (typeof window !== "undefined") {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const win = window as any
+      win.MonacoEnvironment = {
+        getWorkerUrl: () => {
+          return (
+            "data:text/javascript;charset=utf-8," +
+            encodeURIComponent(
+              "self.onmessage = function() { console.warn('Monaco worker disabled by CDA viewer'); };"
+            )
+          )
+        },
+      }
+    }
+  }, [])
+
   const fetcher = useMemo(() => {
     return createGraphiQLFetcher({
       url: "/api/graphql",

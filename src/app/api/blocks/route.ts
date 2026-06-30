@@ -3,15 +3,22 @@ import { createClient } from "@/utils/supabase-server"
 
 /**
  * GET /api/blocks
- * Fetches all blocks from the registry.
+ * Fetches all blocks or a specific block by ID.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   const supabase = await createClient()
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get("id")
 
-  const { data, error } = await supabase
-    .from("blocks")
-    .select("*")
-    .order("label", { ascending: true })
+  let query = supabase.from("blocks").select("*")
+
+  if (id) {
+    query = query.eq("id", id)
+  } else {
+    query = query.order("label", { ascending: true })
+  }
+
+  const { data, error } = await query
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 })

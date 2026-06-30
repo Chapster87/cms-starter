@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { Box, Search, X } from "lucide-react"
+import { Blocks, Search, X } from "lucide-react"
 import Modal from "@/components/modal"
 import { CMSBlock } from "@/types/fields"
 import s from "./block-selector-modal.module.css"
@@ -71,7 +71,7 @@ export default function BlockSelectorModal({
                 {block.emoji ? (
                   <span className={s.emoji}>{block.emoji}</span>
                 ) : (
-                  <Box size={24} className={s.defaultIcon} />
+                  <Blocks size={24} className={s.defaultIcon} />
                 )}
               </div>
               <div className={s.blockInfo}>

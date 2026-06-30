@@ -92,12 +92,12 @@ Structured Text will utilize a ProseMirror JSON schema via Tiptap.
 ### Phase 2: Content Types
 
 - [x] Implement `ModularContentField` component.
-- [ ] Implement `StructuredTextField` (Tiptap JSON + `cmsBlock` extension).
-- [ ] Create `StructuredTextRenderer` for frontend/CDA use.
+- [x] Implement `StructuredTextField` (Tiptap JSON + `cmsBlock` extension).
+- [x] Create `StructuredTextRenderer` for frontend/CDA use.
 
 ### Phase 3: Conversions
 
-- [ ] Migrate `standings_table` field type to a Block-based implementation.
+- [ ] Migrate `Standings Table` model to a Block-based implementation.
 - [ ] Clean up legacy advanced field types.
 
 ## 6. CDA (GraphQL) Impact

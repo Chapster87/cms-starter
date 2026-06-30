@@ -180,6 +180,72 @@ query {
 }
 ```
 
+### Modular Content & Structured Text
+
+These complex field types are stored as JSON but are **fully resolved** by the CDA. This means that any Media Assets or References nested within a Modular Content block or a Structured Text document will return their full objects, not just IDs.
+
+#### Modular Content Example
+
+```graphql
+query {
+  pagesCollection {
+    edges {
+      node {
+        content {
+          # Modular Content field
+          _type # The block technical name
+          title
+          image {
+            url
+            name
+          } # Media inside the block is resolved!
+          link {
+            # Reference inside the block is resolved!
+            slug
+            title
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+#### Structured Text Example
+
+Structured Text follows the Tiptap/ProseMirror JSON format but includes resolved data for `cmsBlock` nodes.
+
+```graphql
+query {
+  articlesCollection {
+    edges {
+      node {
+        body {
+          # Structured Text field
+          type
+          content {
+            type
+            text
+            attrs {
+              # Attributes for custom nodes like cmsBlock
+              id
+              blockType
+              data {
+                # Nested data is fully resolved!
+                title
+                image {
+                  url
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
 ---
 
 ## 4. External Project Implementation

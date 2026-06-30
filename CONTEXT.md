@@ -42,20 +42,17 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - **SelectField (Dropdown):** Support for predefined options with automatic slug generation for values.
   - **DateField (Enhanced):** Supports date-only or datetime-local modes with integrated timezone selection and absolute UTC synchronization.
   - **Markdown:** Dual-tab Write/Preview interface using the `marked` library.
+  - **Modular Content:** A JSONB "Stacked Accordion" field type allowing for dynamic block composition. Supports DND reordering and explicit block opt-in via field settings.
+  - **Blocks System:** A standalone registry (`public.blocks`) for reusable content fragments. Blocks support their own set of fields, enabling complex nested content structures.
+  - **Structured Text:** A high-fidelity ProseMirror-based (via Tiptap) field type for rich text interleaved with CMS Blocks. Supports deep recursive resolution in the GraphQL CDA and custom NodeViews for inline editing.
 
 ## Implementation Roadmap
 
 ### 1. Immediate Tasks (Current Focus)
 
-- [ ] **Blocks Infrastructure:** Implement `public.blocks` registry and polymorphic `public.fields` association.
-- [ ] **Modular Content Field:** Implement the "Stacked Accordion" JSONB field type with DND support for block composition.
-- [ ] **Structured Text:** Implement the ProseMirror-backed field type for mixed-content editing.
+- [ ] **Convert Standings Table model to a Block:** This model is highly specific and should be converted to a reusable block. Requires generalizing custom functionality (like reference resolution) so it can function as a standard block type.
 
 ### 2. Next Steps (Upcoming)
-
-- [ ] **Modular Content Field:** Expand current field type to include options for a single or multiple block inclusion. Also include configurabtion setting for which blocks should be allowed to include
-- [ ] **Structured Text:** Dato inspired (DAST type content) that basically mixes something like a rich-text field with the ability to include blocks within. Used mainly for blog type pages rather than landing pages.
-- [ ] **Convert Standings Table model to a Block** This model is highly specific and shouldn't be part of our core CMS, it's a good candidate for conversion to a block. We will need to ensure all custom functionality is generalized so it could function a any sort of block needed. resolving references correctly and such.
 
 ### 3. Future Roadmap
 
@@ -68,6 +65,9 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 
 ### 4. Completed Items
 
+- [x] **Structured Text Implementation**: Developed a Tiptap-based field with a custom `cmsBlock` extension. Includes a React `NodeView` for inline editing, a dual-tab Write/Preview interface, and a recursive JSX renderer for the frontend.
+- [x] **Modular Content Field**: Implemented a robust JSONB field with a searchable `BlockSelectorModal` and DND-powered block composition. Integrated with `RecordForm` auto-save and persistence logic.
+- [x] **Blocks Infrastructure**: Created the `public.blocks` registry and updated the `fields` table to support polymorphic associations (Model vs Block). Implemented CRUD APIs and standardized migration workflows.
 - [x] **MCP Agent Bridge (Local)**: Implemented a Model Context Protocol server (`src/server/mcp`) that exposes CMS CRUD operations as tools for AI agents, enabling direct record manipulation and schema awareness.
 - [x] **Dynamic Record Table Columns:** Empowered users to configure which fields from a model appear as columns in the record list view. Features include bulk reference resolution, borderless media previews with `next/image`, and interactive reordering via a Gear utility in the header.
 - [x] **Field-Specific Settings:**

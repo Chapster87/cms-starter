@@ -16,7 +16,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
-import { Plus, Box } from "lucide-react"
+import { Plus, Blocks } from "lucide-react"
 
 import Button from "@/components/button"
 import CollapsibleDndWrapper from "@/components/collapsible-dnd-wrapper"
@@ -186,7 +186,7 @@ export default function ModularContentField({
                     key={block._id}
                     id={block._id}
                     label={displayLabel}
-                    icon={<Box size={14} />}
+                    icon={<Blocks size={14} />}
                     onDelete={() => removeBlock(block._id)}
                     className={s.blockWrapper}
                   >

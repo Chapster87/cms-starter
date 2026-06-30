@@ -41,7 +41,25 @@ export function getRecordDisplayName(
 ): string {
   if (!record) return modelFriendlyName || "Record"
 
-  // 0. Priority: check for resolved preview data (added in resolveRecordReferences)
+  // 1. Try common name fields first (title, name, etc. on the record itself)
+  for (const field of NAME_DISCOVERY_FIELDS) {
+    const val = record[field]
+    if (val) {
+      if (typeof val === "string" && !isUuid(val)) {
+        return val
+      }
+      if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+        const obj = val as Record<string, unknown>
+        const name = (obj.display_name ||
+          obj.name ||
+          obj.title ||
+          obj.label) as string | undefined
+        if (name && !isUuid(name)) return String(name)
+      }
+    }
+  }
+
+  // 2. Priority: check for resolved preview data (added in resolveRecordReferences)
   const resolved = record._resolved
   if (resolved && typeof resolved === "object") {
     // If we have list columns, try to find a resolved version of one of them
@@ -69,7 +87,7 @@ export function getRecordDisplayName(
     }
   }
 
-  // 1. Try explicit list columns first
+  // 3. Try explicit list columns
   // We iterate through them to find the first one that yields a non-UUID string.
   // We also check for common ID suffixes if the exact column name isn't found.
   if (listColumns && listColumns.length > 0) {
@@ -102,30 +120,12 @@ export function getRecordDisplayName(
     }
   }
 
-  // 2. Try common name fields
-  for (const field of NAME_DISCOVERY_FIELDS) {
-    const val = record[field]
-    if (val) {
-      if (typeof val === "string" && !isUuid(val)) {
-        return val
-      }
-      if (typeof val === "object" && val !== null) {
-        const obj = val as Record<string, unknown>
-        const name = (obj.display_name ||
-          obj.name ||
-          obj.title ||
-          obj.label) as string | undefined
-        if (name && !isUuid(name)) return String(name)
-      }
-    }
-  }
-
-  // 3. If it's a singleton and we have a model friendly name, use it as the definitive title
+  // 4. If it's a singleton and we have a model friendly name, use it as the definitive title
   if (isSingleton && modelFriendlyName) {
     return modelFriendlyName
   }
 
-  // 4. Fallback: look for the first string field that isn't a system field and isn't a UUID
+  // 5. Fallback: look for the first string field that isn't a system field and isn't a UUID
   const systemFields = [
     "id",
     "created_at",
@@ -151,7 +151,7 @@ export function getRecordDisplayName(
     }
   }
 
-  // 5. Final fallback to slug or truncated ID
+  // 6. Final fallback to slug or truncated ID
   if (record.slug && typeof record.slug === "string") {
     return record.slug
   }
