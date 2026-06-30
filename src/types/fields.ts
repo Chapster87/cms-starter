@@ -66,6 +66,7 @@ export interface CMSFieldSettings {
 
   // Slug
   source_field?: string
+  url_prefix?: string
 
   // Modular Content / Structured Text
   allowed_blocks?: string[]

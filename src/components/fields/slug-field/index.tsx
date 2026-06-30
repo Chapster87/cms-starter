@@ -22,6 +22,8 @@ interface SlugFieldProps {
   onToggleTouched?: (touched: boolean) => void
   /** Whether to show the URL preview prefix. Defaults to true. */
   showUrlPrefix?: boolean
+  /** Optional custom URL prefix to override site settings. */
+  urlPrefix?: string
 }
 
 /**
@@ -42,6 +44,7 @@ export default function SlugField({
   isTouched: controlledIsTouched,
   onToggleTouched,
   showUrlPrefix = true,
+  urlPrefix,
 }: SlugFieldProps) {
   const { settings } = useSiteSettings()
   const [internalIsTouched, setInternalIsTouched] = useState(false)
@@ -94,7 +97,10 @@ export default function SlugField({
     onChange(val)
   }
 
-  const siteUrl = settings?.siteUrl?.replace(/\/$/, "") || "https://example.com"
+  const siteUrl =
+    urlPrefix?.replace(/\/$/, "") ||
+    settings?.siteUrl?.replace(/\/$/, "") ||
+    "https://example.com"
 
   return (
     <div className={s.slugFieldContainer}>

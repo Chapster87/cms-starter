@@ -2,6 +2,7 @@
 
 import React from "react"
 import { JSONContent } from "@tiptap/react"
+import Image from "next/image"
 
 interface StructuredTextRendererProps {
   content: JSONContent | string
@@ -134,15 +135,41 @@ function renderNode(
     case "hardBreak":
       return <br key={index} />
 
-    case "image":
+    case "image": {
+      const width = Number(node.attrs?.width)
+      const height = Number(node.attrs?.height)
+      const hasDimensions =
+        Number.isFinite(width) &&
+        width > 0 &&
+        Number.isFinite(height) &&
+        height > 0
+
+      if (hasDimensions) {
+        return (
+          <Image
+            key={index}
+            src={node.attrs?.src}
+            alt={node.attrs?.alt}
+            title={node.attrs?.title}
+            width={width}
+            height={height}
+            style={{ width: "100%", height: "auto" }}
+          />
+        )
+      }
+
       return (
-        <img
+        <Image
           key={index}
           src={node.attrs?.src}
           alt={node.attrs?.alt}
           title={node.attrs?.title}
+          fill
+          sizes="100vw"
+          style={{ objectFit: "contain" }}
         />
       )
+    }
 
     case "cmsBlock":
       const BlockComponent = blocks[node.attrs?.blockType]
