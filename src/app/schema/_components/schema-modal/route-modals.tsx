@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, ReactNode } from "react"
 import { useParams } from "next/navigation"
 import Modal from "@/components/modal"
 import { useModels, ModelRegistryEntry } from "@/hooks/use-models"
@@ -12,30 +12,21 @@ import ModalModel from "./modal-model"
 import ModalModelGroup from "./modal-model-group"
 import { useSchemaModalNavigation } from "./use-schema-modal-navigation"
 
+interface RouteModalContainerProps {
+  title: string
+  description?: string
+  children: ReactNode
+}
+
 /**
- * Handles Modal creation, editing, and duplication.
+ * Common wrapper for schema-related route modals.
  */
-export function ModelRouteModal() {
-  const { searchParams, handleClose } = useSchemaModalNavigation()
-  const action = searchParams.get("action")
-  const modelSlug = searchParams.get("modelSlug")
-
-  if (!action || !action.includes("model")) return null
-
-  const mode = action.replace("-model", "") as "new" | "edit" | "duplicate"
-  const normalizedMode = mode === "new" ? "create" : mode
-
-  const title =
-    mode === "edit"
-      ? "Edit Model"
-      : mode === "duplicate"
-        ? "Duplicate Model"
-        : "Create New Model"
-
-  const description =
-    mode === "edit"
-      ? "Update model metadata."
-      : "Define a new content structure."
+function RouteModalContainer({
+  title,
+  description,
+  children,
+}: RouteModalContainerProps) {
+  const { handleClose } = useSchemaModalNavigation()
 
   return (
     <Modal
@@ -44,13 +35,41 @@ export function ModelRouteModal() {
       title={title}
       description={description}
     >
+      {children}
+    </Modal>
+  )
+}
+
+/**
+ * Handles Modal creation, editing, and duplication.
+ */
+export function ModelRouteModal() {
+  const { action, searchParams, handleClose } = useSchemaModalNavigation()
+  const modelSlug = searchParams.get("modelSlug")
+
+  if (action?.entityType !== "model") return null
+
+  const title =
+    action.mode === "edit"
+      ? "Edit Model"
+      : action.mode === "duplicate"
+        ? "Duplicate Model"
+        : "Create New Model"
+
+  const description =
+    action.mode === "edit"
+      ? "Update model metadata."
+      : "Define a new content structure."
+
+  return (
+    <RouteModalContainer title={title} description={description}>
       <ModalModel
-        mode={normalizedMode}
+        mode={action.mode}
         modelSlug={modelSlug}
         onSuccess={() => handleClose(true)}
         onCancel={() => handleClose(false)}
       />
-    </Modal>
+    </RouteModalContainer>
   )
 }
 
@@ -58,11 +77,11 @@ export function ModelRouteModal() {
  * Handles Field type selection and field configuration.
  */
 export function FieldRouteModal() {
-  const { searchParams, router, handleClose } = useSchemaModalNavigation()
+  const { action, searchParams, router, handleClose } =
+    useSchemaModalNavigation()
   const params = useParams()
   const { models } = useModels()
 
-  const action = searchParams.get("action")
   const fieldId = searchParams.get("fieldId")
   const fieldType = searchParams.get("fieldType")
   const blockId = searchParams.get("blockId")
@@ -81,12 +100,9 @@ export function FieldRouteModal() {
     return found?.id || modelIdFromPath
   }, [modelIdFromPath, models])
 
-  if (!action || !action.includes("field")) return null
+  if (action?.entityType !== "field") return null
 
-  const mode = action.replace("-field", "") as "new" | "edit" | "duplicate"
-  const normalizedMode = mode === "new" ? "create" : mode
-
-  if (mode === "new" && !fieldType) {
+  if (action.mode === "create" && !fieldType) {
     return (
       <Modal
         isOpen={true}
@@ -106,33 +122,28 @@ export function FieldRouteModal() {
   }
 
   const title =
-    mode === "edit"
+    action.mode === "edit"
       ? "Edit Field"
-      : mode === "duplicate"
+      : action.mode === "duplicate"
         ? "Duplicate Field"
         : "Configure New Field"
 
   const description =
-    mode === "edit"
+    action.mode === "edit"
       ? "Update field configuration."
       : "Define the settings for your new field."
 
   return (
-    <Modal
-      isOpen={true}
-      onOpenChange={(open) => !open && handleClose()}
-      title={title}
-      description={description}
-    >
+    <RouteModalContainer title={title} description={description}>
       <ModalField
-        mode={normalizedMode}
+        mode={action.mode}
         fieldId={fieldId}
         modelId={resolvedModelId}
         blockId={blockId}
         onSuccess={() => handleClose(true)}
         onCancel={() => handleClose(false)}
       />
-    </Modal>
+    </RouteModalContainer>
   )
 }
 
@@ -140,36 +151,26 @@ export function FieldRouteModal() {
  * Handles Model Group (folder) management.
  */
 export function GroupRouteModal() {
-  const { searchParams, handleClose } = useSchemaModalNavigation()
-  const action = searchParams.get("action")
+  const { action, searchParams, handleClose } = useSchemaModalNavigation()
   const groupId = searchParams.get("groupId")
 
-  if (!action || !action.includes("group") || action.includes("block"))
-    return null
+  if (action?.entityType !== "group") return null
 
-  const mode = action.replace("-group", "") as "new" | "edit"
-  const normalizedMode = mode === "new" ? "create" : mode
-
-  const title = mode === "edit" ? "Edit Group" : "Create New Group"
+  const title = action.mode === "edit" ? "Edit Group" : "Create New Group"
   const description =
-    mode === "edit"
+    action.mode === "edit"
       ? "Update folder metadata."
       : "Organize your models into a folder."
 
   return (
-    <Modal
-      isOpen={true}
-      onOpenChange={(open) => !open && handleClose()}
-      title={title}
-      description={description}
-    >
+    <RouteModalContainer title={title} description={description}>
       <ModalModelGroup
-        mode={normalizedMode}
+        mode={action.mode as "create" | "edit"}
         groupId={groupId}
         onSuccess={() => handleClose(true)}
         onCancel={() => handleClose(false)}
       />
-    </Modal>
+    </RouteModalContainer>
   )
 }
 
@@ -177,30 +178,25 @@ export function GroupRouteModal() {
  * Handles reusable Block management.
  */
 export function BlockRouteModal() {
-  const { searchParams, handleClose } = useSchemaModalNavigation()
-  const action = searchParams.get("action")
+  const { action, searchParams, handleClose } = useSchemaModalNavigation()
   const blockId = searchParams.get("blockId")
 
-  if (!action || action.includes("group") || !action.includes("block"))
-    return null
+  if (action?.entityType !== "block") return null
 
-  const mode = action === "edit-block" ? "edit" : "create"
-  const title = mode === "edit" ? "Edit Block" : "Create New Block"
+  const title = action.mode === "edit" ? "Edit Block" : "Create New Block"
 
   return (
-    <Modal
-      isOpen={true}
-      onOpenChange={(open) => !open && handleClose()}
+    <RouteModalContainer
       title={title}
       description="Manage reusable field groups."
     >
       <ModalBlock
-        mode={mode}
+        mode={action.mode as "create" | "edit"}
         blockId={blockId}
         onSuccess={() => handleClose(true)}
         onCancel={() => handleClose(false)}
       />
-    </Modal>
+    </RouteModalContainer>
   )
 }
 
@@ -208,28 +204,25 @@ export function BlockRouteModal() {
  * Handles Block Group management.
  */
 export function BlockGroupRouteModal() {
-  const { searchParams, handleClose } = useSchemaModalNavigation()
-  const action = searchParams.get("action")
+  const { action, searchParams, handleClose } = useSchemaModalNavigation()
   const groupId = searchParams.get("blockGroupId")
 
-  if (!action || !action.includes("block-group")) return null
+  if (action?.entityType !== "block-group") return null
 
-  const mode = action === "edit-block-group" ? "edit" : "create"
-  const title = mode === "edit" ? "Edit Block Group" : "Create Block Group"
+  const title =
+    action.mode === "edit" ? "Edit Block Group" : "Create Block Group"
 
   return (
-    <Modal
-      isOpen={true}
-      onOpenChange={(open) => !open && handleClose()}
+    <RouteModalContainer
       title={title}
       description="Organize your blocks into folders."
     >
       <ModalBlockGroup
-        mode={mode}
+        mode={action.mode as "create" | "edit"}
         groupId={groupId}
         onSuccess={() => handleClose(true)}
         onCancel={() => handleClose(false)}
       />
-    </Modal>
+    </RouteModalContainer>
   )
 }

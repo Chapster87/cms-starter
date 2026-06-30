@@ -1,14 +1,14 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { Settings, Eye } from "lucide-react"
 import * as Tabs from "@radix-ui/react-tabs"
-import EmojiPicker, { EmojiClickData } from "emoji-picker-react"
 import Button from "@/components/button"
-import { CheckboxField, SlugField, SelectField } from "@/components/fields"
 import { toast } from "@/client/toast-store"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
+import ModelBasicSettings from "./_components/model-basic-settings"
+import ModelPreviewSettings from "./_components/model-preview-settings"
 import s from "./style.module.css"
 
 interface ModalModelProps {
@@ -42,20 +42,6 @@ export default function ModalModel({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isIdTouched, setIsIdTouched] = useState(false)
-  const pickerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target as Node)
-      ) {
-        setShowPicker(false)
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
-  }, [])
 
   useEffect(() => {
     // Use setTimeout to move state updates out of the synchronous render cycle
@@ -97,15 +83,6 @@ export default function ModalModel({
     }, 0)
     return () => clearTimeout(timer)
   }, [mode, modelSlug, models])
-
-  const handleFriendlyNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFriendlyName(e.target.value)
-  }
-
-  const onEmojiClick = (emojiData: EmojiClickData) => {
-    setEmoji(emojiData.emoji)
-    setShowPicker(false)
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -200,14 +177,6 @@ export default function ModalModel({
     fetchFields()
   }, [mode, modelSlug, allModels, accessToken])
 
-  const togglePreviewColumn = (fieldName: string) => {
-    setPreviewColumns((prev) =>
-      prev.includes(fieldName)
-        ? prev.filter((f) => f !== fieldName)
-        : [...prev, fieldName]
-    )
-  }
-
   return (
     <form onSubmit={handleSubmit} className={s.modalForm}>
       {error && <p className={s.errorText}>{error}</p>}
@@ -225,140 +194,36 @@ export default function ModalModel({
         </Tabs.List>
 
         <Tabs.Content value="basic" className={s.tabsContent}>
-          <div className={s.nameFieldSection}>
-            <label className={s.fieldLabel}>Display Name</label>
-            <div className={s.nameInputRow}>
-              <div className={s.emojiFieldWrapper}>
-                <Button
-                  variant="secondary"
-                  unstyled
-                  type="button"
-                  className={s.emojiButton}
-                  onClick={() => setShowPicker(!showPicker)}
-                  disabled={isSaving}
-                >
-                  {emoji || "⬚"}
-                </Button>
-                {showPicker && (
-                  <div className={s.pickerContainer} ref={pickerRef}>
-                    <EmojiPicker
-                      onEmojiClick={onEmojiClick}
-                      autoFocusSearch={false}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <input
-                type="text"
-                placeholder="e.g. Article"
-                value={friendlyName}
-                onChange={handleFriendlyNameChange}
-                className={s.nameInput}
-                disabled={isSaving}
-                required
-              />
-            </div>
-            <p className={s.fieldDescription}>
-              Human-friendly label used in the CMS. Please write it down in
-              singular.
-            </p>
-          </div>
-
-          <SlugField
-            label="Model ID (Database Table)"
-            placeholder="e.g. blog_posts"
-            value={modelName}
-            sourceValue={friendlyName}
-            onChange={setModelName}
-            isTouched={isIdTouched}
-            onToggleTouched={setIsIdTouched}
-            disabled={isSaving || mode === "edit"}
-            required
-            description="Lowercase, no spaces. This will be the physical table name."
-          />
-
-          <CheckboxField
-            label="Is Singleton"
-            checked={isSingleton}
-            onChange={setIsSingleton}
-            disabled={isSaving}
-            description="Check this if the model should only ever have one record (e.g., Global Settings)."
-            variant="switch"
-          />
-
-          <CheckboxField
-            label="Enable Draft/Publish"
-            checked={hasDraftMode}
-            onChange={setHasDraftMode}
-            disabled={isSaving}
-            description="Check this if you want to manage record visibility with Draft and Published statuses."
-            variant="switch"
+          <ModelBasicSettings
+            mode={mode}
+            friendlyName={friendlyName}
+            setFriendlyName={setFriendlyName}
+            modelName={modelName}
+            setModelName={setModelName}
+            emoji={emoji}
+            setEmoji={setEmoji}
+            showPicker={showPicker}
+            setShowPicker={setShowPicker}
+            isSingleton={isSingleton}
+            setIsSingleton={setIsSingleton}
+            hasDraftMode={hasDraftMode}
+            setHasDraftMode={setHasDraftMode}
+            isIdTouched={isIdTouched}
+            setIsIdTouched={setIsIdTouched}
+            isSaving={isSaving}
           />
         </Tabs.Content>
 
         {mode === "edit" && availableFields.length > 0 && (
           <Tabs.Content value="preview" className={s.tabsContent}>
-            <div className={s.fieldSection}>
-              <label className={s.fieldLabel}>Preview Columns</label>
-              <div className={s.previewColumnsGrid}>
-                {availableFields
-                  .filter(
-                    (f) =>
-                      ![
-                        "id",
-                        "created_at",
-                        "updated_at",
-                        "status",
-                        "_draft",
-                      ].includes(f.slug)
-                  )
-                  .map((field) => (
-                    <div key={field.slug} className={s.previewColumnCheck}>
-                      <CheckboxField
-                        label={`${field.field_label}`}
-                        checked={previewColumns.includes(field.slug)}
-                        onChange={() => togglePreviewColumn(field.slug)}
-                        disabled={isSaving}
-                      />
-                    </div>
-                  ))}
-              </div>
-              <p className={s.fieldDescription}>
-                Pick fields to show on the top line of reference selection
-                modals.
-              </p>
-            </div>
-
-            <div className={s.fieldSection}>
-              <SelectField
-                label="Subtitle Column"
-                value={subtitleColumn || "none"}
-                onChange={(val) =>
-                  setSubtitleColumn(val === "none" ? null : val)
-                }
-                disabled={isSaving}
-                options={[
-                  { label: "(None)", value: "none" },
-                  ...availableFields
-                    .filter(
-                      (f) =>
-                        ![
-                          "id",
-                          "created_at",
-                          "updated_at",
-                          "status",
-                          "_draft",
-                        ].includes(f.slug)
-                    )
-                    .map((field) => ({
-                      label: `${field.field_label}`,
-                      value: field.slug,
-                    })),
-                ]}
-                description="Pick a field to show as a second line (subtitle) in selection modals."
-              />
-            </div>
+            <ModelPreviewSettings
+              availableFields={availableFields}
+              previewColumns={previewColumns}
+              setPreviewColumns={setPreviewColumns}
+              subtitleColumn={subtitleColumn}
+              setSubtitleColumn={setSubtitleColumn}
+              isSaving={isSaving}
+            />
           </Tabs.Content>
         )}
       </Tabs.Root>
