@@ -265,12 +265,6 @@ export type AnyCMSModel = CMSModelMap[CMSModelName];
  * BLOCK TYPES
  */
 
-export interface Test2 {
-  id: string;
-  created_at: string;
-  updated_at: string;
-}
-
 export interface Test {
   id: string;
   created_at: string;
@@ -278,9 +272,18 @@ export interface Test {
   zxcv?: string;
 }
 
+export interface Test2 {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  division: unknown;
+  season: unknown;
+  league: unknown;
+}
+
 export interface CMSBlockMap {
-  test_2: Test2;
   test: Test;
+  test_2: Test2;
 }
 
 export type CMSBlockName = keyof CMSBlockMap;

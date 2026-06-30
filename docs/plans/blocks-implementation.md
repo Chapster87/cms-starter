@@ -91,7 +91,7 @@ Structured Text will utilize a ProseMirror JSON schema via Tiptap.
 
 ### Phase 2: Content Types
 
-- [ ] Implement `ModularContentField` component.
+- [x] Implement `ModularContentField` component.
 - [ ] Implement `StructuredTextField` (Tiptap JSON + `cmsBlock` extension).
 - [ ] Create `StructuredTextRenderer` for frontend/CDA use.
 

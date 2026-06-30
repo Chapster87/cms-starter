@@ -85,7 +85,7 @@ export default function BlockSelectorModal({
 
           {filteredBlocks.length === 0 && (
             <div className={s.emptyState}>
-              No blocks found matching "{searchTerm}"
+              {`No blocks found matching "${searchTerm}"`}
             </div>
           )}
         </div>
