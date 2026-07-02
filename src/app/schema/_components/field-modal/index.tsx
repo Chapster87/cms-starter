@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import Button from "@/components/button"
 import Modal from "@/components/modal"
 import { useModels } from "@/hooks/use-models"
+import { useSiteSettings } from "@/hooks/use-site-settings"
 import { CMSField, CMSFieldset, CMSBlock, CMSFieldOption } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 import FieldConfiguration from "./_components/field-configuration"
@@ -77,6 +78,7 @@ export default function FieldModal({
   const [availableBlocks, setAvailableBlocks] = useState<CMSBlock[]>([])
 
   const { models: registeredModels } = useModels()
+  const { settings: siteSettings } = useSiteSettings()
   const models = [
     ...registeredModels,
     {
@@ -207,7 +209,7 @@ export default function FieldModal({
           setChoices([])
           setIncludeTime(true)
           setEnabledTools(RICH_TEXT_TOOLS.map((t) => t.id))
-          setUrlPrefix("")
+          setUrlPrefix(`${siteSettings?.siteUrl}/` || "")
         }
         setError(null)
       }, 0)

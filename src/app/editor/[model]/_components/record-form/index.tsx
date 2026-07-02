@@ -522,6 +522,7 @@ export default function RecordForm<T extends CMSModelName>({
           value={(value as string) || ""}
           sourceValue={sourceValue}
           onChange={(val) => handleChange(field.slug, val)}
+          urlPrefix={field.settings?.url_prefix}
         />
       )
     }

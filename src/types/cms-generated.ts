@@ -163,6 +163,7 @@ export interface SocialLinks {
   status: CMSStatus;
   _draft?: unknown;
   link_tree?: NavigationData;
+  slug: string;
 }
 
 export interface Pages {
@@ -171,21 +172,21 @@ export interface Pages {
   updated_at: string;
   status: CMSStatus;
   _draft?: unknown;
+  page_link?: Pages;
   seo?: SeoMetadata;
+  tag_list?: string[];
   navigation?: NavigationData;
   color?: string;
-  page_link?: Pages;
-  tag_list?: string[];
   title: string;
   structured_text?: string;
-  standings_table?: StandingsData;
-  author?: Authors;
-  slug: string;
   long_text?: string;
+  content_dynamic?: ModularContentData;
+  standings_table?: StandingsData;
+  slug: string;
   rich_text?: string;
   media?: MediaAsset;
+  author?: Authors;
   modular_blocks?: ModularContentData;
-  content_dynamic?: ModularContentData;
 }
 
 export interface Authors {
@@ -200,6 +201,7 @@ export interface Authors {
   created_by?: string;
   updated_by?: string;
   user_id?: unknown;
+  slug: string;
 }
 
 export interface SiteNavigation {
@@ -241,6 +243,7 @@ export interface Standings {
   season: Seasons;
   division: Divisions;
   league_standings: StandingsData;
+  slug?: string;
 }
 
 export interface CMSModelMap {
@@ -277,9 +280,9 @@ export interface Test2 {
   id: string;
   created_at: string;
   updated_at: string;
-  division: unknown;
-  season: unknown;
-  league: unknown;
+  division: Divisions;
+  season: Seasons;
+  league: Leagues;
 }
 
 export interface CMSBlockMap {
