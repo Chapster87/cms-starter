@@ -1,40 +1,16 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { RefreshCw, ChevronDown } from "lucide-react"
 import * as Accordion from "@radix-ui/react-accordion"
-import {
-  TextField,
-  NumberField,
-  MarkdownField,
-  RichTextField,
-  SelectField,
-  CheckboxField,
-  JsonField,
-  TagField,
-  ColorField,
-  MediaField,
-  SlugField,
-  SeoField,
-  DateField,
-  ReferenceField,
-  NavigationField,
-  StandingsField,
-  ModularContentField,
-  StructuredTextField,
-} from "@/components/fields"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import { useUsers } from "@/hooks/use-users"
 import { createClient } from "@/utils/supabase"
 import { CMSField, CMSFieldset } from "@/types/fields"
 import { toast } from "@/client/toast-store"
-import {
-  MediaAsset,
-  NavigationData,
-  CMSModelMap,
-  CMSModelName,
-} from "@/types/cms-generated"
+import { CMSModelMap, CMSModelName } from "@/types/cms-generated"
+import { FieldRegistry } from "./field-registry"
 import s from "./style.module.css"
 
 interface FieldSchema {
@@ -81,25 +57,34 @@ export default function RecordForm<T extends CMSModelName>({
   /**
    * Internal helper for accessing form data dynamically.
    */
-  function getFieldValue(key: string): unknown {
-    return formData[key]
-  }
+  const getFieldValue = useCallback(
+    (key: string): unknown => {
+      return formData[key]
+    },
+    [formData]
+  )
 
   /**
    * Validates a single field and updates the error state.
    */
-  function validateField(name: string, value: unknown, isRequired?: boolean) {
-    if (isRequired && (value === undefined || value === null || value === "")) {
-      setErrors((prev) => ({ ...prev, [name]: "This field is required" }))
-      return false
-    }
-    setErrors((prev) => {
-      const next = { ...prev }
-      delete next[name]
-      return next
-    })
-    return true
-  }
+  const validateField = useCallback(
+    (name: string, value: unknown, isRequired?: boolean) => {
+      if (
+        isRequired &&
+        (value === undefined || value === null || value === "")
+      ) {
+        setErrors((prev) => ({ ...prev, [name]: "This field is required" }))
+        return false
+      }
+      setErrors((prev) => {
+        const next = { ...prev }
+        delete next[name]
+        return next
+      })
+      return true
+    },
+    []
+  )
 
   // Sync internal form data with initialData ONLY on initial load or if the record ID changes.
   // We avoid syncing on every initialData change to prevent "flashing" or reloads during auto-save.
@@ -233,137 +218,152 @@ export default function RecordForm<T extends CMSModelName>({
     }
   }, [model, accessToken])
 
-  function handleChange(columnName: string, value: unknown) {
-    const nextData = {
-      ...formData,
-      [columnName]: value,
-    }
-
-    const field = schema.find((f) => f.slug === columnName)
-    validateField(columnName, value, field?.is_required)
-
-    // Auto-sync from user if linking for the first time
-    if ((model as string) === "authors" && columnName === "user_id" && value) {
-      const userId = Array.isArray(value) ? value[0] : value
-      const linkedUser = users.find((u) => u.id === userId)
-
-      if (linkedUser) {
-        const updates: Record<string, unknown> = {}
-        // Auto populate if the fields are currently empty
-        if (linkedUser.display_name && !nextData["name"]) {
-          updates["name"] = linkedUser.display_name
-        }
-        if (linkedUser.avatar_url && !nextData["avatar_url"]) {
-          updates["avatar_url"] = linkedUser.avatar_url
+  const handleChange = useCallback(
+    (columnName: string, value: unknown) => {
+      setFormData((prev) => {
+        const nextData = {
+          ...prev,
+          [columnName]: value,
         }
 
-        if (Object.keys(updates).length > 0) {
-          Object.assign(nextData, updates)
-          toast.info(`Auto-populated from ${linkedUser.display_name || "user"}`)
+        const field = schema.find((f) => f.slug === columnName)
+        validateField(columnName, value, field?.is_required)
+
+        // Auto-sync from user if linking for the first time
+        if (
+          (model as string) === "authors" &&
+          columnName === "user_id" &&
+          value
+        ) {
+          const userId = Array.isArray(value) ? value[0] : value
+          const linkedUser = users.find((u) => u.id === userId)
+
+          if (linkedUser) {
+            const updates: Record<string, unknown> = {}
+            // Auto populate if the fields are currently empty
+            if (linkedUser.display_name && !nextData["name"]) {
+              updates["name"] = linkedUser.display_name
+            }
+            if (linkedUser.avatar_url && !nextData["avatar_url"]) {
+              updates["avatar_url"] = linkedUser.avatar_url
+            }
+
+            if (Object.keys(updates).length > 0) {
+              Object.assign(nextData, updates)
+              toast.info(
+                `Auto-populated from ${linkedUser.display_name || "user"}`
+              )
+            }
+          }
         }
-      }
-    }
 
-    setFormData(nextData)
-    if (onAutoSave) {
-      onAutoSave(nextData as Partial<CMSModelMap[T]>)
-    }
-  }
+        if (onAutoSave) {
+          onAutoSave(nextData as Partial<CMSModelMap[T]>)
+        }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+        return nextData
+      })
+    },
+    [model, onAutoSave, schema, users, validateField]
+  )
 
-    // Perform full validation
-    const nextErrors: Record<string, string> = {}
-    let hasErrors = false
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault()
 
-    schema.forEach((field) => {
-      const val = formData[field.slug]
-      if (
-        field.is_required &&
-        (val === undefined || val === null || val === "")
-      ) {
-        nextErrors[field.slug] = "This field is required"
-        hasErrors = true
-      }
-    })
+      // Perform full validation
+      const nextErrors: Record<string, string> = {}
+      let hasErrors = false
 
-    if (hasErrors) {
-      setErrors(nextErrors)
-      toast.error(
-        "Validation Error",
-        "Please fix the errors in the form before submitting."
-      )
-      return
-    }
+      schema.forEach((field) => {
+        const val = formData[field.slug]
+        if (
+          field.is_required &&
+          (val === undefined || val === null || val === "")
+        ) {
+          nextErrors[field.slug] = "This field is required"
+          hasErrors = true
+        }
+      })
 
-    // Clean data before submission
-    const cleanData = { ...formData }
-
-    // Strip virtual fields added by the reference resolver
-    delete cleanData._resolved
-
-    schema.forEach((field) => {
-      // Remove computed fields from payload
-      if (field.is_computed) {
-        delete cleanData[field.slug]
+      if (hasErrors) {
+        setErrors(nextErrors)
+        toast.error(
+          "Validation Error",
+          "Please fix the errors in the form before submitting."
+        )
         return
       }
 
-      const val = cleanData[field.slug]
+      // Clean data before submission
+      const cleanData = { ...formData }
 
-      // Force relationship fields on 'teams' model to stay as arrays for jsonb compatibility
-      if (
-        (model as string) === "teams" &&
-        (field.slug === "league" || field.slug === "division")
-      ) {
-        if (val && !Array.isArray(val)) {
-          cleanData[field.slug] = [val]
+      // Strip virtual fields added by the reference resolver
+      delete cleanData._resolved
+
+      schema.forEach((field) => {
+        // Remove computed fields from payload
+        if (field.is_computed) {
+          delete cleanData[field.slug]
+          return
         }
-      }
 
-      // 1. Unwrap stringified complex fields (media, json, modular_content, structured_text)
-      if (
-        (field.field_type === "media" ||
-          field.field_type === "json" ||
-          field.field_type === "modular_content" ||
-          field.field_type === "structured_text") &&
-        typeof val === "string" &&
-        (val.startsWith("{") || val.startsWith("["))
-      ) {
-        try {
-          cleanData[field.slug] = JSON.parse(val)
-        } catch (_e) {
-          // Not valid JSON, leave as is
-        }
-      }
+        const val = cleanData[field.slug]
 
-      // 2. Unwrap single-reference fields (Postgres expects UUID, not UUID[])
-      // EXCEPT for teams model where league/division must remain arrays
-      if (field.field_type === "reference") {
-        const settings = (field.settings || {}) as Record<string, unknown>
-        const isMultiple =
-          settings.multiple === true || settings.allow_multiple === true
-
-        const isTeamsSpecialField =
+        // Force relationship fields on 'teams' model to stay as arrays for jsonb compatibility
+        if (
           (model as string) === "teams" &&
           (field.slug === "league" || field.slug === "division")
-
-        if (
-          !isMultiple &&
-          !isTeamsSpecialField &&
-          Array.isArray(val) &&
-          val.length > 0
         ) {
-          cleanData[field.slug] = val[0]
+          if (val && !Array.isArray(val)) {
+            cleanData[field.slug] = [val]
+          }
         }
-      }
-    })
 
-    onSubmit(cleanData as Partial<CMSModelMap[T]>)
-  }
+        // 1. Unwrap stringified complex fields (media, json, modular_content, structured_text)
+        if (
+          (field.field_type === "media" ||
+            field.field_type === "json" ||
+            field.field_type === "modular_content" ||
+            field.field_type === "structured_text") &&
+          typeof val === "string" &&
+          (val.startsWith("{") || val.startsWith("["))
+        ) {
+          try {
+            cleanData[field.slug] = JSON.parse(val)
+          } catch (_e) {
+            // Not valid JSON, leave as is
+          }
+        }
 
-  function handleSyncFromUser() {
+        // 2. Unwrap single-reference fields (Postgres expects UUID, not UUID[])
+        // EXCEPT for teams model where league/division must remain arrays
+        if (field.field_type === "reference") {
+          const settings = (field.settings || {}) as Record<string, unknown>
+          const isMultiple =
+            settings.multiple === true || settings.allow_multiple === true
+
+          const isTeamsSpecialField =
+            (model as string) === "teams" &&
+            (field.slug === "league" || field.slug === "division")
+
+          if (
+            !isMultiple &&
+            !isTeamsSpecialField &&
+            Array.isArray(val) &&
+            val.length > 0
+          ) {
+            cleanData[field.slug] = val[0]
+          }
+        }
+      })
+
+      onSubmit(cleanData as Partial<CMSModelMap[T]>)
+    },
+    [formData, model, onSubmit, schema]
+  )
+
+  const handleSyncFromUser = useCallback(() => {
     const userId = formData["user_id"]
     if (!userId) {
       toast.error("No user selected to sync from")
@@ -412,287 +412,28 @@ export default function RecordForm<T extends CMSModelName>({
         "Author details match the linked user profile."
       )
     }
-  }
+  }, [formData, onAutoSave, users])
 
-  const renderField = (field: CMSField) => {
-    const isComputed = !!field.is_computed
-    const commonProps = {
-      label: field.field_label as string,
-      description: field.field_description as string | undefined,
-      fieldNote: (field.field_note as string) || undefined,
-      required: field.is_required,
-      disabled: isLoading || isComputed,
-      name: field.slug,
-      error: errors[field.slug],
-    }
-
-    const value = getFieldValue(field.slug)
-
-    if (field.field_type === "boolean") {
+  /**
+   * Delegates rendering to specialized sub-components via the registry.
+   */
+  const renderField = useCallback(
+    (field: CMSField) => {
       return (
-        <CheckboxField
-          key={field.slug}
-          {...commonProps}
-          checked={!!value}
-          onChange={(checked) => handleChange(field.slug, checked)}
-        />
-      )
-    }
-
-    if (field.field_type === "number") {
-      return (
-        <NumberField
-          key={field.slug}
-          {...commonProps}
-          value={(value as number) ?? ""}
-          onChange={(val) => handleChange(field.slug, val)}
-          min={field.settings?.min}
-          max={field.settings?.max}
-          step={field.settings?.step}
-          placeholder={field.settings?.placeholder}
-        />
-      )
-    }
-
-    if (field.field_type === "text_multi") {
-      return (
-        <MarkdownField
-          key={field.slug}
-          {...commonProps}
-          value={(value as string) || ""}
-          onChange={(val) => handleChange(field.slug, val)}
-          rows={6}
-          placeholder={field.settings?.placeholder}
-        />
-      )
-    }
-
-    if (field.field_type === "rich_text") {
-      return (
-        <RichTextField
-          key={field.slug}
-          {...commonProps}
-          value={(value as string) || ""}
-          onChange={(val) => handleChange(field.slug, val)}
-          enabledTools={field.settings?.enabled_tools}
-          placeholder={field.settings?.placeholder}
-        />
-      )
-    }
-
-    if (field.field_type === "select") {
-      return (
-        <SelectField
+        <FieldRegistry
           key={field.slug}
           field={field}
-          value={(value as string) || ""}
-          onChange={(val) => handleChange(field.slug, val)}
-        />
-      )
-    }
-
-    if (field.field_type === "color") {
-      return (
-        <ColorField
-          key={field.slug}
-          {...commonProps}
-          value={(value as string) || ""}
-          onChange={(val) => handleChange(field.slug, val)}
-        />
-      )
-    }
-
-    if (field.field_type === "seo_slug" || field.slug === "slug") {
-      // Attempt to find a "source" field for the slug (like 'title' or 'name')
-      const sourceField = schema.find(
-        (f) =>
-          f.slug === "title" ||
-          f.slug === "name" ||
-          f.field_label.toLowerCase() === "title" ||
-          f.field_label.toLowerCase() === "name"
-      )
-      const sourceValue = sourceField
-        ? (getFieldValue(sourceField.slug) as string)
-        : ""
-
-      return (
-        <SlugField
-          key={field.slug}
-          {...commonProps}
-          value={(value as string) || ""}
-          sourceValue={sourceValue}
-          onChange={(val) => handleChange(field.slug, val)}
-          urlPrefix={field.settings?.url_prefix}
-        />
-      )
-    }
-
-    if (field.field_type === "media") {
-      const settings = (field.settings || {}) as Record<string, unknown>
-      const isMultiple =
-        settings.multiple === true || settings.allow_multiple === true
-
-      return (
-        <MediaField
-          key={field.slug}
-          {...commonProps}
-          value={value as string | MediaAsset | MediaAsset[]}
-          onChange={(val) => handleChange(field.slug, val)}
-          multiple={isMultiple}
-        />
-      )
-    }
-
-    if (field.field_type === "seo_metadata") {
-      return (
-        <SeoField
-          key={field.slug}
-          {...commonProps}
-          value={(value as string) || ""}
-          onChange={(val) => handleChange(field.slug, val)}
-        />
-      )
-    }
-
-    if (field.field_type === "tags") {
-      return (
-        <TagField
-          key={field.slug}
-          {...commonProps}
-          value={(value as string) || []}
-          onChange={(val) => handleChange(field.slug, val)}
-          placeholder={field.settings?.placeholder}
-        />
-      )
-    }
-
-    if (field.field_type === "json") {
-      const jsonValue =
-        typeof value === "object"
-          ? JSON.stringify(value, null, 2)
-          : (value as string) || ""
-
-      return (
-        <JsonField
-          key={field.slug}
-          {...commonProps}
-          value={jsonValue}
-          onChange={(val) => handleChange(field.slug, val)}
-        />
-      )
-    }
-
-    if (field.field_type === "modular_content") {
-      return (
-        <ModularContentField
-          key={field.slug}
-          {...commonProps}
-          value={value as never}
-          onChange={(val) => handleChange(field.slug, val)}
-          allowedBlocks={field.settings?.allowed_blocks}
-        />
-      )
-    }
-
-    if (field.field_type === "structured_text") {
-      return (
-        <StructuredTextField
-          key={field.slug}
-          {...commonProps}
-          value={value as Record<string, unknown>}
-          onChange={(val) => handleChange(field.slug, val)}
-          enabledTools={field.settings?.enabled_tools}
-          placeholder={field.settings?.placeholder}
-          allowedBlocks={field.settings?.allowed_blocks}
-        />
-      )
-    }
-
-    if (field.field_type === "date_time") {
-      const settings = (field.settings || {}) as Record<string, unknown>
-      const showTime = settings.include_time !== false
-
-      return (
-        <DateField
-          key={field.slug}
-          {...commonProps}
-          showTime={showTime}
-          value={(value as string) || ""}
-          onChange={(val) => handleChange(field.slug, val)}
-        />
-      )
-    }
-
-    if (field.field_type === "reference") {
-      const settings = (field.settings || {}) as Record<string, unknown>
-      return (
-        <ReferenceField
-          key={field.slug}
-          {...commonProps}
-          allowedModels={(settings.allowed_models as string[]) || []}
-          allowMultiple={!!settings.allow_multiple}
-          value={(value as string | string[]) || null}
-          onChange={(val) => handleChange(field.slug, val)}
-        />
-      )
-    }
-
-    if (field.field_type === "navigation") {
-      const settings = (field.settings || {}) as Record<string, unknown>
-      return (
-        <NavigationField
-          key={field.slug}
-          {...commonProps}
-          value={(value as NavigationData) || null}
-          onChange={(val) => handleChange(field.slug, val)}
-          settings={settings}
-        />
-      )
-    }
-
-    if (field.field_type === "standings_table") {
-      // Resolve dependency values. We look for 'league', 'division' and 'season' columns.
-      // In ReferenceField, the value is often an array (e.g., [uuid]).
-      // We prioritize the raw UUIDs but handle the new _resolved objects if they appear.
-      const extractId = (val: unknown) => {
-        if (Array.isArray(val)) return val[0]
-        if (typeof val === "object" && val !== null) {
-          const obj = val as Record<string, unknown>
-          return obj.id as string | undefined
-        }
-        return val as string | undefined
-      }
-
-      const leagueId = extractId(getFieldValue("league"))
-      const divisionId = extractId(getFieldValue("division"))
-      const seasonId = extractId(getFieldValue("season"))
-
-      return (
-        <StandingsField
-          key={field.slug}
-          {...commonProps}
-          value={(value as string) || []}
+          value={getFieldValue(field.slug)}
+          error={errors[field.slug]}
+          disabled={isLoading || !!field.is_computed}
           onChange={(val: unknown) => handleChange(field.slug, val)}
-          leagueId={leagueId}
-          divisionId={divisionId}
-          seasonId={seasonId}
+          getFieldValue={getFieldValue}
+          schema={schema}
         />
       )
-    }
-
-    return (
-      <TextField
-        key={field.slug}
-        {...commonProps}
-        value={(value as string) || ""}
-        onChange={(e) => handleChange(field.slug, e.target.value)}
-        placeholder={field.settings?.placeholder}
-        minLength={field.settings?.min_length}
-        maxLength={field.settings?.max_length}
-        pattern={field.settings?.regex_pattern}
-      />
-    )
-  }
+    },
+    [errors, handleChange, getFieldValue, isLoading, schema]
+  )
 
   // Determine open fieldsets
   const defaultOpenValues = useMemo(

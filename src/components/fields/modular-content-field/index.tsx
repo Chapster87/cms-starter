@@ -27,7 +27,7 @@ import { CMSBlock } from "@/types/fields"
 
 import s from "./style.module.css"
 
-interface BlockInstance {
+export interface BlockInstance {
   _id: string // Local unique ID for DND
   _type: string // Block API ID
   [key: string]: unknown

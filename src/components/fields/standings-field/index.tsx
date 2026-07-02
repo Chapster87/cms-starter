@@ -15,7 +15,7 @@ import ReferenceField from "../reference-field"
 
 import s from "./style.module.css"
 
-interface StandingRow {
+export interface StandingRow {
   team_id: string
   team_name: string
   team_logo?: unknown
