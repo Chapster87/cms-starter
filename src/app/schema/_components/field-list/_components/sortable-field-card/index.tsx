@@ -8,7 +8,7 @@ import { Copy, Trash2 } from "lucide-react"
 import { CMSField } from "@/types/fields"
 import { FIELD_DEFINITIONS } from "@/utils/field-types"
 
-import s from "./style.module.css"
+import s from "../../style.module.css"
 
 interface SortableFieldCardProps {
   field: CMSField

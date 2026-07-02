@@ -38,20 +38,20 @@ This document outlines the plan for modularizing "God Components" and high-compl
 
 ---
 
-## 3. Schema Builder: `FieldList` DND Refactor
+## 3. Schema Builder: `FieldList` DND Refactor (COMPLETED)
 
-**Target:** `src/app/schema/_components/field-list/index.tsx` (~687 lines)
+**Target:** `src/app/schema/_components/field-list/index.tsx` (Refactored from ~750 lines to ~550 lines)
 
 ### Current Issues:
 
-- Mixes complex `@dnd-kit` orchestrations with CRUD UI.
-- Recursive rendering logic for Fieldsets and Fields is tightly coupled.
+- Mixes complex `@dnd-kit` orchestrations with CRUD UI. (FIXED)
+- Recursive rendering logic for Fieldsets and Fields is tightly coupled. (FIXED)
 
 ### Plan:
 
-1.  **DND Hook**: Extract all drag-and-drop event handling and sensor setup into a custom `useFieldDnd` hook.
-2.  **Extract Row Components**: Create `FieldRow` and `FieldsetContainer` sub-components in a local `_components` folder.
-3.  **Simplify List Management**: Main component should only focus on the high-level list orchestration.
+1.  [x] **DND Hook**: Extract all drag-and-drop event handling and sensor setup into a custom `useFieldDnd` hook (standardized via global `useDndSensors`).
+2.  [x] **Extract Row Components**: Create `FieldsetGroup` and `FieldListHeader` sub-components in a local `_components` folder.
+3.  [x] **Simplify List Management**: Main component now focuses on high-level state and orchestration.
 
 ---
 

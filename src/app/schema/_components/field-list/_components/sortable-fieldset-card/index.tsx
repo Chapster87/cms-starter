@@ -7,7 +7,7 @@ import clsx from "clsx"
 import Button from "@/components/button"
 import { CMSFieldset } from "@/types/fields"
 
-import s from "./style.module.css"
+import s from "../../style.module.css"
 
 interface SortableFieldsetCardProps {
   fieldset: CMSFieldset

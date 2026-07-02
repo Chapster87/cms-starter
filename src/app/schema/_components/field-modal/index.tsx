@@ -215,7 +215,7 @@ export default function FieldModal({
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [isOpen, field, mode])
+  }, [isOpen, field, mode, siteSettings?.siteUrl])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

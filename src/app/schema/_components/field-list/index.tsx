@@ -1,89 +1,21 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react"
-import {
-  DndContext,
-  closestCorners,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-  DragStartEvent,
-  DragOverlay,
-  DragOverEvent,
-} from "@dnd-kit/core"
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable"
-import clsx from "clsx"
-import Button from "@/components/button"
+import { useState, useEffect, useCallback, useMemo } from "react"
+import { DndContext, closestCorners, DragOverlay } from "@dnd-kit/core"
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useAuth } from "@/hooks/use-auth"
 import { createClient } from "@/utils/supabase"
 import { CMSField, CMSFieldset } from "@/types/fields"
-import { SortableFieldCard } from "./sortable-field-card"
-import { SortableFieldsetCard } from "./sortable-fieldset-card"
+import { useDndSensors } from "@/hooks/use-dnd-sensors"
+import { SortableFieldCard } from "./_components/sortable-field-card"
+import { SortableFieldsetCard } from "./_components/sortable-fieldset-card"
 import FieldModal from "../field-modal"
 import FieldsetModal from "../fieldset-modal"
 import AlertDialog from "@/components/alert-dialog"
-import { useSortable } from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
+import { useFieldDnd } from "./_hooks/use-field-dnd"
+import { FieldListHeader } from "./_components/field-list-header"
+import { FieldsetGroup } from "./_components/fieldset-group"
 import s from "./style.module.css"
-
-interface SortableFieldsetGroupProps {
-  fieldset: CMSFieldset
-  isOver: boolean
-  onEdit: (fs: CMSFieldset) => void
-  onDelete: (fs: CMSFieldset) => void
-  children: React.ReactNode
-}
-
-function SortableFieldsetGroup({
-  fieldset,
-  isOver,
-  onEdit,
-  onDelete,
-  children,
-}: SortableFieldsetGroupProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: fieldset.id })
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    zIndex: isDragging ? 1 : 0,
-  }
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={clsx(
-        s.fieldsetGroup,
-        isOver && s.isOver,
-        isDragging && s.dragging
-      )}
-    >
-      <SortableFieldsetCard
-        fieldset={fieldset}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        dragHandleProps={{ ...attributes, ...listeners }}
-        isDragging={isDragging}
-      />
-      <div className={s.groupNestedFields}>{children}</div>
-    </div>
-  )
-}
 
 interface FieldListProps {
   modelId?: string
@@ -92,6 +24,7 @@ interface FieldListProps {
 
 /**
  * Manages the listing and creation of fields for a model or block.
+ * Orchestrates data fetching, drag-and-drop, and field management modals.
  */
 export default function FieldList({ modelId, blockId }: FieldListProps) {
   const { accessToken } = useAuth()
@@ -107,10 +40,6 @@ export default function FieldList({ modelId, blockId }: FieldListProps) {
   const [isFieldsetModalOpen, setIsFieldsetModalOpen] = useState(false)
   const [activeField, setActiveField] = useState<CMSField | null>(null)
   const [activeFieldset, setActiveFieldset] = useState<CMSFieldset | null>(null)
-  const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [overId, setOverId] = useState<string | null>(null)
-  const lastOverId = useRef<string | null>(null)
-  const dragOverThrottleRef = useRef<number | null>(null)
   const [fieldModalMode, setFieldModalMode] = useState<
     "create" | "edit" | "duplicate"
   >("create")
@@ -191,16 +120,7 @@ export default function FieldList({ modelId, blockId }: FieldListProps) {
     })
   }, [fields, fieldsets])
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
+  const sensors = useDndSensors()
 
   const fetchFields = useCallback(async () => {
     if (!modelId && !blockId) return
@@ -301,6 +221,17 @@ export default function FieldList({ modelId, blockId }: FieldListProps) {
     }
   }, [fetchFields, accessToken])
 
+  const { draggingId, overId, handleDragStart, handleDragOver, handleDragEnd } =
+    useFieldDnd({
+      fields,
+      fieldsets,
+      flattenedItems,
+      accessToken,
+      onFieldsChange: setFields,
+      onFieldsetsChange: setFieldsets,
+      onRefresh: fetchFields,
+    })
+
   const handleSync = async () => {
     if (!accessToken || !modelId) return
     setIsSyncing(true)
@@ -332,145 +263,6 @@ export default function FieldList({ modelId, blockId }: FieldListProps) {
       setError(err instanceof Error ? err.message : "Failed to sync fields")
     } finally {
       setIsSyncing(false)
-    }
-  }
-
-  const handleDragStart = (event: DragStartEvent) => {
-    setDraggingId(event.active.id as string)
-  }
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event
-    const activeId = active.id as string
-    const overId = over?.id as string
-
-    if (!overId || activeId === overId) {
-      setOverId(null)
-      return
-    }
-
-    if (overId !== lastOverId.current) {
-      setOverId(overId)
-      lastOverId.current = overId
-    }
-
-    // Throttled container switching to prevent update loops
-    if (dragOverThrottleRef.current) return
-
-    // Find the containers
-    const activeField = fields.find((f) => f.id === activeId)
-    if (!activeField) return
-
-    // Determine target container
-    const overField = fields.find((f) => f.id === overId)
-    const overFieldset = fieldsets.find((fs) => fs.id === overId)
-
-    const targetFieldsetId: string | null = overFieldset
-      ? overFieldset.id
-      : overField
-        ? (overField.fieldset_id ?? null)
-        : null
-
-    // If container changed, update fields state
-    if (activeField.fieldset_id !== targetFieldsetId) {
-      // Immediate update for container changes to ensure persistence logic in DragEnd sees the right state
-      setFields((prev) => {
-        const currentActive = prev.find((f) => f.id === activeId)
-        if (currentActive?.fieldset_id === targetFieldsetId) return prev
-
-        const next = [...prev]
-        const idx = next.findIndex((f) => f.id === activeId)
-        if (idx !== -1) {
-          next[idx] = { ...next[idx], fieldset_id: targetFieldsetId }
-        }
-        return next
-      })
-
-      // Still throttle subsequent updates within this container to prevent layout thrashing
-      dragOverThrottleRef.current = window.setTimeout(() => {
-        dragOverThrottleRef.current = null
-      }, 50)
-    }
-  }
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    setDraggingId(null)
-    setOverId(null)
-    if (dragOverThrottleRef.current) {
-      window.clearTimeout(dragOverThrottleRef.current)
-      dragOverThrottleRef.current = null
-    }
-
-    if (!over) return
-
-    const activeId = active.id as string
-    const overId = over.id as string
-
-    if (activeId === overId) return
-
-    // Use the latest fields state which already has the updated fieldset_id from handleDragOver
-    const nextFields = [...fields]
-    const nextFieldsets = [...fieldsets]
-
-    // Unified reorder calculation using flattened list
-    const oldIdx = flattenedItems.findIndex((i) =>
-      i.type === "field" ? i.data.id === activeId : i.data.id === activeId
-    )
-    const newIdx = flattenedItems.findIndex((i) =>
-      i.type === "field" ? i.data.id === overId : i.data.id === overId
-    )
-
-    if (oldIdx !== -1 && newIdx !== -1) {
-      const newFlattened = arrayMove(flattenedItems, oldIdx, newIdx)
-      newFlattened.forEach((item, index) => {
-        if (item.type === "field") {
-          const idx = nextFields.findIndex((f) => f.id === item.data.id)
-          if (idx !== -1) nextFields[idx].ui_order = index
-        } else {
-          const idx = nextFieldsets.findIndex((fs) => fs.id === item.data.id)
-          if (idx !== -1) nextFieldsets[idx].ui_order = index
-        }
-      })
-    }
-
-    setFields(nextFields)
-    setFieldsets(nextFieldsets)
-
-    if (!accessToken) return
-
-    try {
-      const fieldOrders = nextFields.map((f) => ({
-        id: f.id,
-        ui_order: f.ui_order,
-        fieldset_id: f.fieldset_id ?? null,
-      }))
-      const fieldsetOrders = nextFieldsets.map((fs) => ({
-        id: fs.id,
-        ui_order: fs.ui_order,
-      }))
-
-      await Promise.all([
-        fetch("/api/models/schema/fields/reorder", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ orders: fieldOrders }),
-        }),
-        fetch("/api/models/schema/fieldsets/reorder", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ orders: fieldsetOrders }),
-        }),
-      ])
-    } catch (err) {
-      console.error("Failed to persist order:", err)
-      fetchFields()
     }
   }
 
@@ -546,52 +338,21 @@ export default function FieldList({ modelId, blockId }: FieldListProps) {
 
   return (
     <div className={s.fieldListContainer}>
-      <div className={s.header}>
-        <div className={s.headerTitleGroup}>
-          <h2>Fields</h2>
-          {unregisteredCount > 0 && (
-            <span className={s.syncHint}>
-              {unregisteredCount} existing columns detected.
-              <Button
-                variant="secondary"
-                size="small"
-                onClick={handleSync}
-                isLoading={isSyncing}
-                disabled={isSyncing}
-                className={s.syncButton}
-              >
-                Import them
-              </Button>
-            </span>
-          )}
-        </div>
-        <div
-          className={s.headerActions}
-          style={{ display: "flex", gap: "8px" }}
-        >
-          <Button
-            variant="secondary"
-            beforeText={<span>+</span>}
-            onClick={() => {
-              setFieldsetModalMode("create")
-              setActiveFieldset(null)
-              setIsFieldsetModalOpen(true)
-            }}
-          >
-            Add fieldset
-          </Button>
-          <Button
-            beforeText={<span>+</span>}
-            onClick={() => {
-              setFieldModalMode("create")
-              setActiveField(null)
-              setIsFieldModalOpen(true)
-            }}
-          >
-            Add new field
-          </Button>
-        </div>
-      </div>
+      <FieldListHeader
+        unregisteredCount={unregisteredCount}
+        isSyncing={isSyncing}
+        onSync={handleSync}
+        onAddFieldset={() => {
+          setFieldsetModalMode("create")
+          setActiveFieldset(null)
+          setIsFieldsetModalOpen(true)
+        }}
+        onAddNewField={() => {
+          setFieldModalMode("create")
+          setActiveField(null)
+          setIsFieldModalOpen(true)
+        }}
+      />
 
       {error && <p className={s.errorText}>{error}</p>}
 
@@ -618,45 +379,31 @@ export default function FieldList({ modelId, blockId }: FieldListProps) {
               {interleavedItems.map((item) => {
                 if (item.type === "fieldset") {
                   const fieldset = item.data
-                  const fieldsInGroup = fields.filter(
-                    (f) => f.fieldset_id === fieldset.id
-                  )
                   return (
-                    <SortableFieldsetGroup
+                    <FieldsetGroup
                       key={fieldset.id}
                       fieldset={fieldset}
+                      fields={fields}
                       isOver={overId === fieldset.id}
-                      onEdit={(fs) => {
+                      onEditFieldset={(fs) => {
                         setActiveFieldset(fs)
                         setFieldsetModalMode("edit")
                         setIsFieldsetModalOpen(true)
                       }}
-                      onDelete={handleDeleteFieldset}
-                    >
-                      <SortableContext
-                        items={fieldsInGroup.map((f) => f.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {fieldsInGroup.map((field) => (
-                          <SortableFieldCard
-                            key={field.id}
-                            field={field}
-                            getIconCategory={getIconCategory}
-                            onEdit={(field) => {
-                              setActiveField(field)
-                              setFieldModalMode("edit")
-                              setIsFieldModalOpen(true)
-                            }}
-                            onDuplicate={(field) => {
-                              setActiveField(field)
-                              setFieldModalMode("duplicate")
-                              setIsFieldModalOpen(true)
-                            }}
-                            onDelete={handleDelete}
-                          />
-                        ))}
-                      </SortableContext>
-                    </SortableFieldsetGroup>
+                      onDeleteFieldset={handleDeleteFieldset}
+                      onEditField={(field) => {
+                        setActiveField(field)
+                        setFieldModalMode("edit")
+                        setIsFieldModalOpen(true)
+                      }}
+                      onDuplicateField={(field) => {
+                        setActiveField(field)
+                        setFieldModalMode("duplicate")
+                        setIsFieldModalOpen(true)
+                      }}
+                      onDeleteField={handleDelete}
+                      getIconCategory={getIconCategory}
+                    />
                   )
                 } else {
                   const field = item.data
