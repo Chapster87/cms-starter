@@ -13,6 +13,7 @@ import { activeRecordAtom, editorVersionAtom } from "@/client/editor-store"
 import { dataService, RecordBase } from "@/client/data-service"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
+import { CMSModelName } from "@/types/cms-generated"
 import ModalRecord from "./[model]/_components/modal-record"
 import { RecordStatus } from "./[model]/_components/status-badge"
 import ModelSidebar from "./_components/model-sidebar"
@@ -104,7 +105,7 @@ function EditorLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
 
-  const modelSlug = params?.model as string | undefined
+  const modelSlug = params?.model as CMSModelName | undefined
   const modelData = models.find((m) => m.slug === modelSlug)
   const isNewRecordModalOpen = searchParams.get("action") === "new-record"
 

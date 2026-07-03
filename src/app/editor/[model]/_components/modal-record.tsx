@@ -6,10 +6,11 @@ import { toast } from "@/client/toast-store"
 import { dataService } from "@/client/data-service"
 import { useModels } from "@/hooks/use-models"
 import Modal from "@/components/modal"
+import { CMSModelName } from "@/types/cms-generated"
 import RecordForm from "./record-form"
 
 interface ModalRecordProps {
-  model: string
+  model: CMSModelName
   isSingleton?: boolean
   isOpen: boolean
   onOpenChange: (open: boolean) => void

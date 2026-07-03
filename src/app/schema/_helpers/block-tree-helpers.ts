@@ -12,6 +12,7 @@ export interface FlattenedTreeItem {
   type: "block" | "group"
   depth: number
   parentId: string | null
+  index: number
   emoji?: string | null
 }
 

@@ -55,20 +55,20 @@ This document outlines the plan for modularizing "God Components" and high-compl
 
 ---
 
-## 4. Field Suite: `StructuredTextField` Refactor
+## 4. Field Suite: `StructuredTextField` Refactor (COMPLETED)
 
-**Target:** `src/components/fields/structured-text-field/index.tsx` (~622 lines)
+**Target:** `src/components/fields/structured-text-field/index.tsx` (Refactored from ~660 lines to ~125 lines)
 
 ### Current Issues:
 
-- Manages TipTap initialization, custom extensions, toolbar UI, and block selection in one file.
-- Very high cognitive load for maintaining the editor interface.
+- Manages TipTap initialization, custom extensions, toolbar UI, and block selection in one file. (FIXED)
+- Very high cognitive load for maintaining the editor interface. (FIXED)
 
 ### Plan:
 
-1.  **TipTap Setup Utility**: Move extension configurations and editor setup to a dedicated helper.
-2.  **Toolbar Sub-component**: Extract the rich text toolbar and its interaction logic.
-3.  **Block Management**: Move the "Insert Block" modal and logic to a specialized sub-component.
+1.  [x] **TipTap Setup Utility**: Move extension configurations and editor setup to a dedicated helper (`_helpers/setup.ts`).
+2.  [x] **Toolbar Sub-component**: Extract the rich text toolbar and its interaction logic into a local component (`_components/menu-bar`).
+3.  [x] **Block Management**: Move the "Insert Block" modal and logic to a specialized local hook (`_hooks/use-block-management.ts`).
 
 ---
 
