@@ -20,24 +20,41 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
  * Usage: npx tsx scripts/exec-sql.ts docs/migrations/your-migration.sql
  */
 async function main() {
-  const filePath = process.argv[2]
+  const input = process.argv[2]
 
-  if (!filePath) {
-    console.error("Error: Please provide a path to a .sql file.")
-    console.log("Usage: npx tsx scripts/exec-sql.ts <path-to-sql-file>")
+  if (!input) {
+    console.error("Error: Please provide a path to a .sql file or inline SQL.")
+    console.log(
+      "Usage: npx tsx scripts/exec-sql.ts <path-to-sql-file | inline-sql>"
+    )
     process.exit(1)
   }
 
-  const absolutePath = path.resolve(process.cwd(), filePath)
+  let sql = ""
+  let isFile = false
 
-  if (!fs.existsSync(absolutePath)) {
-    console.error(`Error: File not found at ${absolutePath}`)
-    process.exit(1)
+  // Check if it's a file path
+  if (
+    input.endsWith(".sql") ||
+    fs.existsSync(path.resolve(process.cwd(), input))
+  ) {
+    const absolutePath = path.resolve(process.cwd(), input)
+    if (fs.existsSync(absolutePath)) {
+      sql = fs.readFileSync(absolutePath, "utf8")
+      isFile = true
+    }
   }
 
-  const sql = fs.readFileSync(absolutePath, "utf8")
+  // If not a file, treat as inline SQL
+  if (!isFile) {
+    sql = input
+  }
 
-  console.log(`🚀 Executing migration: ${filePath}...`)
+  console.log(
+    `🚀 Executing ${isFile ? "migration from file" : "inline SQL"}: ${
+      isFile ? input : sql.substring(0, 50) + (sql.length > 50 ? "..." : "")
+    }...`
+  )
 
   const { data, error } = await supabase.rpc("exec_sql", { sql })
 

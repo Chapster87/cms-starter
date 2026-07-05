@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 import { getModels } from "@/server/models"
 
-interface ModelEditorLayoutProps {
+interface NewRecordLayoutProps {
   params: Promise<{
     model: string | undefined
   }>
@@ -9,22 +9,20 @@ interface ModelEditorLayoutProps {
 }
 
 /**
- * Dynamic metadata generator for record list pages.
+ * Dynamic metadata generator for new record pages.
  */
 export async function generateMetadata({
   params,
-}: ModelEditorLayoutProps): Promise<Metadata> {
+}: NewRecordLayoutProps): Promise<Metadata> {
   const { model: modelSlug } = await params
   const models = await getModels()
   const modelData = models.find((m) => m.slug === modelSlug)
 
   return {
-    title: modelData ? `${modelData.friendly_name} Records` : "Record List",
+    title: modelData ? `New ${modelData.friendly_name}` : "New Record",
   }
 }
 
-export default function ModelEditorLayout({
-  children,
-}: ModelEditorLayoutProps) {
+export default function NewRecordLayout({ children }: NewRecordLayoutProps) {
   return children
 }

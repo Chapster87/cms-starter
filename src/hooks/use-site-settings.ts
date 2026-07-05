@@ -9,12 +9,6 @@ export interface SiteSettings {
   titleSuffix: string
   fallbackDescription: string
   noIndex: boolean
-  socialSiteName: string
-  twitterHandle: string
-  twitterUrl: string
-  socialCard: string | null
-  facebookUrl: string
-  instagramUrl: string
   siteUrl: string
   favicon: string | null
 }
@@ -59,9 +53,22 @@ export function useSiteSettings() {
 
       const newSettings = { ...settings, ...updates }
 
+      // Remove social fields if they accidentally exist in the payload
+      const cleanedSettings = {
+        defaultPageTitle: newSettings.defaultPageTitle,
+        titleSuffix: newSettings.titleSuffix,
+        fallbackDescription: newSettings.fallbackDescription,
+        noIndex: newSettings.noIndex,
+        siteUrl: newSettings.siteUrl,
+        favicon: newSettings.favicon,
+      }
+
       const { error } = await supabase
         .from("globals")
-        .update({ value: newSettings, updated_at: new Date().toISOString() })
+        .update({
+          value: cleanedSettings,
+          updated_at: new Date().toISOString(),
+        })
         .eq("key", "site_settings")
 
       if (error) {

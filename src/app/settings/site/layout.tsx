@@ -1,10 +1,10 @@
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Manage Users",
+  title: "Site Configuration",
 }
 
-export default function UsersLayout({
+export default function SiteSettingsLayout({
   children,
 }: {
   children: React.ReactNode

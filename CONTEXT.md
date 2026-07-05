@@ -144,7 +144,6 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
 - [x] **Global Site Settings & baseline SEO**:
   - Implemented a centralized `/settings/site` module for managing global variables.
   - Features include: Site URL (with dynamic `SlugField` integration), baseline SEO (Default Title, Suffix, Fallback Description, No Index), and Brand Assets (Favicon).
-  - Comprehensive social connectivity for Open Graph/Twitter metadata and profile links.
   - Fully integrated with the GraphQL CDA, supporting automatic resolution of media assets (Favicon/Social Card).
 - [x] **Advanced Type Safety & Logical Controls (Phase 3 & 4)**:
   - **Unified Metadata Types**: Consolidated all record shapes into a single generated file (`cms-generated.ts`) driven by the database registry.
@@ -158,6 +157,12 @@ A professional, custom-built Content Management System (CMS) utilizing **Next.js
   - Engineered immediate state synchronization to ensure group assignments persist reliably across page refreshes.
   - Created high-fidelity accordion styling for grouped fields in the `RecordForm`, matching the project's SEO field type design.
   - Implemented intelligent hiding of empty groups to maintain a clean record editing experience.
+- [x] **Social Media Settings**:
+  - Reorganized Social settings into a standalone module at `/settings/social` and a dedicated `useSocialSettings` hook.
+  - Expanded platform support (LinkedIn, TikTok, YouTube) and advanced Open Graph metadata (OG Type, Locale, Twitter Card formats).
+  - Updated GraphQL CDA with a new `socialSettings` query root for decoupled frontend fetching.
+  - Migrated legacy social data and updated RLS policies for the `globals` table to ensure secure and seamless persistence.
+  - Improved the `exec-sql.ts` utility to support both file-based and inline SQL command execution.
 
 ## Glossary
 

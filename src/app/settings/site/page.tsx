@@ -19,13 +19,7 @@ export default function SiteSettingsPage() {
     titleSuffix: "",
     fallbackDescription: "",
     noIndex: false,
-    socialSiteName: "",
-    twitterHandle: "",
-    twitterUrl: "",
-    facebookUrl: "",
-    instagramUrl: "",
     siteUrl: "",
-    socialCard: null as string | null,
     favicon: null as string | null,
   })
 
@@ -39,13 +33,7 @@ export default function SiteSettingsPage() {
             titleSuffix: settings.titleSuffix || "",
             fallbackDescription: settings.fallbackDescription || "",
             noIndex: !!settings.noIndex,
-            socialSiteName: settings.socialSiteName || "",
-            twitterHandle: settings.twitterHandle || "",
-            twitterUrl: settings.twitterUrl || "",
-            facebookUrl: settings.facebookUrl || "",
-            instagramUrl: settings.instagramUrl || "",
             siteUrl: settings.siteUrl || "",
-            socialCard: settings.socialCard || null,
             favicon: settings.favicon || null,
           }
 
@@ -174,60 +162,6 @@ export default function SiteSettingsPage() {
             }}
             multiple={false}
             fieldNote="Recommended size: 32x32px or 48x48px (PNG/ICO/SVG)."
-          />
-        </section>
-
-        <section
-          style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-        >
-          <h2
-            style={{
-              fontSize: "18px",
-              fontWeight: 600,
-              borderBottom: "1px solid var(--color-grey-200)",
-              paddingBottom: "8px",
-            }}
-          >
-            Social & Open Graph
-          </h2>
-          <TextField
-            label="Social Site Name"
-            value={formData.socialSiteName}
-            onChange={(val) => handleChange("socialSiteName", val)}
-            placeholder="e.g. My Company Name"
-          />
-          <TextField
-            label="Twitter Handle"
-            value={formData.twitterHandle}
-            onChange={(val) => handleChange("twitterHandle", val)}
-            placeholder="e.g. @mycompany"
-          />
-          <TextField
-            label="Twitter Profile URL"
-            value={formData.twitterUrl}
-            onChange={(val) => handleChange("twitterUrl", val)}
-            placeholder="e.g. https://twitter.com/mycompany"
-          />
-          <TextField
-            label="Facebook Profile URL"
-            value={formData.facebookUrl}
-            onChange={(val) => handleChange("facebookUrl", val)}
-            placeholder="e.g. https://facebook.com/mycompany"
-          />
-          <TextField
-            label="Instagram Profile URL"
-            value={formData.instagramUrl}
-            onChange={(val) => handleChange("instagramUrl", val)}
-            placeholder="e.g. https://instagram.com/mycompany"
-          />
-          <MediaField
-            label="Default Social Card"
-            value={formData.socialCard || ""}
-            onChange={(val) => {
-              const asset = Array.isArray(val) ? val[0] : val
-              handleChange("socialCard", asset ? asset.id : null)
-            }}
-            multiple={false}
           />
         </section>
       </div>

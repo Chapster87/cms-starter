@@ -137,6 +137,20 @@ export async function POST(req: NextRequest) {
       { table_name: sanitizedName }
     )
 
+    // Enable RLS and add default policy by default
+    const rlsSql = `
+      ALTER TABLE public.${sanitizedName} ENABLE ROW LEVEL SECURITY;
+      DROP POLICY IF EXISTS allow_auth ON public.${sanitizedName};
+      CREATE POLICY allow_auth ON public.${sanitizedName} FOR ALL TO authenticated USING (true) WITH CHECK (true);
+    `
+    const { error: rlsError } = await authenticatedSupabase.rpc("exec_sql", {
+      sql: rlsSql,
+    })
+
+    if (rlsError) {
+      console.error(`Error enabling RLS for '${sanitizedName}':`, rlsError)
+    }
+
     // If draft mode is enabled, add the status and _draft columns immediately
     if (has_draft_mode) {
       const sql = `

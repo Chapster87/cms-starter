@@ -172,21 +172,31 @@ export interface Pages {
   updated_at: string;
   status: CMSStatus;
   _draft?: unknown;
+  title: string;
+  color?: string;
+  tag_list?: string[];
   page_link?: Pages;
   seo?: SeoMetadata;
-  tag_list?: string[];
   navigation?: NavigationData;
-  color?: string;
-  title: string;
-  structured_text?: string;
-  long_text?: string;
-  content_dynamic?: ModularContentData;
-  standings_table?: StandingsData;
-  slug: string;
   rich_text?: string;
   media?: MediaAsset;
   author?: Authors;
+  slug: string;
+  content_dynamic?: ModularContentData;
+  long_text?: string;
+  standings_table?: StandingsData;
   modular_blocks?: ModularContentData;
+  structured_text?: string;
+}
+
+export interface LinkTree {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  status: CMSStatus;
+  _draft?: unknown;
+  top_links?: NavigationData;
+  club_info?: NavigationData;
 }
 
 export interface Authors {
@@ -195,12 +205,12 @@ export interface Authors {
   updated_at: string;
   status: CMSStatus;
   _draft?: unknown;
-  name?: string;
-  bio?: string;
-  avatar_url?: string;
   created_by?: string;
   updated_by?: string;
+  bio?: string;
+  name?: string;
   user_id?: unknown;
+  avatar_url?: string;
   slug: string;
 }
 
@@ -256,6 +266,7 @@ export interface CMSModelMap {
   testing: Testing;
   social_links: SocialLinks;
   pages: Pages;
+  linktree: LinkTree;
   authors: Authors;
   site_navigation: SiteNavigation;
   matches: Matches;

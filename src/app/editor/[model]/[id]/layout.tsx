@@ -3,25 +3,32 @@ import { getModels } from "@/server/models"
 import { getRecordById } from "@/server/records"
 import { getRecordDisplayName } from "@/helpers/record-helpers"
 
-interface Props {
-  params: Promise<{ model: string; id: string }>
+interface EditRecordLayoutProps {
+  params: Promise<{
+    model: string | undefined
+    id: string | undefined
+  }>
+  children: React.ReactNode
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/**
+ * Dynamic metadata generator for record editing pages.
+ */
+export async function generateMetadata({
+  params,
+}: EditRecordLayoutProps): Promise<Metadata> {
   const { model: modelSlug, id } = await params
+
+  if (!modelSlug || !id) return { title: "Edit Record" }
+
   const [models, record] = await Promise.all([
     getModels(),
     getRecordById(modelSlug, id, { resolve: true }),
   ])
 
+  if (!record) return { title: "Record Not Found" }
+
   const modelData = models.find((m) => m.slug === modelSlug)
-
-  if (id === "new") {
-    return {
-      title: `New ${modelData?.friendly_name || "Record"}`,
-    }
-  }
-
   const displayName = getRecordDisplayName(
     record,
     modelData?.friendly_name,
@@ -29,20 +36,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     modelData?.list_columns
   )
 
-  const title = modelData?.is_singleton ? displayName : `Edit ${displayName}`
-
   return {
-    title,
-    openGraph: {
-      title: `${title} | Forge CMS`,
-    },
+    title: modelData?.is_singleton
+      ? `Edit ${modelData.friendly_name}`
+      : `Edit ${displayName}`,
   }
 }
 
-export default function RecordEditorLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function EditRecordLayout({ children }: EditRecordLayoutProps) {
   return children
 }

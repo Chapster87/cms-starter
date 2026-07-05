@@ -1,10 +1,10 @@
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Manage Users",
+  title: "Social Media Settings",
 }
 
-export default function UsersLayout({
+export default function SocialSettingsLayout({
   children,
 }: {
   children: React.ReactNode

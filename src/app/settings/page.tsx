@@ -3,7 +3,7 @@ import Link from "next/link"
 import s from "./style.module.css"
 
 export const metadata: Metadata = {
-  title: "Settings",
+  title: "Site Settings",
 }
 
 /**
