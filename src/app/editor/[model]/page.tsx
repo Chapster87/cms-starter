@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { dataService, RecordBase } from "@/client/data-service"
+import { toast } from "@/client/toast-store"
 import Button from "@/components/button"
 import { useAuth } from "@/hooks/use-auth"
 import { useModels } from "@/hooks/use-models"
@@ -44,6 +45,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     Record<string, string>
   >({})
   const [loading, setLoading] = useState(true)
+  const [isInitializing, setIsInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const modelData = models.find((m) => m.slug === modelSlug) || null
@@ -235,6 +237,27 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     return cols
   }, [modelData, fields])
 
+  const handleInitializeSingleton = async () => {
+    if (!modelData || !modelSlug) return
+    setIsInitializing(true)
+    setError(null)
+    try {
+      const result = await dataService.createRecord(modelSlug, {}, modelData.id)
+      if (result) {
+        toast.success(
+          "Initialized",
+          `${modelData.friendly_name} has been initialized.`
+        )
+        router.push(`/editor/${modelSlug}/${result.slug || result.id}`)
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Initialization failed"
+      setError(msg)
+    } finally {
+      setIsInitializing(false)
+    }
+  }
+
   const handleSort = async (columnName: string) => {
     let newDir: "asc" | "desc" = "asc"
     let newCol = columnName
@@ -336,9 +359,21 @@ export default function RecordListPage({ params }: RecordListPageProps) {
             This is a singleton model, which means it only ever has one record.
             Initialize it to start managing your content.
           </p>
-          <Link href={`?action=new-record`}>
-            <Button size="large">Initialize {modelData?.friendly_name}</Button>
-          </Link>
+          {fields.length > 0 ? (
+            <Link href={`?action=new-record`}>
+              <Button size="large">
+                Initialize {modelData?.friendly_name}
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              size="large"
+              onClick={handleInitializeSingleton}
+              isLoading={isInitializing}
+            >
+              Initialize {modelData?.friendly_name}
+            </Button>
+          )}
         </div>
       </div>
     )

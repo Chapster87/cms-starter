@@ -186,6 +186,8 @@ export default function RecordForm<T extends CMSModelName>({
                   "updated_at",
                   "status",
                   "_draft",
+                  "created_by",
+                  "updated_by",
                 ].includes(f.column_name)
             )
             .map((f: FieldSchema) => ({
