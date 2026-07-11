@@ -98,7 +98,6 @@ export default function MediaDetailsModal({
             alt={asset.alt_text || asset.name}
             fill
             className={s.previewImage}
-            unoptimized
           />
         </div>
 

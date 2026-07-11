@@ -1,24 +1,30 @@
 import { Metadata } from "next"
 import { getModels } from "@/server/models"
 
-interface Props {
-  params: Promise<{ model: string }>
+interface ModelEditorLayoutProps {
+  params: Promise<{
+    model: string | undefined
+  }>
+  children: React.ReactNode
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+/**
+ * Dynamic metadata generator for record list pages.
+ */
+export async function generateMetadata({
+  params,
+}: ModelEditorLayoutProps): Promise<Metadata> {
   const { model: modelSlug } = await params
   const models = await getModels()
   const modelData = models.find((m) => m.slug === modelSlug)
 
   return {
-    title: modelData ? modelData.friendly_name : "Content Editor",
+    title: modelData ? `${modelData.friendly_name} Records` : "Record List",
   }
 }
 
 export default function ModelEditorLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: ModelEditorLayoutProps) {
   return children
 }

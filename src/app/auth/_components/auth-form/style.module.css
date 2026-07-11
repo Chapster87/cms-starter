@@ -43,6 +43,31 @@
   font-size: 14px;
 }
 
+.emailForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-grey-200);
+}
+
+.dividerText {
+  color: var(--color-grey-500);
+  font-size: 14px;
+  text-transform: uppercase;
+}
+
 .formGroup {
   display: flex;
   flex-direction: column;

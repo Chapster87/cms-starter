@@ -33,6 +33,7 @@ interface CMSModel {
   friendly_name: string
   table_name: string
   has_draft_mode?: boolean
+  is_singleton?: boolean
   [key: string]: unknown
 }
 
@@ -558,14 +559,31 @@ export const generateSchema = async () => {
         queryFields[technicalName] = {
           type: modelType,
           args: {
-            id: { type: new GraphQLNonNull(GraphQLString) },
+            id: {
+              type: model.is_singleton
+                ? GraphQLString
+                : new GraphQLNonNull(GraphQLString),
+            },
             preview: { type: GraphQLBoolean, defaultValue: false },
           },
           resolve: async (_source, { id, preview }) => {
-            let query = supabase.from(model.table_name).select("*").eq("id", id)
+            let query = supabase.from(model.table_name).select("*")
+
+            if (id) {
+              query = query.eq("id", id)
+            }
+
             if (model.has_draft_mode && !preview) {
               query = query.eq("status", "published")
             }
+
+            if (model.is_singleton && !id) {
+              // For singletons, if no ID is provided, just get the first record
+              const { data } = await query.limit(1).maybeSingle()
+              if (!data) return null
+              return !preview ? { ...data, _draft: null } : data
+            }
+
             const { data } = await query.single()
             if (!data) return null
             return !preview ? { ...data, _draft: null } : data
@@ -762,14 +780,26 @@ export const generateSchema = async () => {
       titleSuffix: { type: GraphQLString },
       fallbackDescription: { type: GraphQLString },
       noIndex: { type: GraphQLBoolean },
+      siteUrl: { type: GraphQLString },
+      favicon: { type: MediaType },
+    },
+  })
+
+  const SocialSettingsType = new GraphQLObjectType({
+    name: "SocialSettings",
+    fields: {
       socialSiteName: { type: GraphQLString },
       twitterHandle: { type: GraphQLString },
       twitterUrl: { type: GraphQLString },
-      socialCard: { type: MediaType },
       facebookUrl: { type: GraphQLString },
       instagramUrl: { type: GraphQLString },
-      siteUrl: { type: GraphQLString },
-      favicon: { type: MediaType },
+      linkedinUrl: { type: GraphQLString },
+      youtubeUrl: { type: GraphQLString },
+      tiktokUrl: { type: GraphQLString },
+      socialCard: { type: MediaType },
+      ogType: { type: GraphQLString },
+      ogLocale: { type: GraphQLString },
+      twitterCardType: { type: GraphQLString },
     },
   })
 
@@ -788,16 +818,6 @@ export const generateSchema = async () => {
 
         const settings = data.value as Record<string, unknown>
 
-        // Resolve social card if it exists
-        if (settings.socialCard && typeof settings.socialCard === "string") {
-          const { data: mediaData } = await supabase
-            .from("media_assets")
-            .select("*")
-            .eq("id", settings.socialCard)
-            .single()
-          settings.socialCard = mediaData
-        }
-
         // Resolve favicon if it exists
         if (settings.favicon && typeof settings.favicon === "string") {
           const { data: mediaData } = await supabase
@@ -806,6 +826,32 @@ export const generateSchema = async () => {
             .eq("id", settings.favicon)
             .single()
           settings.favicon = mediaData
+        }
+
+        return settings
+      },
+    },
+    socialSettings: {
+      type: SocialSettingsType,
+      resolve: async () => {
+        const { data } = await supabase
+          .from("globals")
+          .select("value")
+          .eq("key", "social_settings")
+          .maybeSingle()
+
+        if (!data?.value) return null
+
+        const settings = data.value as Record<string, unknown>
+
+        // Resolve social card if it exists
+        if (settings.socialCard && typeof settings.socialCard === "string") {
+          const { data: mediaData } = await supabase
+            .from("media_assets")
+            .select("*")
+            .eq("id", settings.socialCard)
+            .single()
+          settings.socialCard = mediaData
         }
 
         return settings

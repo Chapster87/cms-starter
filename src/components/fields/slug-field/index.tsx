@@ -48,12 +48,15 @@ export default function SlugField({
 }: SlugFieldProps) {
   const { settings } = useSiteSettings()
   const [internalIsTouched, setInternalIsTouched] = useState(false)
+  // Track if we've already done the initial check to see if the slug was manually edited
+  const [isInitialized, setIsInitialized] = useState(false)
 
   const isTouched = controlledIsTouched ?? internalIsTouched
 
   // Helper to sanitize string into a slug
   const slugify = React.useCallback(
     (text: string) => {
+      if (!text) return ""
       const escapedSeparator = separator === "-" ? "-" : "_"
       const repeatRegex = new RegExp(`[${escapedSeparator}]+`, "g")
       const trimRegex = new RegExp(
@@ -70,16 +73,57 @@ export default function SlugField({
     [separator]
   )
 
+  // On mount or when initial data arrives, check if we should be "touched"
+  // If the current value exists and doesn't match the auto-generated slug,
+  // it means it was previously saved with a custom value.
+  useEffect(() => {
+    if (isInitialized) return
+
+    // If we have both, check for custom value
+    if (value && sourceValue) {
+      const generated = slugify(sourceValue)
+      const isCustom = generated !== value
+
+      // Defer all state updates to avoid cascading render warning
+      const timer = setTimeout(() => {
+        if (isCustom) {
+          if (onToggleTouched) {
+            onToggleTouched(true)
+          } else {
+            setInternalIsTouched(true)
+          }
+        }
+        setIsInitialized(true)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+
+    // If both are empty (new record) OR we have source but no slug (auto-gen needed)
+    // mark as initialized so the sync effect can take over
+    if (!value) {
+      const timer = setTimeout(() => {
+        setIsInitialized(true)
+      }, 0)
+      return () => clearTimeout(timer)
+    }
+  }, [value, sourceValue, slugify, isInitialized, onToggleTouched])
+
   // Sync with sourceValue if not touched.
   // We remove the !value check so it continues to sync as the user types in the source field.
   useEffect(() => {
-    if (!isTouched && sourceValue !== undefined && sourceValue !== "") {
+    // Only auto-sync if we've initialized and aren't touched
+    if (
+      isInitialized &&
+      !isTouched &&
+      sourceValue !== undefined &&
+      sourceValue !== ""
+    ) {
       const newSlug = slugify(sourceValue)
       if (newSlug !== value) {
         onChange(newSlug)
       }
     }
-  }, [sourceValue, isTouched, onChange, value, slugify])
+  }, [sourceValue, isTouched, onChange, value, slugify, isInitialized])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const escapedSeparator = separator === "-" ? "-" : "_"

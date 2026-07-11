@@ -40,6 +40,15 @@ function SettingsSidebar() {
         </svg>
       ),
     },
+    {
+      title: "Social",
+      url: "/settings/social",
+      icon: (
+        <svg className="feather-icon" width="18" height="18">
+          <use href="/feather-sprite.svg#share-2" />
+        </svg>
+      ),
+    },
     // Future settings pages can be added here
   ]
 

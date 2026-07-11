@@ -140,6 +140,11 @@ export default function EditRecordClient({
     setError(null)
     try {
       const modelId = modelData?.id
+      const oldSlug = (record as Record<string, unknown> | null)?.slug as
+        | string
+        | undefined
+      const newSlug = formData.slug as string | undefined
+
       if (modelData?.has_draft_mode) {
         await dataService.publishRecord(
           targetTable,
@@ -156,7 +161,14 @@ export default function EditRecordClient({
         )
       }
       toast.success("Record published", "Your changes are now live.")
-      await loadRecord()
+
+      // If the slug changed, we need to redirect to the new URL
+      // since the current URL is based on the old slug.
+      if (newSlug && oldSlug && newSlug !== oldSlug) {
+        router.push(`/editor/${modelSlug}/${newSlug}`)
+      } else {
+        await loadRecord()
+      }
     } catch (err: unknown) {
       const msg =
         err instanceof Error ? err.message : "Failed to publish record"

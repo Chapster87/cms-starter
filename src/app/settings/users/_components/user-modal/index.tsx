@@ -114,6 +114,10 @@ export default function UserModal({
             required
             placeholder="e.g. user@example.com"
           />
+          <p className={s.fieldDescription}>
+            Used for login. If the user signs in with Google using this email,
+            their accounts will be automatically linked.
+          </p>
         </div>
 
         <div className={s.fieldSection}>

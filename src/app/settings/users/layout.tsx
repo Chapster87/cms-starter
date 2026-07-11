@@ -1,7 +1,7 @@
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "User Management",
+  title: "Manage Users",
 }
 
 export default function UsersLayout({
