@@ -8,7 +8,9 @@
     "start": "next start",
     "sync-types": "tsx scripts/sync-types.ts",
     "db:migrate": "tsx scripts/exec-sql.ts",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -63,9 +65,12 @@
   },
   "devDependencies": {
     "@csstools/postcss-global-data": "^4.0.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^6.0.3",
     "autoprefixer": "^10.4.27",
     "babel-plugin-react-compiler": "1.0.0",
     "clsx": "^2.1.1",
@@ -73,6 +78,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "html-react-parser": "^6.0.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.8",
     "postcss-custom-media": "^12.0.1",
     "postcss-flexbugs-fixes": "^5.0.2",
@@ -81,7 +87,8 @@
     "postcss-preset-env": "^11.2.0",
     "prettier": "^3.8.1",
     "tsx": "^4.22.4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   },
   "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8",
   "pnpm": {

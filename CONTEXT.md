@@ -35,3 +35,30 @@ The CMS is powered by a centralized registry (`public.models`, `public.fields`, 
 - **Metadata**: Configuration data in the registry (labels, types, validation).
 - **Singleton**: A model restricted to exactly one record (e.g., Global Settings).
 - **Fieldset**: A visual grouping of fields within a model's editor interface.
+
+## GitHub Configuration
+
+- **Sub-issues**: **ENABLED**. When using `/to-tickets` or `/wayfinder`, child tickets MUST be created as native GitHub sub-issues using the `--parent` flag.
+- **Issue Dependencies**: **ENABLED**. When tickets have blockers, they MUST be formally linked using the `--blocked-by` flag.
+- **Ticket Template**: Use the following `gh` command template for creating sub-issues:
+
+  ```bash
+  gh issue create --title "1.4 Refactor RecordForm to use the Engine" --body "## Parent
+    #1
+
+
+  ## What to build
+
+  Description
+
+  ## Acceptance criteria
+
+  - [ ] Task
+  - [ ] Task
+  - [ ] Task
+  - [ ] Task
+
+  ## Blocked by
+
+  - #16" --label "ready-for-agent" --parent 1 --blocked-by 16 --repo Chapster87/cms-starter
+  ```

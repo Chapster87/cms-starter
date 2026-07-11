@@ -10,7 +10,7 @@ Standard canonical triage roles (`needs-triage`, `needs-info`, `ready-for-agent`
 
 ### Domain docs
 
-Single-context layout (`CONTEXT.md` + `docs/adr/` at root). See `docs/agents/domain.md`.
+Single-context layout (`CONTEXT.md` + `docs/adr/` at root). See `docs/agents/domain.md`. **Always check `CONTEXT.md` for local configuration overrides (e.g., GitHub feature availability).**
 
 ### Core Rules
 
