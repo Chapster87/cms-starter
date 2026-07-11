@@ -6,12 +6,15 @@ import {
 } from "@modelcontextprotocol/sdk/types.js"
 
 import { createMCPClient } from "../../utils/supabase-mcp"
+import { SupabaseRecordManager } from "../cms/adapters/supabase-record-manager"
+import { CMSModelName } from "../../types/cms-generated"
 
 /**
  * MCP Server for the Custom CMS.
  * Uses native fetch/WebSockets from Node 22+.
  */
 const supabase = createMCPClient()
+const recordManager = new SupabaseRecordManager(supabase)
 
 const server = new Server(
   {
@@ -45,6 +48,82 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ["model"],
         },
       },
+      {
+        name: "get_record_by_id",
+        description: "Fetch a single record by its ID.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            model: {
+              type: "string",
+              description: "The table name of the model.",
+            },
+            id: {
+              type: "string",
+              description: "The unique identifier of the record.",
+            },
+          },
+          required: ["model", "id"],
+        },
+      },
+      {
+        name: "create_record",
+        description: "Create a new record in the CMS.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            model: {
+              type: "string",
+              description: "The table name of the model.",
+            },
+            data: {
+              type: "object",
+              description: "The record data to insert.",
+            },
+          },
+          required: ["model", "data"],
+        },
+      },
+      {
+        name: "update_record",
+        description: "Update an existing record in the CMS.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            model: {
+              type: "string",
+              description: "The table name of the model.",
+            },
+            id: {
+              type: "string",
+              description: "The unique identifier of the record to update.",
+            },
+            data: {
+              type: "object",
+              description: "The partial data to update.",
+            },
+          },
+          required: ["model", "id", "data"],
+        },
+      },
+      {
+        name: "delete_record",
+        description: "Delete a record from the CMS.",
+        inputSchema: {
+          type: "object",
+          properties: {
+            model: {
+              type: "string",
+              description: "The table name of the model.",
+            },
+            id: {
+              type: "string",
+              description: "The unique identifier of the record to delete.",
+            },
+          },
+          required: ["model", "id"],
+        },
+      },
     ],
   }
 })
@@ -58,12 +137,55 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   try {
     switch (name) {
       case "get_records": {
-        const { data, error } = await supabase
-          .from(args!.model as string)
-          .select("*")
-        if (error) throw error
+        const data = await recordManager.getRecords(args!.model as CMSModelName)
         return {
           content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        }
+      }
+
+      case "get_record_by_id": {
+        const data = await recordManager.getRecordById(
+          args!.model as CMSModelName,
+          args!.id as string
+        )
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        }
+      }
+
+      case "create_record": {
+        const data = await recordManager.createRecord(
+          args!.model as CMSModelName,
+          args!.data as never
+        )
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        }
+      }
+
+      case "update_record": {
+        const data = await recordManager.updateRecord(
+          args!.model as CMSModelName,
+          args!.id as string,
+          args!.data as never
+        )
+        return {
+          content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+        }
+      }
+
+      case "delete_record": {
+        await recordManager.deleteRecord(
+          args!.model as CMSModelName,
+          args!.id as string
+        )
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Successfully deleted record ${args!.id} from ${args!.model}`,
+            },
+          ],
         }
       }
 
