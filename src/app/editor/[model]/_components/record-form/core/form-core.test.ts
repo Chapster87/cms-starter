@@ -103,6 +103,18 @@ describe("FormCore", () => {
     expect(core.values.avatar_url).toBe("https://avatar.com/1")
   })
 
+  it("should manually sync from user", () => {
+    const core = new FormCore("authors", mockSchema, mockUsers, {
+      user_id: "user-1",
+    })
+
+    core.syncFromUser()
+
+    expect(core.values.name).toBe("John Doe")
+    expect(core.values.avatar_url).toBe("https://avatar.com/1")
+    expect(core.isDirty).toBe(true)
+  })
+
   it("should prepare submission data correctly", () => {
     const schemaWithComputed: CMSField[] = [
       ...mockSchema,

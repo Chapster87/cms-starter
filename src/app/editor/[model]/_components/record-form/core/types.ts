@@ -45,4 +45,8 @@ export interface FormCoreActions {
    * @returns A promise that resolves when submission is complete.
    */
   submit: () => Promise<void>
+  /**
+   * Manually triggers a sync from the linked user profile.
+   */
+  syncFromUser: () => void
 }

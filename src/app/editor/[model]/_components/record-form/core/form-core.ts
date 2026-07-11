@@ -19,9 +19,9 @@ export class FormCore implements FormCoreState, FormCoreActions {
   public isSubmitting = false
   public isDirty = false
 
-  private model: string
-  private schema: CMSField[]
-  private users: AuthorUser[]
+  public model: string
+  public schema: CMSField[]
+  public users: AuthorUser[]
   private onStateChange: (state: FormCoreState) => void
 
   /**
@@ -223,6 +223,48 @@ export class FormCore implements FormCoreState, FormCoreActions {
       // Submission logic would be handled by the caller using getSubmissionData()
     } finally {
       this.isSubmitting = false
+      this.updateState()
+    }
+  }
+
+  public updateSchema(schema: CMSField[]) {
+    this.schema = schema
+  }
+
+  public updateUsers(users: AuthorUser[]) {
+    this.users = users
+  }
+
+  public syncFromUser() {
+    const userId = this.values["user_id"]
+    if (!userId) return
+
+    const linkedUser = this.users.find(
+      (u) =>
+        u.id === userId ||
+        (Array.isArray(userId) && userId.includes(u.id)) ||
+        (typeof userId === "string" && userId.includes(u.id))
+    )
+
+    if (!linkedUser) return
+
+    const updates: Record<string, unknown> = {}
+    if (
+      linkedUser.display_name &&
+      this.values["name"] !== linkedUser.display_name
+    ) {
+      updates["name"] = linkedUser.display_name
+    }
+    if (
+      linkedUser.avatar_url &&
+      this.values["avatar_url"] !== linkedUser.avatar_url
+    ) {
+      updates["avatar_url"] = linkedUser.avatar_url
+    }
+
+    if (Object.keys(updates).length > 0) {
+      this.values = { ...this.values, ...updates }
+      this.isDirty = true
       this.updateState()
     }
   }

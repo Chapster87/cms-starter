@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { CMSField, CMSFieldset } from "@/types/fields"
 import { CMSModelMap, CMSModelName } from "@/types/cms-generated"
 import { useAuth } from "@/hooks/use-auth"
 import { useUsers } from "@/hooks/use-users"
 import { createClient } from "@/utils/supabase"
-import { FormCore } from "../core/form-core"
+import { FormCore, AuthorUser } from "../core/form-core"
 import { FormCoreState } from "../core/types"
 
 interface FieldSchema {
@@ -48,38 +48,33 @@ export function useFormStateEngine<T extends CMSModelName>({
     isDirty: false,
   })
 
-  // Ref to store the FormCore instance to avoid re-instantiation on every render
-  const coreRef = useRef<FormCore | null>(null)
-
-  // Initialize or update FormCore when dependencies change
-  if (
-    !coreRef.current ||
-    (id && coreRef.current["id" as keyof FormCore] !== (id as any))
-  ) {
-    coreRef.current = new FormCore(
+  // Initialize FormCore instance. It's stable for a given model/id.
+  const core = useMemo(() => {
+    return new FormCore(
       model as string,
-      schema,
-      users,
+      [], // Initial empty schema, updated via useEffect
+      [], // Initial empty users, updated via useEffect
       initialData as Record<string, unknown>,
       (state) => setFormState(state)
     )
-    // Hack to store id for comparison
-    ;(coreRef.current as any).id = id
-  }
+    // We only recreate if model or id changes.
+    // We include initialData in the dependencies if the record ID changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [model, id])
 
   // Update schema in core when it changes
   useEffect(() => {
-    if (coreRef.current) {
-      coreRef.current["schema" as keyof FormCore] = schema as any
+    if (core) {
+      core.updateSchema(schema)
     }
-  }, [schema])
+  }, [schema, core])
 
   // Update users in core when they change
   useEffect(() => {
-    if (coreRef.current) {
-      coreRef.current["users" as keyof FormCore] = users as any
+    if (core) {
+      core.updateUsers(users as AuthorUser[])
     }
-  }, [users])
+  }, [users, core])
 
   // Debounced auto-save logic
   useEffect(() => {
@@ -167,10 +162,15 @@ export function useFormStateEngine<T extends CMSModelName>({
                     ? "number"
                     : "text_single",
               is_required: f.is_nullable === "NO",
+              model_id: "",
+              is_unique: false,
+              is_system: false,
+              is_computed: false,
+              ui_order: 0,
             }))
 
           if (!isMounted) return
-          setSchema(mappedFields)
+          setSchema(mappedFields as CMSField[])
         }
       } catch (err) {
         if (!isMounted) return
@@ -191,6 +191,6 @@ export function useFormStateEngine<T extends CMSModelName>({
     schema,
     fieldsets,
     fetchingSchema,
-    actions: coreRef.current!,
+    actions: core,
   }
 }
