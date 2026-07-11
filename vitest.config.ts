@@ -1,6 +1,9 @@
 import { defineConfig } from "vitest/config"
 import react from "@vitejs/plugin-react"
 import path from "path"
+import dotenv from "dotenv"
+
+dotenv.config({ path: ".env.local" })
 
 export default defineConfig({
   plugins: [react()],
@@ -8,7 +11,10 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./src/test/setup.ts",
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    include: [
+      "src/**/*.{test,spec}.{ts,tsx}",
+      "tests/**/*.{test,spec}.{ts,tsx}",
+    ],
   },
   resolve: {
     alias: {
