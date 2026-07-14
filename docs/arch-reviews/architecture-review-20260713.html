@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMS Architecture Review - July 2026</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+      .candidate-card {
+        transition: transform 0.2s;
+      }
+      .candidate-card:hover {
+        transform: translateY(-4px);
+      }
+      .mermaid {
+        background: #f9fafb;
+        border-radius: 0.5rem;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900 font-sans leading-normal">
+    <div class="max-w-5xl mx-auto px-4 py-12">
+      <header class="mb-12 border-b border-gray-200 pb-8">
+        <div class="flex justify-between items-end">
+          <div>
+            <h1
+              class="text-4xl font-extrabold tracking-tight text-gray-900 mb-2"
+            >
+              Codebase Architecture Review
+            </h1>
+            <p class="text-lg text-gray-600">
+              Focus: Deepening the Content Delivery API and Registry Sync
+            </p>
+          </div>
+          <div class="text-right text-sm text-gray-400">
+            Generated: 2026-07-13
+          </div>
+        </div>
+      </header>
+
+      <!-- Status Check -->
+      <div class="mb-12 bg-green-50 rounded-xl border border-green-200 p-8">
+        <h2 class="text-xl font-bold text-green-800 mb-4 flex items-center">
+          <svg
+            class="w-6 h-6 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            ></path>
+          </svg>
+          Verification of Previous Improvements
+        </h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div
+            class="bg-white p-4 rounded-lg shadow-sm border border-green-100"
+          >
+            <h3 class="font-bold text-gray-800 mb-1">
+              RecordForm Engine Deepening
+            </h3>
+            <p class="text-sm text-gray-600">
+              Confirmed. <code>FormCore</code> has been extracted into a pure
+              TypeScript class with comprehensive unit tests.
+              <code>useFormStateEngine</code> now acts as a thin adapter.
+            </p>
+          </div>
+          <div
+            class="bg-white p-4 rounded-lg shadow-sm border border-green-100"
+          >
+            <h3 class="font-bold text-gray-800 mb-1">MCP Tool Adapters</h3>
+            <p class="text-sm text-gray-600">
+              Confirmed. <code>SupabaseRecordManager</code> and
+              <code>SupabaseSchemaManager</code> now isolate the data source
+              from the MCP protocol.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Recommendation -->
+      <div class="mb-12 bg-indigo-600 rounded-xl shadow-lg p-8 text-white">
+        <div class="flex items-center mb-4">
+          <span
+            class="bg-indigo-500 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mr-3"
+            >Top Recommendation</span
+          >
+          <h2 class="text-2xl font-bold">
+            Deepen the Content Delivery API (CDA)
+          </h2>
+        </div>
+        <p class="text-indigo-100 mb-6 text-lg">
+          The <code>cda-generator</code> is currently <strong>shallow</strong>.
+          It maps types and fetches data in a single pass, missing critical CMS
+          features like relationship resolution, localized content, and nested
+          block expansion. By extracting a <strong>QueryPlanner</strong> and
+          <strong>ResolverFactory</strong>, we turn the CDA into a deep module
+          that can handle complex content graphs.
+        </p>
+      </div>
+
+      <div class="grid gap-8">
+        <!-- Candidate 1: CDA Engine -->
+        <section
+          class="candidate-card bg-white rounded-xl shadow-md overflow-hidden border border-gray-100"
+        >
+          <div class="p-8">
+            <div class="flex justify-between items-start mb-6">
+              <div>
+                <h3 class="text-2xl font-bold mb-1 text-gray-800">
+                  1. Deepen GraphQL CDA Engine
+                </h3>
+                <p class="text-sm text-gray-500 font-mono">
+                  src/app/api/graphql/_helpers/*
+                </p>
+              </div>
+              <span
+                class="bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+                >Strong</span
+              >
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+              <div>
+                <h4 class="font-bold text-gray-700 mb-2">Problem</h4>
+                <p class="text-gray-600 mb-4">
+                  The CDA generation logic (<code>cda-generator.ts</code>) is
+                  <strong>shallow</strong> and tightly coupled to Supabase. It
+                  doesn't support complex relationships (e.g., fetching a "Post"
+                  and its "Author") or block-level content expansion.
+                </p>
+                <h4 class="font-bold text-gray-700 mb-2">Solution</h4>
+                <p class="text-gray-600">
+                  Extract a <strong>CDACore</strong> engine. Move field
+                  resolution logic into dedicated **Resolvers** that understand
+                  relationship metadata and block structures.
+                </p>
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-700 mb-2">Benefits</h4>
+                <ul
+                  class="list-disc list-inside text-gray-600 space-y-1 text-sm"
+                >
+                  <li>
+                    <strong>Leverage</strong>: Support complex relationship
+                    resolution once, use across all models.
+                  </li>
+                  <li>
+                    <strong>Locality</strong>: Relationship fetching logic lives
+                    with the field definition, not the API route.
+                  </li>
+                  <li>
+                    <strong>Depth</strong>: The interface (GraphQL Schema) stays
+                    simple while the implementation handles heavy graph
+                    traversal.
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="text-center">
+                <span
+                  class="text-xs font-bold text-gray-400 uppercase mb-2 block"
+                  >Before (Shallow)</span
+                >
+                <pre class="mermaid">
+                  graph TD
+                    API[CDA API Route] --> Gen[cda-generator.ts]
+                    Gen --> Sub[Supabase Select *]
+                    Gen --> Map[Type Mapper]
+                    subgraph "Tight Coupling"
+                      Gen
+                      Sub
+                    end
+                </pre>
+              </div>
+              <div class="text-center">
+                <span
+                  class="text-xs font-bold text-gray-400 uppercase mb-2 block"
+                  >After (Deep)</span
+                >
+                <pre class="mermaid">
+                  graph TD
+                    API[CDA API Route] --> Core[CDACore Engine]
+                    Core --> Plan[Query Planner]
+                    Core --> Res[Resolver Factory]
+                    Res --> Rel[Relationship Resolver]
+                    Res --> Blk[Block Expansion]
+                    subgraph "Graph Logic (Deep Module)"
+                      Core
+                      Plan
+                      Res
+                    end
+                </pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Candidate 2: Registry Observer -->
+        <section
+          class="candidate-card bg-white rounded-xl shadow-md overflow-hidden border border-gray-100"
+        >
+          <div class="p-8">
+            <div class="flex justify-between items-start mb-6">
+              <div>
+                <h3 class="text-2xl font-bold mb-1 text-gray-800">
+                  2. Formalize Registry Sync Observer
+                </h3>
+                <p class="text-sm text-gray-500 font-mono">
+                  src/server/cms/adapters/supabase-schema-manager.ts
+                </p>
+              </div>
+              <span
+                class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider"
+                >Worth exploring</span
+              >
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+              <div>
+                <h4 class="font-bold text-gray-700 mb-2">Problem</h4>
+                <p class="text-gray-600 mb-4">
+                  The "Physical-Metadata Sync" described in
+                  <code>CONTEXT.md</code> is currently procedural. If a schema
+                  change fails halfway, the Registry can become out of sync with
+                  Postgres.
+                </p>
+                <h4 class="font-bold text-gray-700 mb-2">Solution</h4>
+                <p class="text-gray-600">
+                  Introduce a <strong>SchemaCoordinator</strong> with a
+                  transactional <strong>SyncState</strong>. Treat schema changes
+                  as idempotent operations that can be re-run or rolled back.
+                </p>
+              </div>
+              <div>
+                <h4 class="font-bold text-gray-700 mb-2">Benefits</h4>
+                <ul
+                  class="list-disc list-inside text-gray-600 space-y-1 text-sm"
+                >
+                  <li>
+                    <strong>Interface as Test Surface</strong>: Tests can verify
+                    "Atomic Sync" by intentionally failing the Postgres update
+                    and checking the Registry.
+                  </li>
+                  <li>
+                    <strong>Depth</strong>: Hides the complexity of DDL
+                    transactions behind a clean "UpdateModel" interface.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer
+        class="mt-16 pt-8 border-t border-gray-200 text-center text-gray-500 text-sm"
+      >
+        <p>
+          Report generated for focus on:
+          <strong>CDA Deepening & Registry Integrity</strong>
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" })
+    </script>
+  </body>
+</html>
