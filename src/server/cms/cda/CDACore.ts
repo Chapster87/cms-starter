@@ -5,11 +5,12 @@ import {
   GraphQLInputObjectType,
   GraphQLInt,
   GraphQLList,
-  GraphQLNonNull,
+  GraphQLNamedType,
   GraphQLObjectType,
   GraphQLScalarType,
   GraphQLSchema,
   GraphQLString,
+  GraphQLUnionType,
   Kind,
 } from "graphql"
 import { SupabaseClient } from "@supabase/supabase-js"
@@ -80,6 +81,8 @@ export class CDACore {
   private blocks: CMSBlock[] = []
   private types: Record<string, GraphQLObjectType> = {}
   private blockTypes: Record<string, GraphQLObjectType> = {}
+  private blockUnionType: GraphQLUnionType | null = null
+  private structuredTextType: GraphQLObjectType | null = null
   private filterInputTypes: Record<string, GraphQLInputObjectType> = {}
 
   constructor(supabase: SupabaseClient) {
@@ -103,7 +106,13 @@ export class CDACore {
     )
 
     // 1. Pass: Create Block Object Types
-    this.generateBlockTypes()
+    this.generateBlockTypes(validModels)
+
+    // 1b. Pass: Create Block Union Type
+    this.generateBlockUnionType()
+
+    // 1c. Pass: Create Structured Text Type
+    this.generateStructuredTextType()
 
     // 2. Pass: Create Filter Input Types
     this.generateFilterInputTypes(validModels)
@@ -118,10 +127,19 @@ export class CDACore {
     const schema = this.generateFinalSchema(QueryType)
 
     // Add block types to the schema so they are discoverable even if not yet used in fields
+    // Add block types to the schema so they are discoverable even if not yet used in fields
     const config = schema.toConfig()
+    const extraTypes: GraphQLNamedType[] = [...Object.values(this.blockTypes)]
+    if (this.blockUnionType) {
+      extraTypes.push(this.blockUnionType)
+    }
+    if (this.structuredTextType) {
+      extraTypes.push(this.structuredTextType)
+    }
+
     return new GraphQLSchema({
       ...config,
-      types: [...(config.types || []), ...Object.values(this.blockTypes)],
+      types: [...(config.types || []), ...extraTypes],
     })
   }
 
@@ -144,7 +162,72 @@ export class CDACore {
     this.blocks = (blocksRes.data as CMSBlock[]) || []
   }
 
-  private generateBlockTypes() {
+  private generateBlockUnionType() {
+    const types = Object.values(this.blockTypes)
+    if (types.length === 0) return
+
+    this.blockUnionType = new GraphQLUnionType({
+      name: "BlockUnion",
+      types: types,
+      resolveType: (value) => {
+        const blockApiId =
+          value._block_type ||
+          value._type ||
+          value.type ||
+          value.block_type ||
+          value.blockType ||
+          value.api_id
+        const block = this.blocks.find(
+          (b) => b.api_id === blockApiId || b.id === value._block_id
+        )
+        if (block) {
+          return this.toPascalCase(block.label) + "Block"
+        }
+        return undefined
+      },
+    })
+  }
+
+  private generateStructuredTextType() {
+    if (!this.blockUnionType) return
+
+    this.structuredTextType = new GraphQLObjectType({
+      name: "StructuredText",
+      fields: {
+        value: { type: GraphQLJSON },
+        blocks: {
+          type: new GraphQLList(this.blockUnionType),
+          resolve: (parent) => {
+            const blocks: Record<string, unknown>[] = []
+            const findBlocks = (node: unknown) => {
+              if (!node || typeof node !== "object") return
+              const nodeObj = node as Record<string, unknown>
+              if (nodeObj.type === "cmsBlock" && nodeObj.attrs) {
+                const attrs = nodeObj.attrs as Record<string, unknown>
+                if (attrs.data) {
+                  blocks.push({
+                    ...(attrs.data as Record<string, unknown>),
+                    _block_type: (attrs.blockType ||
+                      attrs.block_type) as string,
+                    _block_id: (attrs.blockId || attrs.block_id) as string,
+                  })
+                }
+              }
+              if (Array.isArray(node)) {
+                node.forEach(findBlocks)
+              } else {
+                Object.values(nodeObj).forEach(findBlocks)
+              }
+            }
+            findBlocks(parent)
+            return blocks
+          },
+        },
+      },
+    })
+  }
+
+  private generateBlockTypes(validModels: CMSModel[]) {
     this.blocks.forEach((block) => {
       const typeName = this.toPascalCase(block.label) + "Block"
       const blockFields = this.fields.filter((f) => f.block_id === block.id)
@@ -160,9 +243,12 @@ export class CDACore {
           }
 
           blockFields.forEach((field) => {
-            fieldsConfig[field.slug] = {
-              type: this.getGraphQLType(field),
-              resolve: (parent: Record<string, unknown>) => parent[field.slug],
+            if (field.field_type === "reference") {
+              this.addReferenceField(fieldsConfig, field, validModels)
+            } else if (field.field_type === "media") {
+              this.addMediaField(fieldsConfig, field)
+            } else {
+              this.addStandardField(fieldsConfig, field, validModels)
             }
           })
 
@@ -578,20 +664,25 @@ export class CDACore {
           queryFields[technicalName] = {
             type: modelType,
             args: {
-              id: {
-                type: model.is_singleton
-                  ? GraphQLString
-                  : new GraphQLNonNull(GraphQLString),
-              },
+              id: { type: GraphQLString },
+              slug: { type: GraphQLString },
               preview: { type: GraphQLBoolean, defaultValue: false },
             },
-            resolve: async (_source, { id, preview }) => {
+            resolve: async (_source, { id, slug, preview }) => {
+              if (!id && !slug && !model.is_singleton) {
+                throw new Error(
+                  `Either 'id' or 'slug' must be provided for ${technicalName}`
+                )
+              }
+
               let query = this.supabase.from(model.table_name).select("*")
               if (id) query = query.eq("id", id)
+              if (slug) query = query.eq("slug", slug)
+
               if (model.has_draft_mode && !preview)
                 query = query.eq("status", "published")
 
-              if (model.is_singleton && !id) {
+              if (model.is_singleton && !id && !slug) {
                 const { data } = await query.limit(1).maybeSingle()
                 if (!data) return null
                 return !preview ? { ...data, _draft: null } : data
@@ -858,7 +949,15 @@ export class CDACore {
       case "json":
       case "seo_metadata":
       case "modular_content":
+        if (!isInput && this.blockUnionType) {
+          return new GraphQLList(this.blockUnionType)
+        }
+        return GraphQLJSON
       case "structured_text":
+        if (!isInput && this.structuredTextType) {
+          return this.structuredTextType
+        }
+        return GraphQLJSON
       case "navigation":
       case "standings_table":
         return GraphQLJSON
