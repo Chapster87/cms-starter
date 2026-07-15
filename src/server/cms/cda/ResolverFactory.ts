@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js"
 
 import { CMSField } from "@/types/fields"
+import { QueryPlanner } from "./QueryPlanner"
 
 /**
  * Extended CMSField to include metadata used for relations
@@ -66,7 +67,13 @@ export class ResolverFactory {
    * @returns The resolver function.
    */
   public createMediaResolver(field: ExtendedCMSField) {
-    return async (parent: Record<string, unknown>): Promise<unknown> => {
+    return async (
+      parent: Record<string, unknown>,
+      _args: unknown,
+      context: unknown
+    ): Promise<unknown> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ctx = context as any
       const draft = parent._draft as Record<string, unknown> | null
       const val =
         draft && draft[field.slug] !== undefined
@@ -86,6 +93,17 @@ export class ResolverFactory {
         .filter(Boolean) as string[]
 
       if (assetIds.length > 0) {
+        if (ctx?.cache) {
+          await QueryPlanner.ensureBatch(ctx, "media_assets", assetIds)
+          const results = assetIds
+            .map((id) => QueryPlanner.getFromCache(ctx, "media_assets", id))
+            .filter(Boolean)
+
+          if (results.length > 0) {
+            return isMultiple ? results : results[0] || null
+          }
+        }
+
         const { data: mediaData } = await this.supabase
           .from("media_assets")
           .select("*")
@@ -120,13 +138,32 @@ export class ResolverFactory {
     linkedModel: CMSModel
   ) {
     const isMultiple = field.settings?.allow_multiple === true
-    return async (parent: Record<string, unknown>): Promise<unknown> => {
+    return async (
+      parent: Record<string, unknown>,
+      _args: unknown,
+      context: unknown
+    ): Promise<unknown> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ctx = context as any
       const rawValue = parent[field.slug]
       if (!rawValue) return isMultiple ? [] : null
 
       const ids = this.parseJsonValue(rawValue)
       const idArray = Array.isArray(ids) ? (ids as string[]) : [ids as string]
       if (idArray.length === 0 || !idArray[0]) return isMultiple ? [] : null
+
+      if (ctx?.cache) {
+        await QueryPlanner.ensureBatch(ctx, linkedModel.table_name, idArray)
+        const results = idArray
+          .map((id) =>
+            QueryPlanner.getFromCache(ctx, linkedModel.table_name, id)
+          )
+          .filter(Boolean)
+
+        if (results.length > 0) {
+          return isMultiple ? results : results[0] || null
+        }
+      }
 
       const { data } = await this.supabase
         .from(linkedModel.table_name)

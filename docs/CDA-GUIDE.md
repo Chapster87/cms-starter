@@ -186,23 +186,33 @@ These complex field types are stored as JSON but are **fully resolved** by the C
 
 #### Modular Content Example
 
+The CDA uses Union Types for Modular Content. You can query common fields (like `_type`) directly, or use GraphQL fragments to query fields specific to each block type.
+
 ```graphql
 query {
   pagesCollection {
     edges {
       node {
         content {
-          # Modular Content field
-          _type # The block technical name
-          title
-          image {
-            url
-            name
-          } # Media inside the block is resolved!
-          link {
-            # Reference inside the block is resolved!
-            slug
+          # Common fields
+          _type
+
+          # Using Fragments for type-specific fields
+          ... on HeroBlock {
             title
+            subtitle
+            backgroundImage {
+              url
+            }
+          }
+          ... on TextBlock {
+            body
+          }
+          ... on CallToActionBlock {
+            label
+            link {
+              slug
+            }
           }
         }
       }
@@ -409,3 +419,15 @@ echo "CMS_API_TOKEN=cms_sk_v1_$([guid]::NewGuid().ToString().Replace('-', ''))"
 - **401 Unauthorized**: Ensure the `x-api-key` header matches the `CMS_API_TOKEN` exactly.
 - **"Type Query must define one or more fields"**: This occurs if the `models` table in Supabase is empty. Add at least one model to fix.
 - **Field treats as String**: If a relationship field returns as a string, check if the linked model exists in the CMS registry.
+
+---
+
+## 7. Performance & Optimization
+
+### Batched Fetching (N+1 Elimination)
+
+The CDA utilizes a `QueryPlanner` and request-scoped `BatchContext` to automatically eliminate N+1 performance issues.
+
+- **How it works**: When querying collections with nested references or media assets, the engine collects all required IDs across siblings and fetches them in a single database query.
+- **Request-scoped Cache**: Within a single GraphQL request, records are cached in memory. If multiple fields reference the same record or asset, it is only fetched once from the database.
+- **Developer Impact**: You do not need to manually optimize your queries; the CDA handles batching for References, Media, Modular Content, and Structured Text automatically.

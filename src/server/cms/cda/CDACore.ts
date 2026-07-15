@@ -11,48 +11,14 @@ import {
   GraphQLSchema,
   GraphQLString,
   GraphQLUnionType,
-  Kind,
 } from "graphql"
 import { SupabaseClient } from "@supabase/supabase-js"
 
 import { CMSBlock, CMSField } from "@/types/fields"
 import { CMSModel, ExtendedCMSField, ResolverFactory } from "./ResolverFactory"
-
-const GraphQLJSON = new GraphQLScalarType({
-  name: "JSON",
-  serialize: (value) => value,
-  parseValue: (value) => value,
-  parseLiteral: (ast) => {
-    if (ast.kind === Kind.STRING || ast.kind === Kind.BOOLEAN) return ast.value
-    if (ast.kind === Kind.INT || ast.kind === Kind.FLOAT)
-      return parseFloat(ast.value)
-    if (ast.kind === Kind.OBJECT) {
-      const value = Object.create(null)
-      ast.fields.forEach((field) => {
-        value[field.name.value] = field.value
-      })
-      return value
-    }
-    if (ast.kind === Kind.LIST) return ast.values.map((val) => val)
-    return null
-  },
-})
-
-const MediaType = new GraphQLObjectType({
-  name: "Media",
-  fields: {
-    id: { type: GraphQLString },
-    url: { type: GraphQLString },
-    name: { type: GraphQLString },
-    type: { type: GraphQLString },
-    size: { type: GraphQLInt },
-    width: { type: GraphQLInt },
-    height: { type: GraphQLInt },
-    alt_text: { type: GraphQLString },
-    folder: { type: GraphQLString },
-    tags: { type: new GraphQLList(GraphQLString) },
-  },
-})
+import { QueryPlanner } from "./QueryPlanner"
+import { FilterEngine } from "./FilterEngine"
+import { GraphQLJSON, MediaType } from "./schema-types"
 
 export class CDACore {
   private supabase: SupabaseClient
@@ -65,6 +31,7 @@ export class CDACore {
   private structuredTextType: GraphQLObjectType | null = null
   private filterInputTypes: Record<string, GraphQLInputObjectType> = {}
   private resolverFactory!: ResolverFactory
+  private filterEngine!: FilterEngine
 
   constructor(supabase: SupabaseClient) {
     this.supabase = supabase
@@ -83,6 +50,11 @@ export class CDACore {
     )
 
     this.resolverFactory = new ResolverFactory(this.supabase, validModels)
+    this.filterEngine = new FilterEngine(
+      this.supabase,
+      this.fields,
+      validModels
+    )
 
     console.log(
       `CDACore: Found ${this.models.length} models, ${this.fields.length} fields, and ${this.blocks.length} blocks.`
@@ -353,7 +325,10 @@ export class CDACore {
       const isMultiple = field.settings?.allow_multiple === true
       fieldsConfig[field.slug] = {
         type: isMultiple ? new GraphQLList(linkedType) : linkedType,
-        resolve: this.resolverFactory.createReferenceResolver(field, linkedModel),
+        resolve: this.resolverFactory.createReferenceResolver(
+          field,
+          linkedModel
+        ),
       }
     } else {
       fieldsConfig[field.slug] = { type: GraphQLString }
@@ -373,7 +348,7 @@ export class CDACore {
   private addStandardField(
     fieldsConfig: GraphQLFieldConfigMap<Record<string, unknown>, unknown>,
     field: ExtendedCMSField,
-    validModels: CMSModel[]
+    _validModels: CMSModel[]
   ) {
     fieldsConfig[field.slug] = {
       type: this.getGraphQLType(field),
@@ -406,7 +381,21 @@ export class CDACore {
               slug: { type: GraphQLString },
               preview: { type: GraphQLBoolean, defaultValue: false },
             },
-            resolve: async (_source, { id, slug, preview }) => {
+            resolve: async (
+              _source,
+              { id, slug, preview },
+              context: unknown
+            ) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const ctx = context as any
+              // Ensure BatchContext exists
+              if (ctx && !ctx.cache) {
+                Object.assign(
+                  ctx,
+                  QueryPlanner.createBatchContext(this.supabase)
+                )
+              }
+
               if (!id && !slug && !model.is_singleton) {
                 throw new Error(
                   `Either 'id' or 'slug' must be provided for ${technicalName}`
@@ -453,17 +442,32 @@ export class CDACore {
               includeDrafts: { type: GraphQLBoolean, defaultValue: false },
               where: { type: filterType },
             },
-            resolve: async (_source, { preview, includeDrafts, where }) => {
+            resolve: async (
+              _source,
+              { preview, includeDrafts, where },
+              context: unknown
+            ) => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const ctx = context as any
+              // Ensure BatchContext exists
+              if (ctx && !ctx.cache) {
+                Object.assign(
+                  ctx,
+                  QueryPlanner.createBatchContext(this.supabase)
+                )
+              }
+
               const queryBuilder = this.supabase
                 .from(model.table_name)
                 .select("*", { count: "exact" })
 
-              const { query: filteredQuery } = await this.applyFilters(
-                queryBuilder,
-                where,
-                model,
-                false
-              )
+              const { query: filteredQuery } =
+                await this.filterEngine.applyFilters(
+                  queryBuilder,
+                  where,
+                  model,
+                  false
+                )
 
               let finalQuery = filteredQuery
               if (model.has_draft_mode && !includeDrafts && !preview) {
@@ -487,100 +491,6 @@ export class CDACore {
         return queryFields
       },
     })
-  }
-
-  private async applyFilters(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    queryBuilder: any,
-    currentWhere: Record<string, unknown> | null | undefined,
-    currentModel: CMSModel,
-    isSubQuery = false
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): Promise<{ query: any }> {
-    if (!currentWhere || Object.keys(currentWhere).length === 0)
-      return { query: queryBuilder }
-    let localQuery = queryBuilder
-
-    for (const key of Object.keys(currentWhere)) {
-      const val = currentWhere[key]
-      const field = this.fields.find(
-        (f) =>
-          f.model_id === (currentModel.id || currentModel.model_id) &&
-          f.slug === key
-      )
-
-      if (
-        field?.field_type === "reference" &&
-        typeof val === "object" &&
-        val !== null
-      ) {
-        const valObj = val as Record<string, unknown>
-
-        if (
-          Object.keys(valObj).length === 1 &&
-          valObj.id &&
-          typeof valObj.id === "string"
-        ) {
-          if (!isSubQuery) {
-            localQuery = localQuery.filter(key, "eq", `"${valObj.id}"`)
-          } else {
-            localQuery = localQuery.eq(key, valObj.id)
-          }
-          continue
-        }
-
-        const allowedIds = (field.settings?.allowed_models as string[]) || []
-        const linkedModelId =
-          allowedIds[0] ||
-          field.validation_rules?.linkedModel ||
-          (field.settings?.linkedModel as string)
-        const linkedModel = this.models.find((m) => m.id === linkedModelId)
-
-        if (linkedModel) {
-          const subQuery = this.supabase
-            .from(linkedModel.table_name)
-            .select("id")
-          const { query: filteredSubQuery } = await this.applyFilters(
-            subQuery,
-            valObj,
-            linkedModel,
-            true
-          )
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data: matchedRecords } = await (filteredSubQuery as any)
-          const matchedIds = (
-            (matchedRecords as { id: string }[] | null) || []
-          ).map((r) => `"${r.id}"`)
-
-          if (matchedIds.length === 0) {
-            localQuery = localQuery.filter(
-              key,
-              "eq",
-              '"00000000-0000-0000-0000-000000000000"'
-            )
-          } else if (matchedIds.length === 1) {
-            localQuery = localQuery.filter(key, "eq", matchedIds[0])
-          } else {
-            const orFilter = matchedIds
-              .map((id: string) => `${key}.eq.${id}`)
-              .join(",")
-            localQuery = localQuery.or(orFilter)
-          }
-        }
-      } else if (val !== undefined && val !== null) {
-        const isBaseField = [
-          "id",
-          "created_at",
-          "updated_at",
-          "status",
-        ].includes(key)
-        if (field || isBaseField) {
-          localQuery = localQuery.eq(key, val)
-        }
-      }
-    }
-    return { query: localQuery }
   }
 
   private generateFinalSchema(QueryType: GraphQLObjectType): GraphQLSchema {
@@ -705,7 +615,6 @@ export class CDACore {
         return GraphQLString
     }
   }
-
 
   private toPascalCase(str: string) {
     return str
