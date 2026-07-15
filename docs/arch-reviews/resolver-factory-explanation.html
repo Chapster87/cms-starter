@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ResolverFactory Architecture Explanation</title>
+    <style>
+      :root {
+        --primary: #2563eb;
+        --secondary: #64748b;
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --border: #e2e8f0;
+        --text: #1e293b;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        line-height: 1.6;
+        color: var(--text);
+        background-color: var(--bg);
+        margin: 0;
+        padding: 2rem;
+      }
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      }
+      h1 {
+        color: var(--primary);
+        border-bottom: 2px solid var(--border);
+        padding-bottom: 0.5rem;
+      }
+      h2 {
+        margin-top: 2rem;
+        color: var(--secondary);
+      }
+      .comparison {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin: 2rem 0;
+      }
+      .box {
+        border: 1px solid var(--border);
+        padding: 1rem;
+        border-radius: 8px;
+        background: #f1f5f9;
+      }
+      .box.after {
+        border-left: 4px solid #22c55e;
+      }
+      .box.before {
+        border-left: 4px solid #ef4444;
+      }
+      ul {
+        padding-left: 1.5rem;
+      }
+      code {
+        background: #fee2e2;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.9em;
+      }
+      .after code {
+        background: #dcfce7;
+      }
+      .diagram {
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+        margin: 2rem 0;
+      }
+      .node {
+        display: inline-block;
+        padding: 10px 20px;
+        background: white;
+        border: 2px solid var(--primary);
+        border-radius: 6px;
+        margin: 10px;
+        font-weight: bold;
+      }
+      .arrow {
+        font-size: 1.5rem;
+        color: var(--secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>ResolverFactory Architecture Audit</h1>
+      <p>
+        This implementation was a "behind the scenes" architectural refactor.
+        <strong
+          >The format of your GraphQL queries remains exactly the same.</strong
+        >
+      </p>
+
+      <h2>What Changed?</h2>
+      <div class="comparison">
+        <div class="box before">
+          <h3>Before: Monolithic</h3>
+          <ul>
+            <li>
+              All resolution logic lived in <code>schema-generator.ts</code>.
+            </li>
+            <li>One giant recursive function handled everything.</li>
+            <li>
+              Impossible to unit test media resolution without the whole schema.
+            </li>
+            <li>Prone to "infinite loop" bugs in complex relations.</li>
+          </ul>
+        </div>
+        <div class="box after">
+          <h3>After: Modular (Factory Pattern)</h3>
+          <ul>
+            <li>Logic is isolated in <code>ResolverFactory.ts</code>.</li>
+            <li>
+              Specialized resolvers for <strong>Media</strong>,
+              <strong>References</strong>, and <strong>Blocks</strong>.
+            </li>
+            <li>
+              Individually testable (see <code>ResolverFactory.spec.ts</code>).
+            </li>
+            <li>
+              Robust cycle detection with <code>visited</code> path tracking.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <h2>Conceptual Diagram</h2>
+      <div class="diagram">
+        <div class="node">GraphQL Schema</div>
+        <div class="arrow">↓ calls</div>
+        <div class="node" style="background: #dcfce7">ResolverFactory</div>
+        <div
+          style="display: flex; justify-content: space-around; margin-top: 1rem"
+        >
+          <div>
+            <div class="arrow">↙</div>
+            <div class="node" style="font-size: 0.8em">Media Resolver</div>
+          </div>
+          <div>
+            <div class="arrow">↓</div>
+            <div class="node" style="font-size: 0.8em">Reference Resolver</div>
+          </div>
+          <div>
+            <div class="arrow">↘</div>
+            <div class="node" style="font-size: 0.8em">Block Resolver</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="node" style="background: #fef3c7">
+          recursive resolveNode()
+        </div>
+        <p>
+          <small
+            >All resolvers now share a standardized, safe recursion
+            engine.</small
+          >
+        </p>
+      </div>
+
+      <h2>Key Accomplishments</h2>
+      <ul>
+        <li>
+          <strong>Predictability:</strong> Media assets and references are now
+          resolved using the exact same logic across the entire CMS.
+        </li>
+        <li>
+          <strong>Draft Support:</strong> We now consistently check for
+          <code>_draft</code> data before falling back to published data in
+          every field.
+        </li>
+        <li>
+          <strong>Performance:</strong> The factory caches model metadata,
+          reducing the number of lookups needed during schema generation.
+        </li>
+        <li>
+          <strong>Safety:</strong> My audit added path-specific cycle detection,
+          ensuring that if Object A links to Object B which links back to Object
+          A, the system won't crash.
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>

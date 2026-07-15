@@ -6,12 +6,15 @@ This document outlines how to use, maintain, and implement the custom GraphQL AP
 
 ## 1. Schema Maintenance & Lifecycle
 
-### Dynamic Generation
+### The CDACore Engine
 
-The GraphQL schema is not static. It is generated dynamically by querying the CMS registry tables (`models` and `fields`).
+The GraphQL schema is powered by `CDACore`, a dynamic engine that translates the CMS registry into a type-safe GraphQL schema. Unlike static schemas, the CDA is fully introspectable and evolves as you change your content models.
 
-- **Registry Driven**: When you add a new Model or Field in the CMS dashboard, the GraphQL API detects these changes immediately.
-- **Zero Migration**: You do not need to write any GraphQL code to expose new content types; the `schema-generator.ts` handles the mapping automatically.
+- **Registry Driven**: When you add a new Model, Field, or Block in the CMS dashboard, the `CDACore` engine reflects these changes in the schema immediately.
+- **Deep Modules**: The architecture is split into specialized modules:
+  - **QueryPlanner**: Optimizes data fetching.
+  - **ResolverFactory**: Standardizes how references and media are resolved.
+  - **FilterEngine**: Handles complex nested filtering logic.
 
 ### Naming Conventions
 
@@ -186,23 +189,36 @@ These complex field types are stored as JSON but are **fully resolved** by the C
 
 #### Modular Content Example
 
+The CDA uses **GraphQL Union Types** for Modular Content. This provides full type-safety and enables autocomplete in GraphQL explorers. Each block type is generated as a unique `GraphQLObjectType` (e.g., `HeroBlock`, `TextBlock`).
+
 ```graphql
 query {
   pagesCollection {
     edges {
       node {
         content {
-          # Modular Content field
-          _type # The block technical name
-          title
-          image {
-            url
-            name
-          } # Media inside the block is resolved!
-          link {
-            # Reference inside the block is resolved!
-            slug
+          # All blocks share metadata
+          _block_type
+
+          # Use fragments to access fields specific to each block
+          ... on HeroBlock {
             title
+            subtitle
+            backgroundImage {
+              url
+            }
+          }
+          ... on TextBlock {
+            body
+            alignment # 'left', 'center', or 'right'
+          }
+          ... on CallToActionBlock {
+            label
+            link {
+              # Nested references inside blocks are also resolved!
+              slug
+              title
+            }
           }
         }
       }
@@ -213,7 +229,7 @@ query {
 
 #### Structured Text Example
 
-Structured Text follows the Tiptap/ProseMirror JSON format but includes resolved data for `cmsBlock` nodes.
+Structured Text is resolved as a dedicated `StructuredText` type. It provides the raw JSON `value` (ProseMirror format) and a flattened `blocks` array containing all blocks embedded within the text, resolved via **Union Types**.
 
 ```graphql
 query {
@@ -221,22 +237,21 @@ query {
     edges {
       node {
         body {
-          # Structured Text field
-          type
-          content {
-            type
-            text
-            attrs {
-              # Attributes for custom nodes like cmsBlock
-              id
-              blockType
-              data {
-                # Nested data is fully resolved!
-                title
-                image {
-                  url
-                }
+          # 1. The raw ProseMirror JSON
+          value
+
+          # 2. Fully resolved blocks found within the text
+          blocks {
+            _block_type
+            ... on ImageGalleryBlock {
+              images {
+                url
+                alt
               }
+            }
+            ... on CalloutBlock {
+              message
+              type
             }
           }
         }
@@ -409,3 +424,26 @@ echo "CMS_API_TOKEN=cms_sk_v1_$([guid]::NewGuid().ToString().Replace('-', ''))"
 - **401 Unauthorized**: Ensure the `x-api-key` header matches the `CMS_API_TOKEN` exactly.
 - **"Type Query must define one or more fields"**: This occurs if the `models` table in Supabase is empty. Add at least one model to fix.
 - **Field treats as String**: If a relationship field returns as a string, check if the linked model exists in the CMS registry.
+
+---
+
+## 7. Performance & Optimization
+
+### Query Planning & Batched Fetching (N+1 Elimination)
+
+The CDA is designed for performance at scale. It utilizes a `QueryPlanner` and request-scoped `BatchContext` to automatically eliminate N+1 performance issues that typically plague GraphQL APIs.
+
+#### How it works:
+
+1.  **ID Collection**: As the resolver tree is traversed, the engine identifies all required foreign keys (References, Media IDs, etc.) for a given level of siblings.
+2.  **Batched Request**: The `QueryPlanner` executes a single `IN` query to fetch all missing records from the database in one round-trip.
+3.  **Request-scoped Cache**: Once fetched, records are stored in a `BatchContext` map. If the same record (e.g., a shared "Author" or "Brand Logo") is requested multiple times within the same GraphQL request, it is returned from the local cache with zero additional database overhead.
+
+#### Developer Impact:
+
+- **No Manual Optimization**: You do not need to worry about query depth or collection size; the engine handles batching for all complex types:
+  - **References**: Nested models.
+  - **Media**: Image and file metadata.
+  - **Modular Content**: Blocks and their nested references.
+  - **Structured Text**: Resolved blocks within the document.
+- **Predictable Performance**: Query time scales with the number of unique models involved, not the number of records returned.

@@ -43,7 +43,7 @@ The CMS is powered by a centralized registry (`public.models`, `public.fields`, 
 - **Ticket Template**: Use the following `gh` command template for creating sub-issues:
 
   ```bash
-  gh issue create --title "1.4 Refactor RecordForm to use the Engine" --body "## Parent
+  gh issue create --title "Refactor RecordForm to use the Engine" --body "## Parent
     #1
 
 
