@@ -2,6 +2,8 @@
 
 import React from "react"
 import { useEditor, EditorContent, Editor } from "@tiptap/react"
+
+import { useDebounce } from "@/hooks/use-debounce"
 import StarterKit from "@tiptap/starter-kit"
 import * as Select from "@radix-ui/react-select"
 import { Color } from "@tiptap/extension-color"
@@ -458,6 +460,8 @@ export default function RichTextField({
   // Trigger re-renders on selection changes to update the toolbar state
   const [, setSelectionUpdate] = React.useState(0)
 
+  const debouncedOnChange = useDebounce(onChange, 500)
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -487,7 +491,7 @@ export default function RichTextField({
     content: value,
     editable: !disabled,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML())
+      debouncedOnChange(editor.getHTML())
     },
     onSelectionUpdate: () => {
       setSelectionUpdate((prev) => prev + 1)

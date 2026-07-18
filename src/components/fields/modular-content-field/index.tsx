@@ -1,6 +1,8 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+
+import { useDebounce } from "@/hooks/use-debounce"
 import {
   DndContext,
   closestCenter,
@@ -143,8 +145,10 @@ export default function ModularContentField({
     onChange(blocks.filter((b) => b._id !== id))
   }
 
+  const debouncedOnChange = useDebounce(onChange, 500)
+
   function updateBlockData(id: string, data: Record<string, unknown>) {
-    onChange(
+    debouncedOnChange(
       blocks.map((b) => {
         if (b._id === id) {
           return { ...b, ...data }
