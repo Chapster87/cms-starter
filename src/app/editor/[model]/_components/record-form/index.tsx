@@ -1,13 +1,14 @@
 "use client"
 
 import { useMemo, useCallback } from "react"
-import { RefreshCw, ChevronDown } from "lucide-react"
+import { RefreshCw, ChevronDown, AlertCircle } from "lucide-react"
 import * as Accordion from "@radix-ui/react-accordion"
 import Button from "@/components/button"
 import { CMSField, CMSFieldset } from "@/types/fields"
 import { CMSModelMap, CMSModelName } from "@/types/cms-generated"
 import { FieldRegistry } from "./field-registry"
 import { useFormStateEngine } from "./hooks/use-form-state-engine"
+import { useLocalStorageSafetyNet } from "./hooks/use-local-storage-safety-net"
 import s from "./style.module.css"
 
 interface RecordFormProps<T extends CMSModelName> {
@@ -39,6 +40,14 @@ export default function RecordForm<T extends CMSModelName>({
       model,
       initialData,
       onAutoSave,
+    })
+
+  const { hasRestorableData, restore, discard, clear } =
+    useLocalStorageSafetyNet({
+      id,
+      model,
+      currentValues: formState.values,
+      onRestore: (data) => actions.reset(data),
     })
 
   /**
@@ -119,8 +128,47 @@ export default function RecordForm<T extends CMSModelName>({
 
   if (fetchingSchema) return <p>Loading form fields...</p>
 
+  const onFormSubmit = async (e: React.FormEvent) => {
+    await handleSubmit(e)
+    // If it's a new record, we clear local storage on success.
+    // The parent handles redirection, but we can clear here.
+    if (!id) {
+      clear()
+    }
+  }
+
   return (
-    <form id={id} onSubmit={handleSubmit} className={s.form}>
+    <form id={id} onSubmit={onFormSubmit} className={s.form}>
+      {hasRestorableData && (
+        <div className={s.safetyNetAlert}>
+          <div className={s.safetyNetContent}>
+            <AlertCircle size={20} />
+            <div>
+              <strong>Unsaved work found.</strong>
+              <p>Would you like to restore your last session?</p>
+            </div>
+          </div>
+          <div className={s.safetyNetActions}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="small"
+              onClick={restore}
+            >
+              Restore
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="small"
+              onClick={discard}
+            >
+              Discard
+            </Button>
+          </div>
+        </div>
+      )}
+
       {(model as string) === "authors" && !!getFieldValue("user_id") && (
         <div style={{ marginBottom: "8px" }}>
           <Button
