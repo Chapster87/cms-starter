@@ -81,7 +81,7 @@ export function useFormStateEngine<T extends CMSModelName>({
     if (onAutoSave && formState.isDirty && !formState.isSubmitting) {
       const timer = setTimeout(() => {
         onAutoSave(formState.values as Partial<CMSModelMap[T]>)
-      }, 1000)
+      }, 2000)
       return () => clearTimeout(timer)
     }
   }, [formState.values, formState.isDirty, formState.isSubmitting, onAutoSave])

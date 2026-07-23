@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useRef, useMemo } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { useAtom } from "jotai"
@@ -41,7 +41,6 @@ export default function EditRecordClient({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const targetTable = modelData?.table_name || modelSlug || ""
 
   // Hydrate the store with server-provided record
@@ -95,40 +94,32 @@ export default function EditRecordClient({
   }, [targetTable, id])
 
   const handleAutoSave = useCallback(
-    (formData: Record<string, unknown>) => {
+    async (formData: Record<string, unknown>) => {
       if (!targetTable || !record?.id || !modelData?.has_draft_mode) return
 
-      if (autoSaveTimerRef.current) {
-        clearTimeout(autoSaveTimerRef.current)
-      }
+      setIsSaving(true)
+      try {
+        const isFirstDraft = !record?._draft
+        const modelId = modelData?.id
+        await dataService.autoSaveRecord(
+          targetTable,
+          record.id,
+          formData,
+          modelId
+        )
+        editorStore.setRecord(record ? { ...record, _draft: formData } : record)
 
-      autoSaveTimerRef.current = setTimeout(async () => {
-        setIsSaving(true)
-        try {
-          const isFirstDraft = !record?._draft
-          const modelId = modelData?.id
-          await dataService.autoSaveRecord(
-            targetTable,
-            record.id,
-            formData,
-            modelId
+        if (isFirstDraft) {
+          toast.info(
+            "Page updated.",
+            "Unsaved changes have been saved as a draft."
           )
-          editorStore.setRecord(
-            record ? { ...record, _draft: formData } : record
-          )
-
-          if (isFirstDraft) {
-            toast.info(
-              "Page updated.",
-              "Unsaved changes have been saved as a draft."
-            )
-          }
-        } catch (err) {
-          console.error("Auto-save failed:", err)
-        } finally {
-          setIsSaving(false)
         }
-      }, 2000)
+      } catch (err) {
+        console.error("Auto-save failed:", err)
+      } finally {
+        setIsSaving(false)
+      }
     },
     [targetTable, record, modelData]
   )
