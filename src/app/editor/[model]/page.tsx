@@ -20,6 +20,8 @@ import {
 } from "lucide-react"
 import ColumnSettings from "./_components/column-settings"
 import SortSettings from "./_components/sort-settings"
+import Pagination from "@/components/pagination"
+import { usePagination } from "./_hooks/use-pagination"
 import { CMSField } from "@/types/fields"
 import { MediaAsset } from "@/types/cms-generated"
 import s from "./style.module.css"
@@ -47,6 +49,17 @@ export default function RecordListPage({ params }: RecordListPageProps) {
   const [loading, setLoading] = useState(true)
   const [isInitializing, setIsInitializing] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const {
+    page,
+    pageSize,
+    totalRecords,
+    setPage,
+    resetPage,
+    handlePageSizeChange,
+    handleTotal,
+    clampToLastPage,
+    handleRecordDeleted,
+  } = usePagination()
 
   const modelData = models.find((m) => m.slug === modelSlug) || null
 
@@ -63,17 +76,27 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     setLoading(true)
     setError(null)
     try {
-      const [fetchedRecords, fieldsRes] = await Promise.all([
-        dataService.getRecords(modelSlug, {
+      const [pagedResult, fieldsRes] = await Promise.all([
+        dataService.getRecordsPage(modelSlug, {
           orderBy: sortColumn,
           orderDir: sortDirection,
+          page,
+          pageSize,
         }),
         fetch(`/api/models/schema/fields?table=${modelSlug}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         }),
       ])
 
+      const fetchedRecords = pagedResult.records
       setRecords(fetchedRecords)
+      handleTotal(pagedResult.total)
+
+      // If the current page is now beyond the last page (e.g. records were
+      // removed elsewhere), fall back to the new last page and refetch.
+      if (fetchedRecords.length === 0) {
+        clampToLastPage(pagedResult.total)
+      }
 
       if (fieldsRes.ok) {
         const fieldsData: CMSField[] = await fieldsRes.json()
@@ -146,7 +169,16 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     } finally {
       setLoading(false)
     }
-  }, [modelSlug, accessToken, sortColumn, sortDirection])
+  }, [
+    modelSlug,
+    accessToken,
+    sortColumn,
+    sortDirection,
+    page,
+    pageSize,
+    handleTotal,
+    clampToLastPage,
+  ])
 
   useEffect(() => {
     if (!authLoading && accessToken) {
@@ -155,7 +187,15 @@ export default function RecordListPage({ params }: RecordListPageProps) {
       }, 0)
       return () => clearTimeout(timer)
     }
-  }, [loadRecords, authLoading, accessToken, sortColumn, sortDirection])
+  }, [
+    loadRecords,
+    authLoading,
+    accessToken,
+    sortColumn,
+    sortDirection,
+    page,
+    pageSize,
+  ])
 
   // Redirect singletons if a record already exists
   useEffect(() => {
@@ -176,6 +216,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
     try {
       await dataService.deleteRecord(modelSlug, id)
       setRecords((prev) => prev.filter((r) => r.id !== id))
+      handleRecordDeleted()
     } catch (err: unknown) {
       alert(err instanceof Error ? err.message : "Failed to delete record")
     }
@@ -271,6 +312,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
 
     setSortColumn(newCol)
     setSortDirection(newDir)
+    resetPage()
 
     // Persist to database
     if (modelData && accessToken) {
@@ -416,6 +458,7 @@ export default function RecordListPage({ params }: RecordListPageProps) {
                 onSortChange={async (col, dir) => {
                   setSortColumn(col)
                   setSortDirection(dir)
+                  resetPage()
 
                   // Persist to database
                   if (modelData && accessToken) {
@@ -704,6 +747,16 @@ export default function RecordListPage({ params }: RecordListPageProps) {
           </tbody>
         </table>
       </div>
+
+      {totalRecords > 0 && (
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          totalRecords={totalRecords}
+          onPageChange={setPage}
+          onPageSizeChange={handlePageSizeChange}
+        />
+      )}
     </div>
   )
 }

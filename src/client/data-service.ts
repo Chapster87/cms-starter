@@ -61,6 +61,49 @@ export const dataService = {
   },
 
   /**
+   * Fetches a single page of records for a given model along with the total
+   * number of matching records, so callers can render pagination controls.
+   * @param model - The name of the model (table).
+   * @param options - Optional ordering and pagination parameters.
+   * @returns A promise resolving to the page of records and the exact total count.
+   */
+  async getRecordsPage<T extends RecordBase = RecordBase>(
+    model: string,
+    options: {
+      orderBy?: string
+      orderDir?: "asc" | "desc"
+      page?: number
+      pageSize?: number
+    } = {}
+  ): Promise<{ records: T[]; total: number }> {
+    const {
+      orderBy = "created_at",
+      orderDir = "desc",
+      page = 1,
+      pageSize = 25,
+    } = options
+
+    const safePage = Math.max(1, page)
+    const safePageSize = Math.max(1, pageSize)
+    const from = (safePage - 1) * safePageSize
+    const to = from + safePageSize - 1
+
+    const supabase = createClient()
+    const { data, count, error } = await supabase
+      .from(model)
+      .select("*", { count: "exact" })
+      .order(orderBy, { ascending: orderDir === "asc" })
+      .range(from, to)
+
+    if (error) {
+      console.error(`Error fetching records for '${model}':`, error.message)
+      throw error
+    }
+
+    return { records: (data as T[]) || [], total: count ?? 0 }
+  },
+
+  /**
    * Fetches a single record by its ID.
    * @param model - The name of the model.
    * @param id - The UUID of the record.
